@@ -1,0 +1,11 @@
+{
+  "title": "赛程助手",
+  "desc": "",
+  "key": "sport",
+  "version": "1.0.1",
+  "author": "xwkj",
+  "type": "app",
+  "support_app": "",
+  "compile":[],
+  "support_version": "1.5.3"
+}

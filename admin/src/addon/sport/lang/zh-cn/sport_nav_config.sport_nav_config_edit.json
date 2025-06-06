@@ -1,0 +1,19 @@
+{
+      "name":"导航名称",
+      "icon":"未选中图标",
+      "selectedIcon":"选中图标",
+      "path":"跳转路径",
+      "sort":"排序",
+      "status":"状态：0禁用 1启用",
+      "remark":"备注",
+      "namePlaceholder":"请输入导航名称",
+      "iconPlaceholder":"请输入未选中图标",
+      "selectedIconPlaceholder":"请输入选中图标",
+      "pathPlaceholder":"请输入跳转路径",
+      "sortPlaceholder":"请输入排序",
+      "statusPlaceholder":"请输入状态：0禁用 1启用",
+      "remarkPlaceholder":"请输入备注",
+      "addSportNavConfig":"添加导航配置",
+      "updateSportNavConfig":"编辑导航配置",
+      "sportNavConfigDeleteTips":"确定要删除该导航配置吗？"
+}

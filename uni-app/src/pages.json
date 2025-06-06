@@ -210,6 +210,20 @@
     ],
     "subPackages": [
         // {{ PAGE_BEGAIN }}
+            // SPORT_PAGE_BEGIN
+            // *********************************** sport ***********************************
+            {
+                "root": "addon/sport",
+                "pages": [
+                    {
+                        "path": "pages/hello_world/index",
+                        "style": {
+                            "navigationBarTitleText": "%sport.pages.hello_world.index%"
+                        }
+                    }
+                ]
+            },
+            // SPORT_PAGE_END
         // SHOP_PAGE_BEGIN
         {
             "root": "addon/shop",

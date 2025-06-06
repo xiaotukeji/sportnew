@@ -83,15 +83,15 @@
         "sdkConfigs": {
             "maps": {
                 "qqmap": {
-                    "key": ""
+                    "key": "IZQBZ-3UHEU-WTCVD-2464U-I5N4V-ZFFU3"
                 }
             }
         },
-        "async" : {
-          "loading" : "",
-          "error" : "",
-          "delay" : 0,
-          "timeout" : 3000
+        "async": {
+            "loading": "",
+            "error": "",
+            "delay": 0,
+            "timeout": 3000
         }
     },
     "fallbackLocale": "zh-Hans"
