@@ -21,10 +21,31 @@
                     <!-- 举办地点 -->
                     <view class="form-item">
                         <view class="form-label required">举办地点</view>
+                        <view class="location-container">
+                            <input 
+                                class="form-input readonly" 
+                                :value="formData.location || (formData.full_address ? '已选择地址' : '')" 
+                                placeholder="请选择举办地点"
+                                disabled
+                                @tap="chooseLocation"
+                            />
+                            <view class="location-action" @tap="chooseLocation">
+                                <text class="location-icon">📍</text>
+                                <text class="location-text">选择</text>
+                            </view>
+                        </view>
+                        <view v-if="formData.full_address" class="selected-address">
+                            <text class="address-text">{{ formData.full_address }}</text>
+                        </view>
+                    </view>
+                    
+                    <!-- 地址补充 -->
+                    <view v-if="formData.location" class="form-item">
+                        <view class="form-label">地址补充</view>
                         <input 
                             class="form-input" 
-                            v-model="formData.location" 
-                            placeholder="请输入举办地点"
+                            v-model="formData.address_detail" 
+                            placeholder="请输入详细地址信息（可选）"
                             maxlength="200"
                         />
                     </view>
@@ -37,7 +58,7 @@
                             :value="startTimeDisplay" 
                             placeholder="请选择开始时间"
                             disabled
-                            @tap="showStartTimePicker = true"
+                            @tap="openStartTimePicker"
                         />
                     </view>
                     
@@ -49,7 +70,7 @@
                             :value="endTimeDisplay" 
                             placeholder="请选择结束时间"
                             disabled
-                            @tap="showEndTimePicker = true"
+                            @tap="openEndTimePicker"
                         />
                     </view>
                 </view>
@@ -297,7 +318,11 @@ const { requireLogin } = useLoginCheck()
 // 表单数据
 const formData = ref({
     name: '',                   // 比赛名称
-    location: '',              // 举办地点
+    location: '',              // 举办地点（地图选择的地址名称）
+    lng: '',                   // 经度
+    lat: '',                   // 纬度
+    full_address: '',          // 完整地址
+    address_detail: '',        // 地址补充
     start_time: 0,             // 开始时间
     end_time: 0,               // 结束时间
     organizer_type: 1,         // 举办者类型：1个人 2单位
@@ -341,12 +366,24 @@ const endTimeValue = ref('')
 
 const startTimeDisplay = computed(() => {
     return formData.value.start_time ? 
-        new Date(formData.value.start_time * 1000).toLocaleString() : ''
+        new Date(formData.value.start_time * 1000).toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : ''
 })
 
 const endTimeDisplay = computed(() => {
     return formData.value.end_time ? 
-        new Date(formData.value.end_time * 1000).toLocaleString() : ''
+        new Date(formData.value.end_time * 1000).toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : ''
 })
 
 // 选择器相关
@@ -383,6 +420,17 @@ const selectedSeriesName = computed(() => {
 const submitLoading = ref(false)
 
 /**
+ * 打开时间选择器
+ */
+const openStartTimePicker = () => {
+    showStartTimePicker.value = true
+}
+
+const openEndTimePicker = () => {
+    showEndTimePicker.value = true
+}
+
+/**
  * 时间选择
  */
 const onStartTimeChange = (e: any) => {
@@ -391,6 +439,9 @@ const onStartTimeChange = (e: any) => {
     formData.value.start_time = Math.floor(timestamp / 1000)
     formData.value.year = new Date(timestamp).getFullYear()
     showStartTimePicker.value = false
+    
+    // 更新时间选择器的值
+    startTimeValue.value = timeString
 }
 
 const onEndTimeChange = (e: any) => {
@@ -398,6 +449,84 @@ const onEndTimeChange = (e: any) => {
     const timestamp = new Date(timeString).getTime()
     formData.value.end_time = Math.floor(timestamp / 1000)
     showEndTimePicker.value = false
+    
+    // 更新时间选择器的值
+    endTimeValue.value = timeString
+}
+
+/**
+ * 选择地址
+ */
+const chooseLocation = () => {
+    // #ifdef MP-WEIXIN
+    uni.chooseLocation({
+        success: (res) => {
+            console.log('选择地址成功:', res)
+            
+            // 保存经纬度
+            if (res.latitude && res.longitude) {
+                formData.value.lat = res.latitude.toString()
+                formData.value.lng = res.longitude.toString()
+            }
+            
+            // 保存地址信息
+            if (res.name) {
+                formData.value.location = res.name
+            }
+            
+            // 组合完整地址
+            let fullAddress = ''
+            if (res.address) {
+                fullAddress += res.address
+            }
+            if (res.name && res.name !== res.address) {
+                fullAddress += (fullAddress ? ' ' : '') + res.name
+            }
+            
+            formData.value.full_address = fullAddress
+            
+            uni.showToast({
+                title: '地址选择成功',
+                icon: 'success'
+            })
+        },
+        fail: (res) => {
+            console.error('选择地址失败:', res)
+            if (res.errMsg && res.errMsg.includes('cancel')) {
+                // 用户取消，不显示错误
+                return
+            }
+            
+            let message = '选择地址失败'
+            if (res.errMsg) {
+                if (res.errMsg.includes('auth deny')) {
+                    message = '请授权地理位置权限'
+                } else if (res.errMsg.includes('system permission denied')) {
+                    message = '系统权限被拒绝，请在系统设置中开启定位权限'
+                }
+            }
+            
+            uni.showToast({
+                title: message,
+                icon: 'none'
+            })
+        }
+    })
+    // #endif
+    
+    // #ifdef H5
+    uni.showToast({
+        title: 'H5环境暂不支持地图选择',
+        icon: 'none'
+    })
+    // #endif
+    
+    // #ifdef APP-PLUS
+    uni.showToast({
+        title: 'APP环境暂不支持地图选择',
+        icon: 'none'
+    })
+    // #endif
 }
 
 /**
@@ -579,7 +708,7 @@ const validateForm = () => {
     
     if (!formData.value.location.trim()) {
         uni.showToast({
-            title: '请输入举办地点',
+            title: '请选择举办地点',
             icon: 'none'
         })
         return false
@@ -640,8 +769,19 @@ const handleSubmit = async () => {
     try {
         submitLoading.value = true
         
+        // 组合完整地址信息
+        let finalFullAddress = formData.value.full_address
+        if (formData.value.address_detail) {
+            finalFullAddress += (finalFullAddress ? ' ' : '') + formData.value.address_detail
+        }
+        
         // 提交数据
-        await addEvent(formData.value)
+        const submitData = {
+            ...formData.value,
+            full_address: finalFullAddress
+        }
+        
+        await addEvent(submitData)
         
         uni.showToast({
             title: '创建比赛成功',
@@ -670,10 +810,11 @@ onMounted(() => {
         loadOrganizerList()
         loadSeriesList()
         
-        // 初始化时间选择器的值
+        // 初始化时间选择器的值（设置为当前时间）
         const now = new Date()
-        startTimeValue.value = now.toISOString().slice(0, 16)
-        endTimeValue.value = now.toISOString().slice(0, 16)
+        const timeString = now.toISOString().slice(0, 16)
+        startTimeValue.value = timeString
+        endTimeValue.value = timeString
     }, '/addon/sport/pages/event/create')
 })
 </script>
@@ -759,6 +900,47 @@ onMounted(() => {
         &::placeholder {
             color: #999;
         }
+    }
+}
+
+.location-container {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    
+    .form-input {
+        flex: 1;
+    }
+    
+    .location-action {
+        display: flex;
+        align-items: center;
+        gap: 8rpx;
+        padding: 16rpx 24rpx;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12rpx;
+        
+        .location-icon {
+            font-size: 24rpx;
+        }
+        
+        .location-text {
+            font-size: 24rpx;
+            color: white;
+        }
+    }
+}
+
+.selected-address {
+    margin-top: 16rpx;
+    padding: 16rpx;
+    background: #f8f9fa;
+    border-radius: 8rpx;
+    
+    .address-text {
+        font-size: 24rpx;
+        color: #666;
+        line-height: 1.5;
     }
 }
 

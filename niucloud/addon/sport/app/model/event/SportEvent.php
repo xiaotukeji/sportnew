@@ -81,6 +81,16 @@ class SportEvent extends BaseModel
     ];
 
     /**
+     * 可批量赋值的字段
+     * @var array
+     */
+    protected $field = [
+        'id', 'series_id', 'name', 'event_type', 'year', 'season', 'start_time', 
+        'end_time', 'location', 'lng', 'lat', 'full_address', 'organizer_id', 
+        'organizer_type', 'sort', 'status', 'remark', 'create_time', 'update_time'
+    ];
+
+    /**
      * 获取器 - 格式化开始时间
      * @param $value
      * @return string
