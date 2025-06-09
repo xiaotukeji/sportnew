@@ -45,7 +45,7 @@ onLaunch((data: any) => {
     }, false);
 
     try {
-        uni.hideTabBar() // 隐藏tabbar
+        //uni.hideTabBar() // 隐藏tabbar
     } catch (e) {
 
     }

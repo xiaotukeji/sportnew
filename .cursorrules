@@ -1,0 +1,434 @@
+# NiuCloud-Admin 项目开发规范
+
+## 项目概述
+niucloud-admin是一款基于前后端分离架构的快速开发框架，采用多租户SaaS系统设计，支持企业级应用开发。
+
+## 项目结构
+```
+sportnew/
+├── admin/          # Vue3 + Element Plus 管理后台
+├── web/            # Nuxt3 前端网站  
+├── niucloud/       # ThinkPHP8 + PHP8 后端API
+└── uni-app/        # UniApp 移动端应用
+```
+
+## 开发原则
+- 🔒 **安全第一**: 严格遵循项目现有代码结构，绝不破坏已完成的功能
+- 🌐 **国际化**: 所有新功能必须支持多语言（i18n）
+- 🏢 **多租户**: 遵循SaaS多租户架构设计
+- 📝 **中文优先**: 使用中文进行注释和文档说明
+- 🔧 **询问机制**: 创建新文件或目录前必须征询用户同意
+
+## 技术栈规范
+
+### 管理后台 (admin/)
+**核心技术**: Vue 3.2.45 + Element Plus 2.7.4 + TypeScript 4.9.5 + Vite 4.1.0
+
+**开发规范**:
+- ✅ 使用 Vue 3 Composition API 和 `<script setup>` 语法
+- ✅ 严格使用 TypeScript 类型定义，避免 `any` 类型
+- ✅ 状态管理使用 Pinia 2.0.30
+- ✅ HTTP 请求统一使用 axios 并进行错误处理
+- ✅ 优先使用 Element Plus 组件，保持UI一致性
+- ✅ 图标使用 `@element-plus/icons-vue`
+
+**文件组织**:
+```
+admin/src/
+├── views/          # 页面文件 (大驼峰命名)
+├── components/     # 组件文件 (大驼峰命名)  
+├── utils/          # 工具函数
+├── stores/         # Pinia状态管理
+└── apis/           # API接口定义
+```
+
+**样式规范**:
+- 使用 Sass 预处理器
+- 结合 Tailwind CSS 工具类
+- 支持响应式设计
+- 遵循 Element Plus 设计语言
+
+### 前端网站 (web/)
+**核心技术**: Nuxt 3.4.1 + Element Plus 2.3.2 + WindiCSS
+
+**开发规范**:
+- ✅ 遵循 Nuxt3 文件约定和目录结构
+- ✅ 组件自动导入机制 (`components/` 目录)
+- ✅ 页面路由基于文件系统 (`app/` 目录)
+- ✅ 使用 WindiCSS 进行原子化CSS开发
+- ✅ 支持 SSR 和静态站点生成
+- ✅ 集成 Element Plus 组件库
+
+### 后端API (niucloud/)
+**核心技术**: ThinkPHP 8.0.3 + PHP 8.0+ + MySQL + ThinkORM 3.0.14
+
+**架构规范**:
+- ✅ 严格遵循 MVC 架构模式
+- ✅ 控制器放置在 `app/模块/controller/`
+- ✅ 模型使用 ThinkORM 规范，放置在 `app/模块/model/`
+- ✅ 服务层采用依赖注入模式 (`app/模块/service/`)
+- ✅ 中间件统一处理权限和验证
+
+**API设计规范**:
+- ✅ 严格遵循 RESTful API 设计原则
+- ✅ 统一响应格式: `{code: int, msg: string, data: any}`
+- ✅ 使用 JWT 进行身份验证
+- ✅ 所有接口支持多语言错误信息返回
+- ✅ 接口版本控制和向后兼容
+
+**数据库规范**:
+- ✅ 表名使用下划线命名法 (`snake_case`)
+- ✅ 必须字段: `id`, `created_at`, `updated_at`
+- ✅ 软删除表包含: `deleted_at`
+- ✅ 支持多租户数据隔离
+
+**权限系统**:
+- ✅ 基于角色的访问控制 (RBAC)
+- ✅ 所有接口必须进行权限验证
+- ✅ 多租户权限完全隔离
+- ✅ 接口级别的细粒度权限控制
+
+### 移动端应用 (uni-app/)
+**核心技术**: UniApp + Vue 3 + TypeScript + uView UI
+
+**开发规范**:
+- ✅ 使用 Vue 3 Composition API
+- ✅ TypeScript 严格模式开发
+- ✅ uView UI 组件库统一界面风格
+- ✅ 支持多平台编译 (H5/微信小程序/支付宝小程序/抖音小程序)
+- ✅ 遵循各平台开发规范和限制
+
+## 开发工作流程
+
+### 新功能开发标准流程
+1. **📋 需求分析**: 明确功能需求和技术方案
+2. **🗄️ 数据库设计**: 设计表结构，考虑多租户隔离
+3. **⚡ 后端开发**: 创建模型、服务层、控制器和API接口
+4. **🎨 前端开发**: 实现管理后台页面和交互逻辑
+5. **📱 移动端开发**: 如需要，开发对应移动端页面
+6. **🌐 国际化**: 添加多语言支持文件
+7. **🧪 测试验证**: 功能测试和兼容性测试
+
+### 代码生成器使用指南
+- ✅ 使用内置代码生成器生成基础 CRUD 操作
+- ✅ 生成后必须根据业务需求进行定制化开发
+- ✅ 确保生成的代码符合项目规范和架构设计
+- ✅ 检查生成代码的权限控制和多租户支持
+
+### 代码质量保证
+- ✅ 新功能必须进行充分的单元测试和集成测试
+- ✅ 确保新代码不影响现有功能的正常运行
+- ✅ 验证多语言功能在各个模块中的正确性
+- ✅ 进行代码审查，确保符合团队开发规范
+
+## 依赖版本管理
+
+### 前端依赖 (admin/)
+```json
+{
+  "vue": "3.2.45",
+  "element-plus": "^2.7.4", 
+  "typescript": "4.9.5",
+  "vite": "4.1.0",
+  "pinia": "2.0.30",
+  "axios": "1.4.0",
+  "@vueuse/core": "9.12.0"
+}
+```
+
+### 前端依赖 (web/)
+```json
+{
+  "nuxt": "^3.4.1",
+  "element-plus": "^2.3.2",
+  "vue-i18n": "^9.2.2",
+  "@vueuse/core": "^9.13.0"
+}
+```
+
+### 后端依赖 (niucloud/)
+```json
+{
+  "php": ">=8.0.0",
+  "topthink/framework": "v8.0.3",
+  "topthink/think-orm": "v3.0.14",
+  "firebase/php-jwt": "v5.5.1",
+  "w7corp/easywechat": "6.7.0"
+}
+```
+
+## 关键注意事项
+
+### 🚨 必须遵守的规则
+- **绝对禁止**: 破坏现有功能或修改核心架构
+- **创建确认**: 创建新文件/目录前必须征得用户同意
+- **架构一致**: 所有新代码必须符合多租户SaaS架构
+- **国际化强制**: 新功能必须支持多语言
+- **权限必须**: 所有接口必须包含权限验证
+- **测试保障**: 充分测试确保功能稳定性
+
+### 💡 最佳实践建议
+- 优先使用项目现有的组件和工具函数
+- 保持代码风格与项目整体一致
+- 注重性能优化和用户体验
+- 编写清晰的中文注释和文档
+- 遵循单一职责原则，保持代码可读性
+
+### 🔧 开发环境要求
+- Node.js 16+ (前端开发)
+- PHP 8.0+ (后端开发)  
+- MySQL 5.7+ (数据库)
+- Redis (缓存和队列)
+- Composer (PHP依赖管理)
+- NPM/Yarn (前端依赖管理)
+
+这个配置将确保所有开发工作都符合 niucloud-admin 的技术标准和架构要求。
+
+## 登录认证机制详解
+
+### 🔐 **核心组件**
+1. **useMemberStore**: Pinia状态管理，存储用户信息和token
+2. **useLogin**: 登录相关的组合式函数，处理各种登录场景  
+3. **AuthService/LoginService**: 后端认证服务层
+
+### 🔄 **前端登录流程**
+1. **设置登录返回页**: `login.setLoginBack({ url: '/xxx' })` - 登录成功后跳转的页面
+2. **触发登录**: 跳转到 `/app/pages/auth/index` 登录中间页
+3. **登录方式**:
+   - 账号密码登录: `LoginService.account(username, password)`
+   - 微信小程序授权: `weappLogin()` 获取openid自动登录
+   - 手机号验证码: `mobileLogin()`
+
+### 🎫 **Token管理**
+- **存储**: `uni.setStorageSync(TOKEN_KEY, token)`
+- **设置**: `memberStore.setToken(token)` 自动获取用户信息
+- **清除**: `memberStore.logout()` 清理token和用户信息
+
+### 🛡️ **权限验证**
+- **页面级**: pages.json中设置 `"needLogin": true`
+- **功能级**: `if (!userInfo.value) { handleLogin(); return; }`
+- **接口级**: 自动携带token，后端中间件验证
+
+### 📡 **关键API**
+- **获取用户信息**: `getMemberInfo()` - 验证token有效性
+- **退出登录**: `logout()` - 清理本地数据，调用后端接口
+- **绑定手机号**: 微信登录后可能需要强制绑定手机号
+
+### 🌐 **多平台兼容**
+- **小程序**: 支持微信授权登录，openid绑定
+- **H5**: 支持微信网页授权，扫码登录
+- **APP**: 支持第三方登录集成
+
+### ✨ **最佳实践**
+1. 登录前先调用 `login.setLoginBack()` 设置返回页面
+2. 功能操作前检查登录状态: `if (!userInfo.value) return handleLogin()`
+3. 退出登录使用 `memberStore.logout()` 而不是直接清理storage
+4. 页面初始化时检查token: `if (memberStore.token) memberStore.getMemberInfo()`
+
+### 🎯 **Sport插件登录示例**
+```typescript
+// 页面中使用登录逻辑
+import { useLogin } from '@/hooks/useLogin';
+import useMemberStore from '@/stores/member';
+
+const login = useLogin();
+const memberStore = useMemberStore();
+const userInfo = computed(() => memberStore.info);
+
+// 处理登录
+const handleLogin = () => {
+    login.setLoginBack({ url: '/addon/sport/pages/member/index' });
+};
+
+// 检查登录状态
+const checkLogin = () => {
+    if (!userInfo.value) {
+        handleLogin();
+        return false;
+    }
+    return true;
+};
+
+// 页面初始化
+onMounted(() => {
+    if (memberStore.token) {
+        memberStore.getMemberInfo();
+    }
+});
+```
+
+## Sport插件开发规范
+
+### 📂 **项目目录结构**
+
+#### 后端目录结构 (niucloud/addon/sport/)
+```
+niucloud/addon/sport/
+├── app/
+│   ├── adminapi/          # 后端管理API
+│   │   ├── controller/    # 控制器目录 (按功能模块分目录)
+│   │   └── route/         # 路由配置
+│   │       └── route.php  # 后端管理路由文件
+│   ├── api/               # 前端小程序API  
+│   │   ├── controller/    # 控制器目录 (按功能模块分目录)
+│   │   └── route/         # 路由配置
+│   │       └── route.php  # 前端小程序路由文件
+│   ├── model/             # 数据模型目录
+│   │   ├── sport_category/    # 项目大类模型
+│   │   ├── sport_event/       # 赛事模型
+│   │   ├── sport_athlete/     # 参赛人员模型
+│   │   └── ... (其他业务模型)
+│   ├── service/           # 业务服务层
+│   │   └── admin/         # 管理端服务
+│   └── validate/          # 数据验证器
+├── sql/                   # 数据库脚本
+└── Addon.php             # 插件主文件
+```
+
+#### 前端目录结构 (uni-app/src/addon/sport/)
+```
+uni-app/src/addon/sport/
+├── pages/                 # 页面目录
+│   ├── index/            # 首页相关页面
+│   ├── event/            # 赛事相关页面
+│   ├── member/           # 个人中心页面
+│   └── ... (其他业务页面)
+├── components/           # 组件目录
+├── api/                  # API接口文件
+│   ├── event.ts         # 赛事相关接口
+│   ├── athlete.ts       # 运动员相关接口
+│   └── ... (其他业务接口)
+├── stores/               # 状态管理
+├── utils/                # 工具函数
+├── styles/               # 样式文件
+├── hooks/                # 自定义hooks
+└── locale/               # 国际化文件
+```
+
+### 🗄️ **数据库表结构**
+
+#### 核心业务表
+- **sport_event**: 赛事表 - 存储赛事基本信息
+- **sport_event_series**: 赛事系列表 - 系列赛管理
+- **sport_category**: 项目大类表 - 运动项目分类
+- **sport_base_item**: 基础项目表 - 标准运动项目
+- **sport_item**: 比赛项目表 - 具体赛事的比赛项目
+- **sport_athlete**: 参赛人员表 - 运动员信息
+- **sport_registration**: 报名记录表 - 报名信息
+- **sport_score**: 比赛成绩表 - 成绩记录
+- **sport_organizer**: 主办方表 - 主办方信息
+- **sport_nav_config**: 导航配置表 - 小程序导航配置
+
+#### 字段规范
+- 所有表必须包含: `id`, `create_time`, `update_time`
+- 软删除表包含: `delete_time`
+- 状态字段统一使用: `status` (0禁用 1启用)
+- 排序字段统一使用: `sort`
+
+### 🔧 **开发流程规范**
+
+#### 新增功能标准流程
+
+1. **📋 数据库设计**
+   - 确认是否需要新建数据表
+   - 参考 `sport_all.sql` 中的表结构设计规范
+   - 遵循字段命名和类型规范
+
+2. **⚡ 后端开发**
+   ```
+   创建顺序：模型 → 服务层 → 控制器 → 路由
+   ```
+   
+   **模型创建 (niucloud/addon/sport/app/model/)**
+   - 在对应业务目录下创建模型文件
+   - 继承基础模型类，遵循ThinkORM规范
+   - 参考现有模型: `sport_category/`, `sport_event/` 等
+
+   **服务层创建 (niucloud/addon/sport/app/service/)**
+   - 业务逻辑统一放在服务层
+   - 管理端服务放在 `admin/` 目录下
+   - 前端服务直接放在根目录
+
+   **控制器创建**
+   - 管理端: `app/adminapi/controller/业务模块/`
+   - 前端: `app/api/controller/业务模块/`
+   - 按功能模块分目录，如: `event/`, `athlete/` 等
+
+   **路由配置**
+   - 管理端路由: `app/adminapi/route/route.php`
+   - 前端路由: `app/api/route/route.php`
+   - 严格遵循RESTful设计规范
+
+3. **🎨 前端开发**
+   ```
+   创建顺序：API接口 → 页面组件 → 路由配置 → pages.json更新
+   ```
+   
+   **API接口 (uni-app/src/addon/sport/api/)**
+   - 按业务模块创建ts文件
+   - 使用统一的请求封装
+   - 参考商城插件: `goods.ts`, `order.ts` 等
+
+   **页面开发 (uni-app/src/addon/sport/pages/)**
+   - 按功能模块分目录组织
+   - 使用Vue 3 + TypeScript开发
+   - 遵循uniapp开发规范
+
+   **pages.json配置**
+   - 新页面必须及时添加到 `uni-app/src/pages.json`
+   - 配置国际化标题: `%addon.sport.pages.xxx%`
+   - 设置必要的页面样式和权限
+
+### 📝 **代码规范**
+
+#### 命名规范
+- **数据表**: 下划线命名法 (`sport_event`)
+- **模型文件**: 大驼峰命名法 (`SportEvent.php`) 
+- **控制器**: 大驼峰命名法 (`EventController.php`)
+- **API文件**: 小写+下划线 (`event.ts`)
+- **页面目录**: 小写+下划线 (`event_list/`)
+
+#### 路由规范
+- **RESTful风格**: 
+  - GET `/sport/event` - 列表
+  - GET `/sport/event/:id` - 详情  
+  - POST `/sport/event` - 新增
+  - PUT `/sport/event/:id` - 编辑
+  - DELETE `/sport/event/:id` - 删除
+
+#### API响应格式
+```json
+{
+  "code": 200,
+  "msg": "success", 
+  "data": {}
+}
+```
+
+### 🔍 **参考商城插件**
+
+#### 后端参考
+- 路由配置: `/niucloud/addon/shop/app/api/route/route.php`
+- 控制器结构: `/niucloud/addon/shop/app/api/controller/`
+- 模型设计: `/niucloud/addon/shop/app/model/`
+- 服务层: `/niucloud/addon/shop/app/service/`
+
+#### 前端参考  
+- API封装: `/uni-app/src/addon/shop/api/`
+- 页面结构: `/uni-app/src/addon/shop/pages/`
+- 组件设计: `/uni-app/src/addon/shop/components/`
+- 状态管理: `/uni-app/src/addon/shop/stores/`
+
+### ⚠️ **注意事项**
+
+1. **必须遵循**:
+   - 创建新文件/目录前征询用户同意
+   - 严格按照目录结构组织代码
+   - 及时更新pages.json配置
+   - 保持与商城插件相同的代码风格
+
+2. **开发建议**:
+   - 优先参考商城插件的实现方式
+   - 遵循多语言国际化规范
+   - 确保代码的可维护性和扩展性
+   - 充分测试新增功能 

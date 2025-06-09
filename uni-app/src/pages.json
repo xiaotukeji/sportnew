@@ -1,5 +1,32 @@
 {
     "pages": [
+        // sport插件页面 - 首页设为启动页
+        {
+            "path": "addon/sport/pages/index/index",
+            "style": {
+                "navigationStyle": "custom",
+                "navigationBarTitleText": "运动会助手"
+            }
+        },
+        {
+            "path": "addon/sport/pages/event/index",
+            "style": {
+                "navigationBarTitleText": "赛事列表"
+            }
+        },
+        {
+            "path": "addon/sport/pages/event/create",
+            "style": {
+                "navigationBarTitleText": "创建比赛"
+            },
+            "needLogin": true
+        },
+        {
+            "path": "addon/sport/pages/member/index",
+            "style": {
+                "navigationBarTitleText": "个人中心"
+            }
+        },
         // pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
         {
             "path": "app/pages/index/index",
@@ -210,20 +237,7 @@
     ],
     "subPackages": [
         // {{ PAGE_BEGAIN }}
-            // SPORT_PAGE_BEGIN
-            // *********************************** sport ***********************************
-            {
-                "root": "addon/sport",
-                "pages": [
-                    {
-                        "path": "pages/hello_world/index",
-                        "style": {
-                            "navigationBarTitleText": "%sport.pages.hello_world.index%"
-                        }
-                    }
-                ]
-            },
-            // SPORT_PAGE_END
+
         // SHOP_PAGE_BEGIN
         {
             "root": "addon/shop",
@@ -459,6 +473,7 @@
             ]
         },
         // SHOP_PAGE_END
+  
 // {{ PAGE_END }}
         {
             "root": "app/components",
@@ -617,11 +632,25 @@
         "backgroundColorBottom": "#F6F6F6"
     },
     "tabBar": {
-        "list": [{
-                "pagePath": "app/pages/index/index"
+        "list": [
+            
+            {
+                "pagePath": "addon/sport/pages/index/index",
+                "text": "首页",
+                "iconPath": "static/tabbar/home.png",
+                "selectedIconPath": "static/tabbar/home-active.png"
             },
             {
-                "pagePath": "app/pages/index/nosite"
+                "pagePath": "addon/sport/pages/event/index",
+                "text": "赛事",
+                "iconPath": "static/tabbar/event.png",
+                "selectedIconPath": "static/tabbar/event-active.png"
+            },
+            {
+                "pagePath": "addon/sport/pages/member/index",
+                "text": "我的",
+                "iconPath": "static/tabbar/my.png",
+                "selectedIconPath": "static/tabbar/my-active.png"
             }
         ]
     },
