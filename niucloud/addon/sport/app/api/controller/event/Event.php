@@ -133,6 +133,13 @@ class Event extends BaseApiController
             ['status', ''],            // 状态筛选
         ]);
         
+        // 调试：记录控制器接收的参数
+        \think\facade\Log::info('MyList Controller Debug:', [
+            'raw_request_data' => $this->request->param(),
+            'processed_data' => $data,
+            'request_method' => $this->request->method()
+        ]);
+        
         return success((new EventService())->getMyList($data));
     }
 
