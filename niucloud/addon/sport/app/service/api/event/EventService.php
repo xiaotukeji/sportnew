@@ -85,14 +85,15 @@ class EventService extends BaseApiService
      */
     public function getInfo(int $id)
     {
-        $field = 'id, series_id, name, event_type, year, season, start_time, end_time, location, organizer_id, organizer_type, sort, status, remark, create_time, update_time';
+        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.create_time, se.update_time';
         
         $info = $this->model
-            ->where([['id', '=', $id]])
-            ->withJoin(['organizer' => ['organizer_name', 'contact_name', 'contact_phone']])
-            ->withJoin(['series' => ['name as series_name']], 'LEFT')
-            ->field($field)
-            ->append(['start_time_text', 'end_time_text', 'event_type_text', 'organizer_type_text'])
+            ->alias('se')
+            ->leftJoin('sport_organizer so', 'se.organizer_id = so.id')
+            ->leftJoin('sport_event_series ses', 'se.series_id = ses.id')
+            ->where([['se.id', '=', $id]])
+            ->field($field . ', so.organizer_name, so.contact_name, so.contact_phone, ses.name as series_name')
+            ->append(['start_time_text', 'end_time_text', 'event_type_text', 'organizer_type_text', 'status_text'])
             ->findOrEmpty()
             ->toArray();
             
