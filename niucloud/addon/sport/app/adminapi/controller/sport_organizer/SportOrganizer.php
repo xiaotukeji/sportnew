@@ -71,7 +71,7 @@ class SportOrganizer extends BaseAdminController
              ["remark",""],
 
         ]);
-        $this->validate($data, 'addon\sport\app\validate\sport_organizer\SportOrganizer.add');
+        $this->validate($data, 'addon\sport\app\validate\sport_organizer\SportOrganizer.admin_add');
         $id = (new SportOrganizerService())->add($data);
         return success('ADD_SUCCESS', ['id' => $id]);
     }
@@ -95,7 +95,7 @@ class SportOrganizer extends BaseAdminController
              ["remark",""],
 
         ]);
-        $this->validate($data, 'addon\sport\app\validate\sport_organizer\SportOrganizer.edit');
+        $this->validate($data, 'addon\sport\app\validate\sport_organizer\SportOrganizer.admin_edit');
         (new SportOrganizerService())->edit($id, $data);
         return success('EDIT_SUCCESS');
     }

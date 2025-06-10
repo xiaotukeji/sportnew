@@ -20,24 +20,26 @@ class SportOrganizer extends BaseValidate
 {
 
        protected $rule = [
-            'organizer_id' => 'require',
-            'organizer_type' => 'require',
             'organizer_name' => 'require',
+            'organizer_type' => 'require',
+            'organizer_id' => 'require',
             'sort' => 'require',
             'status' => 'require'
         ];
 
        protected $message = [
-            'organizer_id.require' => ['common_validate.require', ['organizer_id']],
-            'organizer_type.require' => ['common_validate.require', ['organizer_type']],
-            'organizer_name.require' => ['common_validate.require', ['organizer_name']],
-            'sort.require' => ['common_validate.require', ['sort']],
-            'status.require' => ['common_validate.require', ['status']]
+            'organizer_name.require' => '主办方名称不能为空',
+            'organizer_type.require' => '举办者类型不能为空',
+            'organizer_id.require' => '主办方ID不能为空',
+            'sort.require' => '排序不能为空',
+            'status.require' => '状态不能为空'
         ];
 
        protected $scene = [
-            "add" => ['organizer_id', 'member_id', 'organizer_type', 'organizer_name', 'organizer_license', 'contact_name', 'contact_phone', 'sort', 'status', 'remark'],
-            "edit" => ['organizer_id', 'member_id', 'organizer_type', 'organizer_name', 'organizer_license', 'contact_name', 'contact_phone', 'sort', 'status', 'remark']
+            "add" => ['organizer_name', 'organizer_type', 'organizer_license', 'contact_name', 'contact_phone', 'remark'],
+            "edit" => ['organizer_name', 'organizer_type', 'organizer_license', 'contact_name', 'contact_phone', 'remark'],
+            "admin_add" => ['organizer_id', 'member_id', 'organizer_type', 'organizer_name', 'organizer_license', 'contact_name', 'contact_phone', 'sort', 'status', 'remark'],
+            "admin_edit" => ['organizer_id', 'member_id', 'organizer_type', 'organizer_name', 'organizer_license', 'contact_name', 'contact_phone', 'sort', 'status', 'remark']
         ];
 
 }
