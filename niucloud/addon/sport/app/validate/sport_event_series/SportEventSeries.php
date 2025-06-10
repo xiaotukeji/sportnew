@@ -29,17 +29,19 @@ class SportEventSeries extends BaseValidate
         ];
 
        protected $message = [
-            'name.require' => ['common_validate.require', ['name']],
-            'organizer_id.require' => ['common_validate.require', ['organizer_id']],
-            'member_id.require' => ['common_validate.require', ['member_id']],
-            'start_year.require' => ['common_validate.require', ['start_year']],
-            'sort.require' => ['common_validate.require', ['sort']],
-            'status.require' => ['common_validate.require', ['status']]
+            'name.require' => '系列赛名称不能为空',
+            'start_year.require' => '开始年份不能为空',
+            'organizer_id.require' => '主办方ID不能为空',
+            'member_id.require' => '用户ID不能为空',
+            'sort.require' => '排序不能为空',
+            'status.require' => '状态不能为空'
         ];
 
        protected $scene = [
-            "add" => ['name', 'organizer_id', 'member_id', 'description', 'start_year', 'end_year', 'sort', 'status', 'remark'],
-            "edit" => ['name', 'organizer_id', 'member_id', 'description', 'start_year', 'end_year', 'sort', 'status', 'remark']
+            "add" => ['name', 'start_year', 'description', 'remark'],
+            "edit" => ['name', 'start_year', 'description', 'remark'],
+            "admin_add" => ['name', 'organizer_id', 'member_id', 'description', 'start_year', 'end_year', 'sort', 'status', 'remark'],
+            "admin_edit" => ['name', 'organizer_id', 'member_id', 'description', 'start_year', 'end_year', 'sort', 'status', 'remark']
         ];
 
 }

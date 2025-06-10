@@ -69,7 +69,7 @@ class SportEventSeries extends BaseAdminController
              ["remark",""],
 
         ]);
-        $this->validate($data, 'addon\sport\app\validate\sport_event_series\SportEventSeries.add');
+        $this->validate($data, 'addon\sport\app\validate\sport_event_series\SportEventSeries.admin_add');
         $id = (new SportEventSeriesService())->add($data);
         return success('ADD_SUCCESS', ['id' => $id]);
     }
@@ -92,7 +92,7 @@ class SportEventSeries extends BaseAdminController
              ["remark",""],
 
         ]);
-        $this->validate($data, 'addon\sport\app\validate\sport_event_series\SportEventSeries.edit');
+        $this->validate($data, 'addon\sport\app\validate\sport_event_series\SportEventSeries.admin_edit');
         (new SportEventSeriesService())->edit($id, $data);
         return success('EDIT_SUCCESS');
     }

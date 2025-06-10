@@ -672,10 +672,16 @@ const addOrganizerConfirm = async () => {
             ...organizerForm.value,
             organizer_type: formData.value.organizer_type
         }
-        await addOrganizer(params)
+        const result: any = await addOrganizer(params)
         
         // 重新加载主办方列表
         await loadOrganizerList()
+        
+        // 自动选中新添加的主办方
+        if (result && result.data && result.data.id) {
+            formData.value.organizer_id = result.data.id
+            console.log('自动选中新添加的主办方:', result.data.id)
+        }
         
         // 关闭模态框并重置表单
         showOrganizerModal.value = false
@@ -726,10 +732,16 @@ const addSeriesConfirm = async () => {
     }
     
     try {
-        await addEventSeries(seriesForm.value)
+        const result: any = await addEventSeries(seriesForm.value)
         
         // 重新加载系列赛列表
         await loadSeriesList()
+        
+        // 自动选中新添加的系列赛
+        if (result && result.data && result.data.id) {
+            formData.value.series_id = result.data.id
+            console.log('自动选中新添加的系列赛:', result.data.id)
+        }
         
         // 关闭模态框并重置表单
         showSeriesModal.value = false
