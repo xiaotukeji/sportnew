@@ -72,7 +72,7 @@ CREATE TABLE `sport_event` (
     `organizer_id` int(11) NOT NULL COMMENT '主办方ID',
     `organizer_type` tinyint(4) NOT NULL DEFAULT '1' COMMENT '举办者类型：1个人 2单位',
     `sort` int(11) NOT NULL DEFAULT '0' COMMENT '排序',
-    `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态：0禁用 1启用',
+    `status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '状态：0待发布 1进行中 2已结束 3已作废',
     `remark` varchar(255) DEFAULT NULL COMMENT '备注',
     `create_time` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
     `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',

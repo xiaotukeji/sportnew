@@ -10,6 +10,15 @@ export function getEventPageList(params: Record<string, any>) {
 }
 
 /**
+ * 获取我的赛事列表
+ * @param params
+ * @returns
+ */
+export function getEventList(params: Record<string, any>) {
+    return request.get(`sport/event/my-list`, { params })
+}
+
+/**
  * 获取赛事详情
  * @param event_id 赛事ID
  * @returns
@@ -44,6 +53,16 @@ export function editEvent(event_id: number, params: Record<string, any>) {
  */
 export function deleteEvent(event_id: number) {
     return request.delete(`sport/event/${event_id}`, { showErrorMessage: true, showSuccessMessage: true })
+}
+
+/**
+ * 更新赛事状态
+ * @param event_id 赛事ID
+ * @param status 状态：0待发布 1进行中 2已结束 3已作废
+ * @returns
+ */
+export function updateEventStatus(event_id: number, status: number) {
+    return request.put(`sport/event/${event_id}/status`, { status }, { showErrorMessage: true, showSuccessMessage: true })
 }
 
 /**

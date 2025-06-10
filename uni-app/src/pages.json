@@ -34,6 +34,13 @@
                 "navigationBarTitleText": "个人中心"
             }
         },
+        {
+            "path": "addon/sport/pages/member/my-events",
+            "style": {
+                "navigationBarTitleText": "我的赛事"
+            },
+            "needLogin": true
+        },
         // pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
         {
             "path": "app/pages/index/index",

@@ -249,10 +249,8 @@ const handleLogout = () => {
 // 跳转到我的赛事
 const goToMyEvents = () => {
     requireLogin(() => {
-        // TODO: 跳转到我的赛事页面
-        uni.showToast({
-            title: '功能开发中',
-            icon: 'none'
+        uni.navigateTo({
+            url: '/addon/sport/pages/member/my-events'
         });
     }, '/addon/sport/pages/member/index');
 };

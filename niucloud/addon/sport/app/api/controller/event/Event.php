@@ -122,4 +122,34 @@ class Event extends BaseApiController
     {
         return success((new EventService())->getInit());
     }
+
+    /**
+     * 获取我的赛事列表
+     * @return \think\Response
+     */
+    public function myList()
+    {
+        $data = $this->request->params([
+            ['status', ''],            // 状态筛选
+            ['page', 1],               // 页码
+            ['limit', 10],             // 每页数量
+        ]);
+        
+        return success((new EventService())->getMyList($data));
+    }
+
+    /**
+     * 更新赛事状态
+     * @param int $id
+     * @return \think\Response
+     */
+    public function updateStatus(int $id)
+    {
+        $data = $this->request->params([
+            ['status', 0],  // 新状态：0待发布 1进行中 2已结束 3已作废
+        ]);
+        
+        (new EventService())->updateStatus($id, $data['status']);
+        return success('UPDATE_SUCCESS');
+    }
 } 

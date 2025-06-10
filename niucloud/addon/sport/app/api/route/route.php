@@ -50,6 +50,12 @@ Route::group('sport', function() {
     // 获取赛事创建初始化数据
     Route::get('event/init', 'addon\sport\app\api\controller\event\Event@init');
     
+    // 获取我的赛事列表
+    Route::get('event/my-list', 'addon\sport\app\api\controller\event\Event@myList');
+    
+    // 更新赛事状态
+    Route::put('event/:id/status', 'addon\sport\app\api\controller\event\Event@updateStatus');
+    
     /***************************************************** 主办方管理 ****************************************************/
     
     // 获取用户主办方列表
