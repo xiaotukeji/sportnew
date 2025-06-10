@@ -73,6 +73,9 @@ class SportEvent extends BaseModel
         'end_time' => 'integer',
         'organizer_id' => 'integer',
         'organizer_type' => 'integer',
+        'member_id' => 'integer',
+        'latitude' => 'float',
+        'longitude' => 'float',
         'sort' => 'integer',
         'status' => 'integer',
         'create_time' => 'integer',
@@ -86,8 +89,8 @@ class SportEvent extends BaseModel
      */
     protected $field = [
         'id', 'series_id', 'name', 'event_type', 'year', 'season', 'start_time', 
-        'end_time', 'location', 'lng', 'lat', 'full_address', 'organizer_id', 
-        'organizer_type', 'sort', 'status', 'remark', 'create_time', 'update_time', 'delete_time'
+        'end_time', 'location', 'location_detail', 'latitude', 'longitude', 'organizer_id', 
+        'organizer_type', 'member_id', 'sort', 'status', 'remark', 'create_time', 'update_time', 'delete_time'
     ];
 
     /**

@@ -69,8 +69,12 @@ CREATE TABLE `sport_event` (
     `start_time` int(11) NOT NULL COMMENT '开始时间',
     `end_time` int(11) NOT NULL COMMENT '结束时间',
     `location` varchar(200) NOT NULL COMMENT '举办地点',
+    `location_detail` varchar(500) DEFAULT NULL COMMENT '详细地址',
+    `latitude` decimal(10,7) DEFAULT NULL COMMENT '纬度',
+    `longitude` decimal(10,7) DEFAULT NULL COMMENT '经度',
     `organizer_id` int(11) NOT NULL COMMENT '主办方ID',
     `organizer_type` tinyint(4) NOT NULL DEFAULT '1' COMMENT '举办者类型：1个人 2单位',
+    `member_id` int(11) NOT NULL DEFAULT '0' COMMENT '发布者ID',
     `sort` int(11) NOT NULL DEFAULT '0' COMMENT '排序',
     `status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '状态：0待发布 1进行中 2已结束 3已作废',
     `remark` varchar(255) DEFAULT NULL COMMENT '备注',
@@ -78,7 +82,8 @@ CREATE TABLE `sport_event` (
     `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
     `delete_time` int(11) DEFAULT NULL COMMENT '删除时间',
     PRIMARY KEY (`id`),
-    KEY `idx_series_id` (`series_id`)
+    KEY `idx_series_id` (`series_id`),
+    KEY `idx_member_id` (`member_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事表';
 
 -- 项目大类表

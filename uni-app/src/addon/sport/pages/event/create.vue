@@ -1084,11 +1084,22 @@ const handleSubmit = async () => {
             finalFullAddress += (finalFullAddress ? ' ' : '') + formData.value.address_detail
         }
         
-        // 提交数据
-        const submitData = {
-            ...formData.value,
-            full_address: finalFullAddress
+        // 提交数据 - 映射字段名
+        const submitData: any = {
+            name: formData.value.name,
+            location: formData.value.location,
+            location_detail: finalFullAddress, // 详细地址
+            latitude: formData.value.lat ? parseFloat(formData.value.lat) : null,   // 纬度
+            longitude: formData.value.lng ? parseFloat(formData.value.lng) : null,  // 经度
+            start_time: formData.value.start_time,
+            end_time: formData.value.end_time,
+            organizer_id: formData.value.organizer_id,
+            event_type: formData.value.event_type,
+            series_id: formData.value.series_id,
+            year: formData.value.year
         }
+        
+        console.log('提交数据:', submitData)
         
         const result: any = await addEvent(submitData)
         

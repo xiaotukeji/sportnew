@@ -122,6 +122,7 @@ class EventService extends BaseApiService
         $data['update_time'] = time();
         $data['status'] = 0;  // 默认状态为待发布
         $data['sort'] = 0;
+        $data['member_id'] = $this->member_id;  // 设置发布者ID
         
         $res = $this->model->save($data);
         return $this->model->id;
@@ -194,11 +195,9 @@ class EventService extends BaseApiService
     private function checkEventPermission(int $event_id)
     {
         $event = $this->model
-            ->alias('e')
-            ->join('sport_organizer so', 'e.organizer_id = so.id')
             ->where([
-                ['e.id', '=', $event_id],
-                ['so.member_id', '=', $this->member_id]
+                ['id', '=', $event_id],
+                ['member_id', '=', $this->member_id]
             ])
             ->findOrEmpty();
             
@@ -256,11 +255,11 @@ class EventService extends BaseApiService
      */
     public function getMyList(array $data = [])
     {
-        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.organizer_id, se.organizer_type, se.status, se.remark, se.create_time, se.update_time';
+        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.status, se.remark, se.create_time, se.update_time';
         $order = 'se.id desc';
 
         $where = [
-            ['so.member_id', '=', $this->member_id]  // 只查询当前用户的赛事
+            ['se.member_id', '=', $this->member_id]  // 直接根据member_id查询当前用户的赛事
         ];
 
         // 状态筛选
@@ -270,23 +269,18 @@ class EventService extends BaseApiService
 
         $search_model = $this->model
             ->alias('se')
-            ->join('sport_organizer so', 'se.organizer_id = so.id')
+            ->leftJoin('sport_organizer so', 'se.organizer_id = so.id')
             ->leftJoin('sport_event_series ses', 'se.series_id = ses.id')
             ->where($where)
             ->field($field . ', so.organizer_name, ses.name as series_name')
             ->order($order)
-            ->append(['start_time_text', 'end_time_text', 'event_type_text', 'organizer_type_text']);
+            ->append(['start_time_text', 'end_time_text', 'event_type_text', 'organizer_type_text', 'status_text']);
 
         $list = $this->pageQuery($search_model);
         
-        // 添加状态统计 - 暂时使用固定值
-        $list['status_count'] = [
-            'total' => count($list['data'] ?? []),
-            '0' => 0,
-            '1' => 0,
-            '2' => 0,
-            '3' => 0
-        ];
+        // 获取状态统计
+        $status_count = $this->getStatusCount();
+        $list['status_count'] = $status_count;
         
         return $list;
     }
@@ -307,44 +301,34 @@ class EventService extends BaseApiService
         
         // 分别查询各个状态的数量
         $total = $this->model
-            ->alias('se')
-            ->join('sport_organizer so', 'se.organizer_id = so.id')
-            ->where([['so.member_id', '=', $this->member_id]])
+            ->where([['member_id', '=', $this->member_id]])
             ->count();
             
         $status0 = $this->model
-            ->alias('se')
-            ->join('sport_organizer so', 'se.organizer_id = so.id')
             ->where([
-                ['so.member_id', '=', $this->member_id],
-                ['se.status', '=', 0]
+                ['member_id', '=', $this->member_id],
+                ['status', '=', 0]
             ])
             ->count();
             
         $status1 = $this->model
-            ->alias('se')
-            ->join('sport_organizer so', 'se.organizer_id = so.id')
             ->where([
-                ['so.member_id', '=', $this->member_id],
-                ['se.status', '=', 1]
+                ['member_id', '=', $this->member_id],
+                ['status', '=', 1]
             ])
             ->count();
             
         $status2 = $this->model
-            ->alias('se')
-            ->join('sport_organizer so', 'se.organizer_id = so.id')
             ->where([
-                ['so.member_id', '=', $this->member_id],
-                ['se.status', '=', 2]
+                ['member_id', '=', $this->member_id],
+                ['status', '=', 2]
             ])
             ->count();
             
         $status3 = $this->model
-            ->alias('se')
-            ->join('sport_organizer so', 'se.organizer_id = so.id')
             ->where([
-                ['so.member_id', '=', $this->member_id],
-                ['se.status', '=', 3]
+                ['member_id', '=', $this->member_id],
+                ['status', '=', 3]
             ])
             ->count();
         
