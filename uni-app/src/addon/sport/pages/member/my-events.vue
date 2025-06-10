@@ -10,7 +10,8 @@
                 @tap="switchStatus(tab.value)"
             >
                 <text class="tab-text">{{ tab.label }}</text>
-                <view v-if="tab.count !== undefined" class="tab-badge">{{ tab.count }}</view>
+                <!-- 暂时隐藏统计数字 -->
+                <!-- <view v-if="tab.count !== undefined" class="tab-badge">{{ tab.count }}</view> -->
             </view>
         </view>
         
@@ -201,10 +202,10 @@ const loadEventList = async (isLoadMore = false) => {
             eventList.value = newList
         }
         
-        // 更新状态统计
-        if (response.data?.status_count) {
-            updateStatusCount(response.data.status_count)
-        }
+        // 更新状态统计 - 暂时注释
+        // if (response.data?.status_count) {
+        //     updateStatusCount(response.data.status_count)
+        // }
         
         hasMore.value = newList.length >= 10
         
