@@ -693,6 +693,7 @@ CREATE TABLE `sport_organizer` (
     `organizer_type` tinyint(4) NOT NULL DEFAULT '1' COMMENT '主办方类型：1个人 2单位',
     `organizer_name` varchar(100) NOT NULL COMMENT '主办方名称',
     `organizer_license` varchar(255) DEFAULT NULL COMMENT '单位证件',
+    `organizer_license_img` varchar(500) DEFAULT NULL COMMENT '机构证件图片',
     `contact_name` varchar(50) DEFAULT NULL COMMENT '联系人',
     `contact_phone` varchar(20) DEFAULT NULL COMMENT '联系电话',
     `sort` int(11) NOT NULL DEFAULT '0' COMMENT '排序',

@@ -155,11 +155,13 @@
                             :value="selectedOrganizerName" 
                             placeholder="请选择主办方"
                             disabled
-                            @tap="showOrganizerPicker = true"
+                            @tap="openOrganizerPicker"
                         />
-                        <view class="form-tip" v-if="!organizerList.length">
-                            <text class="tip-text">暂无主办方，</text>
-                            <text class="tip-link" @tap="showOrganizerModal = true">点击添加</text>
+                        <view class="form-tip">
+                            <text class="tip-text" v-if="!organizerList.length">暂无主办方，</text>
+                            <text class="tip-link" @tap="showOrganizerModal = true">
+                                {{ organizerList.length ? '添加新主办方' : '点击添加' }}
+                            </text>
                         </view>
                     </view>
                 </view>
@@ -197,11 +199,13 @@
                             :value="selectedSeriesName" 
                             placeholder="请选择系列赛"
                             disabled
-                            @tap="showSeriesPicker = true"
+                            @tap="openSeriesPicker"
                         />
-                        <view class="form-tip" v-if="!seriesList.length">
-                            <text class="tip-text">暂无系列赛，</text>
-                            <text class="tip-link" @tap="showSeriesModal = true">点击添加</text>
+                        <view class="form-tip">
+                            <text class="tip-text" v-if="!seriesList.length">暂无系列赛，</text>
+                            <text class="tip-link" @tap="showSeriesModal = true">
+                                {{ seriesList.length ? '添加新系列赛' : '点击添加' }}
+                            </text>
                         </view>
                     </view>
                 </view>
@@ -223,26 +227,40 @@
 
         
         <!-- 主办方选择器 -->
-        <picker
-            v-if="showOrganizerPicker"
-            :range="organizerPickerList"
-            range-key="organizer_name"
-            @change="onOrganizerChange"
-            @cancel="showOrganizerPicker = false"
-        >
-            <view></view>
-        </picker>
+        <view v-if="showOrganizerPicker" class="picker-mask" @tap="showOrganizerPicker = false">
+            <view class="picker-container" @tap.stop>
+                <view class="picker-header">
+                    <text class="picker-cancel" @tap="showOrganizerPicker = false">取消</text>
+                    <text class="picker-title">选择主办方</text>
+                    <text class="picker-confirm" @tap="confirmOrganizerSelection">确定</text>
+                </view>
+                <picker-view class="picker-view" :value="[selectedOrganizerIndex]" @change="onOrganizerPickerChange">
+                    <picker-view-column>
+                        <view v-for="(item, index) in organizerPickerList" :key="index" class="picker-item">
+                            {{ item.organizer_name }}
+                        </view>
+                    </picker-view-column>
+                </picker-view>
+            </view>
+        </view>
         
         <!-- 系列赛选择器 -->
-        <picker
-            v-if="showSeriesPicker"
-            :range="seriesPickerList"
-            range-key="name"
-            @change="onSeriesChange"
-            @cancel="showSeriesPicker = false"
-        >
-            <view></view>
-        </picker>
+        <view v-if="showSeriesPicker" class="picker-mask" @tap="showSeriesPicker = false">
+            <view class="picker-container" @tap.stop>
+                <view class="picker-header">
+                    <text class="picker-cancel" @tap="showSeriesPicker = false">取消</text>
+                    <text class="picker-title">选择系列赛</text>
+                    <text class="picker-confirm" @tap="confirmSeriesSelection">确定</text>
+                </view>
+                <picker-view class="picker-view" :value="[selectedSeriesIndex]" @change="onSeriesPickerChange">
+                    <picker-view-column>
+                        <view v-for="(item, index) in seriesPickerList" :key="index" class="picker-item">
+                            {{ item.name }}
+                        </view>
+                    </picker-view-column>
+                </picker-view>
+            </view>
+        </view>
         
         <!-- 添加主办方模态框 -->
         <view v-if="showOrganizerModal" class="modal-mask" @tap="cancelOrganizerModal">
@@ -431,6 +449,21 @@ const seriesPickerList = computed(() => {
     return seriesList.value
 })
 
+// 选择器临时索引
+const tempOrganizerIndex = ref(0)
+const tempSeriesIndex = ref(0)
+
+// 选中的索引
+const selectedOrganizerIndex = computed(() => {
+    const index = organizerList.value.findIndex((item: any) => item.id === formData.value.organizer_id)
+    return index >= 0 ? index : 0
+})
+
+const selectedSeriesIndex = computed(() => {
+    const index = seriesList.value.findIndex((item: any) => item.id === formData.value.series_id)
+    return index >= 0 ? index : 0
+})
+
 // 选中的显示名称
 const selectedOrganizerName = computed(() => {
     const organizer = organizerList.value.find((item: any) => item.id === formData.value.organizer_id)
@@ -613,19 +646,56 @@ const handleEventTypeChange = (value: number) => {
 }
 
 /**
+ * 打开选择器
+ */
+const openOrganizerPicker = () => {
+    if (!organizerList.value.length) {
+        uni.showToast({
+            title: '暂无主办方数据',
+            icon: 'none'
+        })
+        return
+    }
+    tempOrganizerIndex.value = selectedOrganizerIndex.value
+    showOrganizerPicker.value = true
+}
+
+const openSeriesPicker = () => {
+    if (!seriesList.value.length) {
+        uni.showToast({
+            title: '暂无系列赛数据',
+            icon: 'none'
+        })
+        return
+    }
+    tempSeriesIndex.value = selectedSeriesIndex.value
+    showSeriesPicker.value = true
+}
+
+/**
  * 选择器变化
  */
-const onOrganizerChange = (e: any) => {
-    const index = e.detail.value
-    const selected = organizerPickerList.value[index]
-    formData.value.organizer_id = selected.id
+const onOrganizerPickerChange = (e: any) => {
+    tempOrganizerIndex.value = e.detail.value[0]
+}
+
+const onSeriesPickerChange = (e: any) => {
+    tempSeriesIndex.value = e.detail.value[0]
+}
+
+const confirmOrganizerSelection = () => {
+    if (organizerPickerList.value[tempOrganizerIndex.value]) {
+        const selected = organizerPickerList.value[tempOrganizerIndex.value]
+        formData.value.organizer_id = selected.id
+    }
     showOrganizerPicker.value = false
 }
 
-const onSeriesChange = (e: any) => {
-    const index = e.detail.value
-    const selected = seriesPickerList.value[index]
-    formData.value.series_id = selected.id
+const confirmSeriesSelection = () => {
+    if (seriesPickerList.value[tempSeriesIndex.value]) {
+        const selected = seriesPickerList.value[tempSeriesIndex.value]
+        formData.value.series_id = selected.id
+    }
     showSeriesPicker.value = false
 }
 
@@ -1205,5 +1275,58 @@ onMounted(() => {
             color: white;
         }
     }
+}
+
+.picker-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.picker-container {
+    background: white;
+    width: 100%;
+    border-radius: 24rpx 24rpx 0 0;
+}
+
+.picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 32rpx;
+    border-bottom: 1px solid #f0f0f0;
+    
+    .picker-cancel,
+    .picker-confirm {
+        font-size: 28rpx;
+        color: #007aff;
+        cursor: pointer;
+    }
+    
+    .picker-title {
+        font-size: 32rpx;
+        font-weight: bold;
+        color: #333;
+    }
+}
+
+.picker-view {
+    height: 500rpx;
+}
+
+.picker-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100rpx;
+    font-size: 28rpx;
+    color: #333;
 }
 </style> 
