@@ -193,6 +193,14 @@ const loadEventList = async (isLoadMore = false) => {
             status: currentStatus.value === 'all' ? '' : currentStatus.value
         }
         
+        // 调试：输出前端发送的参数
+        console.log('前端发送参数:', {
+            currentStatus: currentStatus.value,
+            params: params,
+            statusIsEmpty: params.status === '',
+            statusType: typeof params.status
+        })
+        
         const response: any = await getEventList(params)
         
         // 适配后端分页数据结构

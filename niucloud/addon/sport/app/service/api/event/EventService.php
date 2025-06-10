@@ -256,10 +256,7 @@ class EventService extends BaseApiService
     public function getMyList(array $data = [])
     {
         // 调试：记录服务层接收的参数
-        \think\facade\Log::info('EventService MyList Debug:', [
-            'input_data' => $data,
-            'member_id' => $this->member_id
-        ]);
+        \think\facade\Log::info('EventService MyList Debug: input_data=' . json_encode($data) . ', member_id=' . $this->member_id);
         
         $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.status, se.remark, se.create_time, se.update_time';
         $order = 'se.id desc';
@@ -272,18 +269,9 @@ class EventService extends BaseApiService
         if (isset($data['status']) && $data['status'] !== '' && is_numeric($data['status'])) {
             $status_value = (int)$data['status'];
             $where[] = ['se.status', '=', $status_value];
-            \think\facade\Log::info('Status Filter Applied:', [
-                'original_status' => $data['status'],
-                'converted_status' => $status_value,
-                'where_conditions' => $where
-            ]);
+            \think\facade\Log::info('Status Filter Applied: original=' . $data['status'] . ', converted=' . $status_value . ', where=' . json_encode($where));
         } else {
-            \think\facade\Log::info('No Status Filter Applied:', [
-                'status_isset' => isset($data['status']),
-                'status_not_empty' => $data['status'] !== '',
-                'status_is_numeric' => is_numeric($data['status'] ?? ''),
-                'status_value' => $data['status'] ?? 'not_set'
-            ]);
+            \think\facade\Log::info('No Status Filter Applied: isset=' . (isset($data['status']) ? 'true' : 'false') . ', not_empty=' . (($data['status'] ?? '') !== '' ? 'true' : 'false') . ', is_numeric=' . (is_numeric($data['status'] ?? '') ? 'true' : 'false') . ', value=' . ($data['status'] ?? 'not_set'));
         }
 
         $search_model = $this->model
