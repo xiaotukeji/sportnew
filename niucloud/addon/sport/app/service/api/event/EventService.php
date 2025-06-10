@@ -258,6 +258,9 @@ class EventService extends BaseApiService
         $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.status, se.remark, se.create_time, se.update_time';
         $order = 'se.id desc';
 
+        // 调试：输出当前用户ID
+        \think\facade\Log::info('Sport Event MyList Debug - Current member_id: ' . $this->member_id);
+
         $where = [
             ['se.member_id', '=', $this->member_id]  // 直接根据member_id查询当前用户的赛事
         ];
@@ -265,7 +268,10 @@ class EventService extends BaseApiService
         // 状态筛选
         if (!empty($data['status']) && $data['status'] !== '') {
             $where[] = ['se.status', '=', $data['status']];
+            \think\facade\Log::info('Sport Event MyList Debug - Status filter: ' . $data['status']);
         }
+
+        \think\facade\Log::info('Sport Event MyList Debug - Where conditions: ' . json_encode($where));
 
         $search_model = $this->model
             ->alias('se')
@@ -276,7 +282,13 @@ class EventService extends BaseApiService
             ->order($order)
             ->append(['start_time_text', 'end_time_text', 'event_type_text', 'organizer_type_text', 'status_text']);
 
+        // 调试：输出生成的SQL
+        \think\facade\Log::info('Sport Event MyList Debug - Generated SQL: ' . $search_model->getLastSql());
+
         $list = $this->pageQuery($search_model);
+        
+        // 调试：输出查询结果
+        \think\facade\Log::info('Sport Event MyList Debug - Query result count: ' . count($list['data'] ?? []));
         
         // 获取状态统计
         $status_count = $this->getStatusCount();
