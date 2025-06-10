@@ -264,7 +264,7 @@ class EventService extends BaseApiService
         ];
 
         // 状态筛选
-        if ($data['status'] !== '') {
+        if (!empty($data['status']) && $data['status'] !== '') {
             $where[] = ['se.status', '=', $data['status']];
         }
 
@@ -277,7 +277,7 @@ class EventService extends BaseApiService
             ->order($order)
             ->append(['start_time_text', 'end_time_text', 'event_type_text', 'organizer_type_text']);
 
-        $list = $this->pageQuery($search_model, $data['page'], $data['limit']);
+        $list = $this->pageQuery($search_model);
         
         // 添加状态统计
         $status_count = $this->getStatusCount();

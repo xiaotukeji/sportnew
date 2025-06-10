@@ -87,7 +87,7 @@ class SportEvent extends BaseModel
     protected $field = [
         'id', 'series_id', 'name', 'event_type', 'year', 'season', 'start_time', 
         'end_time', 'location', 'lng', 'lat', 'full_address', 'organizer_id', 
-        'organizer_type', 'sort', 'status', 'remark', 'create_time', 'update_time'
+        'organizer_type', 'sort', 'status', 'remark', 'create_time', 'update_time', 'delete_time'
     ];
 
     /**
@@ -146,8 +146,10 @@ class SportEvent extends BaseModel
     public function getStatusTextAttr($value, $data)
     {
         $status = [
-            0 => '禁用',
-            1 => '启用'
+            0 => '待发布',
+            1 => '进行中',
+            2 => '已结束',
+            3 => '已作废'
         ];
         return $status[$data['status']] ?? '未知';
     }

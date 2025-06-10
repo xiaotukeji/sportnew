@@ -1,7 +1,10 @@
 -- 更新sport_event表的status字段定义
 -- 将状态含义从 0禁用 1启用 改为 0待发布 1进行中 2已结束 3已作废
 
--- 1. 修改字段注释
+-- 1. 添加delete_time字段（软删除需要）
+ALTER TABLE `sport_event` ADD COLUMN `delete_time` int(11) DEFAULT NULL COMMENT '删除时间';
+
+-- 2. 修改字段注释
 ALTER TABLE `sport_event` MODIFY COLUMN `status` tinyint(4) NOT NULL DEFAULT '0' COMMENT '状态：0待发布 1进行中 2已结束 3已作废';
 
 -- 2. 更新现有数据的状态

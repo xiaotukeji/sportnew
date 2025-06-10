@@ -131,8 +131,6 @@ class Event extends BaseApiController
     {
         $data = $this->request->params([
             ['status', ''],            // 状态筛选
-            ['page', 1],               // 页码
-            ['limit', 10],             // 每页数量
         ]);
         
         return success((new EventService())->getMyList($data));

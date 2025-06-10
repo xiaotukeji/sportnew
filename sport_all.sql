@@ -76,6 +76,7 @@ CREATE TABLE `sport_event` (
     `remark` varchar(255) DEFAULT NULL COMMENT '备注',
     `create_time` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
     `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+    `delete_time` int(11) DEFAULT NULL COMMENT '删除时间',
     PRIMARY KEY (`id`),
     KEY `idx_series_id` (`series_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事表';

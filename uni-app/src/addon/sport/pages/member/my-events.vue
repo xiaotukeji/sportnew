@@ -189,8 +189,7 @@ const loadEventList = async (isLoadMore = false) => {
         const params = {
             page: page.value,
             limit: 10,
-            status: currentStatus.value === 'all' ? '' : currentStatus.value,
-            my_events: 1  // 只查看我的赛事
+            status: currentStatus.value === 'all' ? '' : currentStatus.value
         }
         
         const response: any = await getEventList(params)
