@@ -137,7 +137,7 @@ class Event extends BaseApiController
         ]);
         
         // 调试：记录控制器接收的参数
-        \think\facade\Log::info('MyList Controller Debug: raw_request=' . json_encode($this->request->param()) . ', processed_data=' . json_encode($data) . ', method=' . $this->request->method() . ', status=' . $data['status']);
+        \think\facade\Log::info('MyList Controller Debug: raw_request=' . json_encode($this->request->params()) . ', processed_data=' . json_encode($data) . ', method=' . $this->request->method() . ', status=' . $data['status']);
         
         return success((new EventService())->getMyList($data));
     }
