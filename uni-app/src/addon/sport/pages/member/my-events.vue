@@ -194,20 +194,9 @@ const loadEventList = async (isLoadMore = false) => {
         }
         
         const response: any = await getEventList(params)
-        console.log('原始API响应:', response)
         
         // 适配后端分页数据结构
         const newList = response.data?.data || []
-        
-        // 调试：检查每个事件的状态值
-        newList.forEach((event: any, index: number) => {
-            console.log(`事件${index + 1} 状态信息:`, {
-                name: event.name,
-                status: event.status,
-                status_type: typeof event.status,
-                status_text: getStatusText(event.status)
-            })
-        })
         const total = response.data?.total || 0
         const currentPage = response.data?.current_page || 1
         const lastPage = response.data?.last_page || 1
@@ -226,12 +215,7 @@ const loadEventList = async (isLoadMore = false) => {
         // 根据分页信息判断是否还有更多数据
         hasMore.value = currentPage < lastPage
         
-        console.log('加载赛事列表成功:', {
-            status: currentStatus.value,
-            page: page.value,
-            count: newList.length,
-            total: eventList.value.length
-        })
+        // 加载完成
         
     } catch (error) {
         console.error('加载赛事列表失败:', error)
