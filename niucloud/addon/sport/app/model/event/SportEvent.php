@@ -14,7 +14,7 @@ namespace addon\sport\app\model\event;
 use core\base\BaseModel;
 use think\model\concern\SoftDelete;
 use addon\sport\app\model\organizer\SportOrganizer;
-use addon\sport\app\model\event_series\SportEventSeries;
+use addon\sport\app\model\series\SportEventSeries;
 
 /**
  * 赛事模型
