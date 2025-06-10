@@ -274,6 +274,7 @@ class EventService extends BaseApiService
         \think\facade\Log::info('Sport Event MyList Debug - Where conditions: ' . json_encode($where));
 
         $search_model = $this->model
+            ->withTrashed()  // 临时包含软删除数据来测试
             ->alias('se')
             ->leftJoin('sport_organizer so', 'se.organizer_id = so.id')
             ->leftJoin('sport_event_series ses', 'se.series_id = ses.id')
@@ -285,10 +286,27 @@ class EventService extends BaseApiService
         // 调试：输出生成的SQL
         \think\facade\Log::info('Sport Event MyList Debug - Generated SQL: ' . $search_model->getLastSql());
 
+        // 先执行一个简单的计数查询来验证
+        $simple_count = $this->model->where([['member_id', '=', $this->member_id]])->count();
+        \think\facade\Log::info('Sport Event MyList Debug - Simple count query result: ' . $simple_count);
+        
+        // 测试包含软删除的计数
+        $with_trashed_count = $this->model->withTrashed()->where([['member_id', '=', $this->member_id]])->count();
+        \think\facade\Log::info('Sport Event MyList Debug - With trashed count: ' . $with_trashed_count);
+        
+        // 测试不带JOIN的查询
+        $simple_list = $this->model
+            ->withTrashed()  // 也包含软删除数据测试
+            ->where([['member_id', '=', $this->member_id]])
+            ->limit(5)
+            ->select()
+            ->toArray();
+        \think\facade\Log::info('Sport Event MyList Debug - Simple query result: ' . json_encode($simple_list));
+
         $list = $this->pageQuery($search_model);
         
         // 调试：输出查询结果
-        \think\facade\Log::info('Sport Event MyList Debug - Query result count: ' . count($list['data'] ?? []));
+        \think\facade\Log::info('Sport Event MyList Debug - PageQuery result: ' . json_encode($list));
         
         // 获取状态统计
         $status_count = $this->getStatusCount();
