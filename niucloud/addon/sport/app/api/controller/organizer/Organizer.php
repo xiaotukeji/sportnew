@@ -50,7 +50,7 @@ class Organizer extends BaseApiController
         ]);
 
         // 验证必填字段
-        $this->validate($data, 'addon\sport\app\validate\organizer\Organizer.add');
+        $this->validate($data, 'addon\sport\app\validate\sport_organizer\SportOrganizer.add');
         
         $id = (new OrganizerService())->add($data);
         return success('ADD_SUCCESS', ['id' => $id]);
@@ -83,7 +83,7 @@ class Organizer extends BaseApiController
         ]);
 
         // 验证必填字段
-        $this->validate($data, 'addon\sport\app\validate\organizer\Organizer.edit');
+        $this->validate($data, 'addon\sport\app\validate\sport_organizer\SportOrganizer.edit');
         
         (new OrganizerService())->edit($id, $data);
         return success('EDIT_SUCCESS');
