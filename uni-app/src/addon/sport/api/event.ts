@@ -15,7 +15,7 @@ export function getEventPageList(params: Record<string, any>) {
  * @returns
  */
 export function getEventList(params: Record<string, any>) {
-    return request.get(`sport/event/my-list`, { params })
+    return request.get(`sport/event/my-list`, params)
 }
 
 /**

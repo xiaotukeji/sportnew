@@ -129,16 +129,15 @@ class Event extends BaseApiController
      */
     public function myList()
     {
-        // 修复：正确获取前端发送的params参数
-        $params = $this->request->param('params', []);
-        $data = [
-            'status' => $params['status'] ?? '',
-            'page' => (int)($params['page'] ?? 1),
-            'limit' => (int)($params['limit'] ?? 15),
-        ];
+        // 统一使用params()方法获取参数，与商城购物车保持一致
+        $data = $this->request->params([
+            ['status', ''],            // 状态筛选
+            ['page', 1],              // 页码
+            ['limit', 15],            // 每页数量
+        ]);
         
         // 调试：记录控制器接收的参数
-        \think\facade\Log::info('MyList Controller Debug: raw_request=' . json_encode($this->request->param()) . ', params=' . json_encode($params) . ', processed_data=' . json_encode($data) . ', method=' . $this->request->method() . ', status=' . $data['status']);
+        \think\facade\Log::info('MyList Controller Debug: raw_request=' . json_encode($this->request->param()) . ', processed_data=' . json_encode($data) . ', method=' . $this->request->method() . ', status=' . $data['status']);
         
         return success((new EventService())->getMyList($data));
     }
