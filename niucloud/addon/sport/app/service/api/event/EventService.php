@@ -264,7 +264,15 @@ class EventService extends BaseApiService
 
         // 状态筛选
         if (!empty($data['status']) && $data['status'] !== '') {
-            $where[] = ['se.status', '=', $data['status']];
+            // 调试：记录状态筛选参数
+            \think\facade\Log::info('Status Filter Debug:', [
+                'raw_status' => $data['status'],
+                'status_type' => gettype($data['status']),
+                'is_numeric' => is_numeric($data['status']),
+                'int_value' => (int)$data['status']
+            ]);
+            
+            $where[] = ['se.status', '=', (int)$data['status']];  // 确保转换为整数
         }
 
         $search_model = $this->model
