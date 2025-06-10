@@ -194,7 +194,13 @@ const loadEventList = async (isLoadMore = false) => {
         }
         
         const response: any = await getEventList(params)
-        const newList = response.data?.list || []
+        console.log('原始API响应:', response)
+        
+        // 适配后端分页数据结构
+        const newList = response.data?.data || []
+        const total = response.data?.total || 0
+        const currentPage = response.data?.current_page || 1
+        const lastPage = response.data?.last_page || 1
         
         if (isLoadMore) {
             eventList.value = [...eventList.value, ...newList]
@@ -202,12 +208,13 @@ const loadEventList = async (isLoadMore = false) => {
             eventList.value = newList
         }
         
-        // 更新状态统计 - 暂时注释
-        // if (response.data?.status_count) {
-        //     updateStatusCount(response.data.status_count)
-        // }
+        // 更新状态统计
+        if (response.data?.status_count) {
+            updateStatusCount(response.data.status_count)
+        }
         
-        hasMore.value = newList.length >= 10
+        // 根据分页信息判断是否还有更多数据
+        hasMore.value = currentPage < lastPage
         
         console.log('加载赛事列表成功:', {
             status: currentStatus.value,
