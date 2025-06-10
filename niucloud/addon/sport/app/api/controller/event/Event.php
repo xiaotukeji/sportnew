@@ -69,7 +69,7 @@ class Event extends BaseApiController
         ]);
 
         // 验证必填字段
-        $this->validate($data, 'addon\sport\app\validate\event\Event.add');
+        $this->validate($data, 'addon\sport\app\validate\sport_event\SportEvent.add');
         
         $id = (new EventService())->add($data);
         return success('ADD_SUCCESS', ['id' => $id]);
@@ -97,7 +97,7 @@ class Event extends BaseApiController
         ]);
 
         // 验证必填字段
-        $this->validate($data, 'addon\sport\app\validate\event\Event.edit');
+        $this->validate($data, 'addon\sport\app\validate\sport_event\SportEvent.edit');
         
         (new EventService())->edit($id, $data);
         return success('EDIT_SUCCESS');

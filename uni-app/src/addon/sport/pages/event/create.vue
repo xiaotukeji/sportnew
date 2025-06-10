@@ -129,24 +129,6 @@
                 <view class="form-section">
                     <view class="section-title">组织信息</view>
                     
-                    <!-- 举办者类型 -->
-                    <view class="form-item">
-                        <view class="form-label required">举办者类型</view>
-                        <view class="radio-group">
-                            <view 
-                                v-for="item in organizerTypeOptions" 
-                                :key="item.value" 
-                                class="radio-item"
-                                @tap="handleOrganizerTypeChange(item.value)"
-                            >
-                                <view class="radio-circle" :class="{ 'active': formData.organizer_type === item.value }">
-                                    <view class="radio-dot" v-if="formData.organizer_type === item.value"></view>
-                                </view>
-                                <text class="radio-label">{{ item.label }}</text>
-                            </view>
-                        </view>
-                    </view>
-                    
                     <!-- 主办方 -->
                     <view class="form-item">
                         <view class="form-label required">主办方</view>
@@ -271,13 +253,52 @@
                 </view>
                 <view class="modal-content">
                     <view class="form-item">
+                        <view class="form-label required">类型</view>
+                        <radio-group @change="onOrganizerTypeChange">
+                            <view class="radio-group">
+                                <label class="radio-item" v-for="option in organizerTypeOptions" :key="option.value">
+                                    <radio 
+                                        :value="option.value" 
+                                        :checked="organizerForm.organizer_type === option.value"
+                                    />
+                                    <text class="radio-text">{{ option.label }}</text>
+                                </label>
+                            </view>
+                        </radio-group>
+                    </view>
+                    <view class="form-item">
                         <view class="form-label required">名称</view>
                         <input 
                             class="form-input" 
                             v-model="organizerForm.organizer_name" 
-                            placeholder="请输入主办方名称"
+                            :placeholder="organizerForm.organizer_type === 1 ? '请输入姓名（个人）' : '请输入机构名称（单位）'"
                             maxlength="100"
                         />
+                    </view>
+                    <!-- 机构证件上传（仅机构显示） -->
+                    <!-- 调试信息：organizerForm.organizer_type = {{ organizerForm.organizer_type }} -->
+                    <view v-if="organizerForm.organizer_type === 2" class="form-item">
+                        <view class="form-label">机构证件</view>
+                        <view class="upload-container">
+                            <!-- 已上传的图片预览 -->
+                            <view v-if="organizerForm.organizer_license_img" class="image-preview">
+                                <image 
+                                    :src="img(organizerForm.organizer_license_img)" 
+                                    class="preview-image"
+                                    @click="previewOrganizerImage"
+                                    mode="aspectFill"
+                                />
+                                <view class="delete-btn" @click="deleteOrganizerImage">
+                                    <text class="nc-iconfont nc-icon-guanbiV6xx"></text>
+                                </view>
+                            </view>
+                            
+                            <!-- 上传按钮 -->
+                            <view v-else class="upload-btn" @click="chooseOrganizerImage">
+                                <text class="nc-iconfont nc-icon-xiangjiV6xx"></text>
+                                <text class="upload-text">上传机构证件（可选）</text>
+                            </view>
+                        </view>
                     </view>
                     <view class="form-item">
                         <view class="form-label">联系人</view>
@@ -353,6 +374,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useLoginCheck } from '@/addon/sport/hooks/useLoginCheck'
+import { uploadImage } from '@/app/api/system'
+import { img } from '@/utils/common'
 import { 
     addEvent, 
     getOrganizerList, 
@@ -374,7 +397,6 @@ const formData = ref({
     address_detail: '',        // 地址补充
     start_time: 0,             // 开始时间
     end_time: 0,               // 结束时间
-    organizer_type: 1,         // 举办者类型：1个人 2单位
     organizer_id: 0,           // 主办方ID
     event_type: 1,             // 赛事类型：1独立赛事 2系列赛事
     series_id: 0,              // 系列赛ID
@@ -386,7 +408,8 @@ const organizerForm = ref({
     organizer_name: '',
     contact_name: '',
     contact_phone: '',
-    organizer_type: 1
+    organizer_type: 1,
+    organizer_license_img: ''
 })
 
 // 系列赛表单
@@ -548,6 +571,48 @@ const chooseLocation = () => {
     console.log('开始选择地址')
     
     // #ifdef MP-WEIXIN
+    // 检查是否支持隐私协议API
+    if (typeof (global as any).wx !== 'undefined' && (global as any).wx.requirePrivacyAuthorize) {
+        (global as any).wx.requirePrivacyAuthorize({
+            success: () => {
+                console.log('隐私协议已同意，可以选择地址')
+                performChooseLocation()
+            },
+            fail: () => {
+                console.log('用户拒绝了隐私协议')
+                uni.showToast({
+                    title: '需要同意隐私协议才能选择地址',
+                    icon: 'none'
+                })
+            }
+        })
+    } else {
+        // 旧版本或不支持隐私协议的情况下直接调用
+        performChooseLocation()
+    }
+    // #endif
+    
+    // #ifdef H5
+    console.log('当前环境: H5')
+    uni.showToast({
+        title: 'H5环境暂不支持地图选择，请手动输入地址',
+        icon: 'none'
+    })
+    // #endif
+    
+    // #ifdef APP-PLUS
+    console.log('当前环境: APP')
+    uni.showToast({
+        title: 'APP环境暂不支持地图选择，请手动输入地址',
+        icon: 'none'
+    })
+    // #endif
+}
+
+/**
+ * 执行地址选择
+ */
+const performChooseLocation = () => {
     uni.chooseLocation({
         success: (res) => {
             console.log('选择地址成功:', res)
@@ -597,43 +662,21 @@ const chooseLocation = () => {
                     message = '请授权地理位置权限'
                 } else if (res.errMsg.includes('system permission denied')) {
                     message = '系统权限被拒绝，请在系统设置中开启定位权限'
+                } else if (res.errMsg.includes('privacy agreement')) {
+                    message = '请在小程序管理后台配置隐私协议'
                 }
             }
             
             uni.showToast({
                 title: message,
-                icon: 'none'
+                icon: 'none',
+                duration: 3000
             })
         }
     })
-    // #endif
-    
-    // #ifdef H5
-    console.log('当前环境: H5')
-    uni.showToast({
-        title: 'H5环境暂不支持地图选择，请手动输入地址',
-        icon: 'none'
-    })
-    // #endif
-    
-    // #ifdef APP-PLUS
-    console.log('当前环境: APP')
-    uni.showToast({
-        title: 'APP环境暂不支持地图选择，请手动输入地址',
-        icon: 'none'
-    })
-    // #endif
 }
 
-/**
- * 举办者类型变化
- */
-const handleOrganizerTypeChange = (value: number) => {
-    formData.value.organizer_type = value
-    formData.value.organizer_id = 0
-    organizerForm.value.organizer_type = value
-    loadOrganizerList()
-}
+
 
 /**
  * 赛事类型变化
@@ -704,7 +747,7 @@ const confirmSeriesSelection = () => {
  */
 const loadOrganizerList = async () => {
     try {
-        const response: any = await getOrganizerList(formData.value.organizer_type)
+        const response: any = await getOrganizerList()
         organizerList.value = response.data || []
     } catch (error) {
         console.error('加载主办方列表失败:', error)
@@ -726,6 +769,118 @@ const loadSeriesList = async () => {
 }
 
 /**
+ * 主办方类型变更
+ */
+const onOrganizerTypeChange = (e: any) => {
+    console.log('主办方类型变更:', e.detail.value, typeof e.detail.value)
+    organizerForm.value.organizer_type = parseInt(e.detail.value)
+    console.log('设置后的类型:', organizerForm.value.organizer_type, typeof organizerForm.value.organizer_type)
+    // 切换类型时清空证件图片
+    organizerForm.value.organizer_license_img = ''
+}
+
+/**
+ * 选择主办方证件图片
+ */
+const chooseOrganizerImage = () => {
+    // #ifdef MP-WEIXIN
+    // 检查是否支持隐私协议API
+    if (typeof (global as any).wx !== 'undefined' && (global as any).wx.requirePrivacyAuthorize) {
+        (global as any).wx.requirePrivacyAuthorize({
+            success: () => {
+                console.log('隐私协议已同意，可以选择图片')
+                performChooseImage()
+            },
+            fail: () => {
+                console.log('用户拒绝了隐私协议')
+                uni.showToast({
+                    title: '需要同意隐私协议才能选择图片',
+                    icon: 'none'
+                })
+            }
+        })
+    } else {
+        // 旧版本或不支持隐私协议的情况下直接调用
+        performChooseImage()
+    }
+    // #endif
+    
+    // #ifndef MP-WEIXIN
+    performChooseImage()
+    // #endif
+}
+
+/**
+ * 执行图片选择
+ */
+const performChooseImage = () => {
+    uni.chooseImage({
+        count: 1,
+        sizeType: ['original', 'compressed'],
+        sourceType: ['camera', 'album'],
+        success: (res) => {
+            uploadOrganizerImageFile(res.tempFilePaths[0])
+        },
+        fail: (err) => {
+            console.error('选择图片失败:', err)
+            let message = '选择图片失败'
+            if (err.errMsg && err.errMsg.includes('privacy agreement')) {
+                message = '请在小程序管理后台配置隐私协议'
+            }
+            uni.showToast({
+                title: message,
+                icon: 'none'
+            })
+        }
+    })
+}
+
+/**
+ * 上传主办方证件图片
+ */
+const uploadOrganizerImageFile = (filePath: string) => {
+    uni.showLoading({ title: '上传中...' })
+    
+    uploadImage({
+        filePath: filePath,
+        name: 'file'
+    }).then((res: any) => {
+        uni.hideLoading()
+        organizerForm.value.organizer_license_img = res.data.url
+        uni.showToast({ title: '上传成功', icon: 'success' })
+    }).catch(err => {
+        uni.hideLoading()
+        uni.showToast({ title: '上传失败', icon: 'none' })
+        console.error('上传失败:', err)
+    })
+}
+
+/**
+ * 预览主办方证件图片
+ */
+const previewOrganizerImage = () => {
+    uni.previewImage({
+        urls: [img(organizerForm.value.organizer_license_img)],
+        current: 0
+    })
+}
+
+/**
+ * 删除主办方证件图片
+ */
+const deleteOrganizerImage = () => {
+    uni.showModal({
+        title: '提示',
+        content: '确定要删除这张图片吗？',
+        success: (res) => {
+            if (res.confirm) {
+                organizerForm.value.organizer_license_img = ''
+            }
+        }
+    })
+}
+
+/**
  * 添加主办方
  */
 const addOrganizerConfirm = async () => {
@@ -739,8 +894,7 @@ const addOrganizerConfirm = async () => {
     
     try {
         const params = {
-            ...organizerForm.value,
-            organizer_type: formData.value.organizer_type
+            ...organizerForm.value
         }
         const result: any = await addOrganizer(params)
         
@@ -759,7 +913,8 @@ const addOrganizerConfirm = async () => {
             organizer_name: '',
             contact_name: '',
             contact_phone: '',
-            organizer_type: 1
+            organizer_type: 1,
+            organizer_license_img: ''
         }
         
         uni.showToast({
@@ -777,7 +932,8 @@ const cancelOrganizerModal = () => {
         organizer_name: '',
         contact_name: '',
         contact_phone: '',
-        organizer_type: 1
+        organizer_type: 1,
+        organizer_license_img: ''
     }
 }
 
@@ -1119,44 +1275,7 @@ onMounted(() => {
 
 
 
-.radio-group {
-    display: flex;
-    flex-direction: row;
-    gap: 32rpx;
-}
 
-.radio-item {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    
-    .radio-circle {
-        width: 32rpx;
-        height: 32rpx;
-        border: 2rpx solid #ddd;
-        border-radius: 50%;
-        margin-right: 16rpx;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        
-        &.active {
-            border-color: #007aff;
-        }
-        
-        .radio-dot {
-            width: 16rpx;
-            height: 16rpx;
-            background-color: #007aff;
-            border-radius: 50%;
-        }
-    }
-    
-    .radio-label {
-        font-size: 28rpx;
-        color: #333;
-    }
-}
 
 .form-tip {
     margin-top: 16rpx;
@@ -1252,6 +1371,108 @@ onMounted(() => {
     padding: 32rpx;
     max-height: 50vh;
     overflow-y: auto;
+}
+
+.upload-container {
+    margin-top: 20rpx;
+    
+    .image-preview {
+        position: relative;
+        width: 200rpx;
+        height: 200rpx;
+        border-radius: 10rpx;
+        overflow: hidden;
+        
+        .preview-image {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40rpx;
+            height: 40rpx;
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 0 10rpx 0 20rpx;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24rpx;
+        }
+    }
+    
+    .upload-btn {
+        width: 200rpx;
+        height: 200rpx;
+        border: 2rpx dashed #ddd;
+        border-radius: 10rpx;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        
+        .nc-iconfont {
+            font-size: 60rpx;
+            margin-bottom: 20rpx;
+        }
+        
+        .upload-text {
+            font-size: 24rpx;
+            text-align: center;
+        }
+    }
+}
+
+.radio-group {
+    display: flex;
+    flex-direction: row;
+    gap: 32rpx;
+    
+    .radio-item {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        
+        radio {
+            margin-right: 16rpx;
+        }
+        
+        .radio-text {
+            font-size: 28rpx;
+            color: #333;
+        }
+        
+        .radio-circle {
+            width: 32rpx;
+            height: 32rpx;
+            border: 2rpx solid #ddd;
+            border-radius: 50%;
+            margin-right: 16rpx;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            &.active {
+                border-color: #007aff;
+            }
+            
+            .radio-dot {
+                width: 16rpx;
+                height: 16rpx;
+                background-color: #007aff;
+                border-radius: 50%;
+            }
+        }
+        
+        .radio-label {
+            font-size: 28rpx;
+            color: #333;
+        }
+    }
 }
 
 .modal-footer {
