@@ -647,7 +647,7 @@
                 "selectedIconPath": "static/tabbar/event-active.png"
             },
             {
-                "pagePath": "addon/shop/pages/member/index",
+                "pagePath": "addon/sport/pages/member/index",
                 "text": "我的",
                 "iconPath": "static/tabbar/my.png",
                 "selectedIconPath": "static/tabbar/my-active.png"

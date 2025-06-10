@@ -18,60 +18,110 @@
                         />
                     </view>
                     
-                    <!-- 举办地点 -->
+                    <!-- 举办地点 - 地图选择 -->
                     <view class="form-item">
-                        <view class="form-label required">举办地点</view>
+                        <view class="form-label required">选择地点</view>
                         <view class="location-container">
                             <input 
                                 class="form-input readonly" 
-                                :value="formData.location || (formData.full_address ? '已选择地址' : '')" 
-                                placeholder="请选择举办地点"
+                                :value="formData.location || ''" 
+                                placeholder="点击地图选择地点"
                                 disabled
                                 @tap="chooseLocation"
                             />
                             <view class="location-action" @tap="chooseLocation">
                                 <text class="location-icon">📍</text>
-                                <text class="location-text">选择</text>
+                                <text class="location-text">地图选择</text>
                             </view>
-                        </view>
-                        <view v-if="formData.full_address" class="selected-address">
-                            <text class="address-text">{{ formData.full_address }}</text>
                         </view>
                     </view>
                     
-                    <!-- 地址补充 -->
-                    <view v-if="formData.location" class="form-item">
-                        <view class="form-label">地址补充</view>
+                    <!-- 举办地点 - 手动输入 -->
+                    <view class="form-item">
+                        <view class="form-label required">详细地址</view>
                         <input 
                             class="form-input" 
                             v-model="formData.address_detail" 
-                            placeholder="请输入详细地址信息（可选）"
+                            placeholder="请输入详细地址（如：xx楼xx室）"
                             maxlength="200"
                         />
+                        <view class="form-tip">
+                            <text class="tip-text">先选择地图位置，再补充详细地址信息</text>
+                        </view>
                     </view>
                     
                     <!-- 开始时间 -->
                     <view class="form-item">
                         <view class="form-label required">开始时间</view>
-                        <input 
-                            class="form-input readonly" 
-                            :value="startTimeDisplay" 
-                            placeholder="请选择开始时间"
-                            disabled
-                            @tap="openStartTimePicker"
-                        />
+                        <view class="time-picker-container">
+                            <picker
+                                mode="date"
+                                :value="startDateValue"
+                                @change="onStartDateChange"
+                            >
+                                <view class="time-picker-item">
+                                    <input 
+                                        class="form-input readonly" 
+                                        :value="startDateDisplay" 
+                                        placeholder="选择日期"
+                                        disabled
+                                    />
+                                    <text class="picker-arrow">📅</text>
+                                </view>
+                            </picker>
+                            <picker
+                                mode="time"
+                                :value="startTimeValue"
+                                @change="onStartTimeChange"
+                            >
+                                <view class="time-picker-item">
+                                    <input 
+                                        class="form-input readonly" 
+                                        :value="startTimeDisplay" 
+                                        placeholder="选择时间"
+                                        disabled
+                                    />
+                                    <text class="picker-arrow">🕐</text>
+                                </view>
+                            </picker>
+                        </view>
                     </view>
                     
                     <!-- 结束时间 -->
                     <view class="form-item">
                         <view class="form-label required">结束时间</view>
-                        <input 
-                            class="form-input readonly" 
-                            :value="endTimeDisplay" 
-                            placeholder="请选择结束时间"
-                            disabled
-                            @tap="openEndTimePicker"
-                        />
+                        <view class="time-picker-container">
+                            <picker
+                                mode="date"
+                                :value="endDateValue"
+                                @change="onEndDateChange"
+                            >
+                                <view class="time-picker-item">
+                                    <input 
+                                        class="form-input readonly" 
+                                        :value="endDateDisplay" 
+                                        placeholder="选择日期"
+                                        disabled
+                                    />
+                                    <text class="picker-arrow">📅</text>
+                                </view>
+                            </picker>
+                            <picker
+                                mode="time"
+                                :value="endTimeValue"
+                                @change="onEndTimeChange"
+                            >
+                                <view class="time-picker-item">
+                                    <input 
+                                        class="form-input readonly" 
+                                        :value="endTimeDisplay" 
+                                        placeholder="选择时间"
+                                        disabled
+                                    />
+                                    <text class="picker-arrow">🕐</text>
+                                </view>
+                            </picker>
+                        </view>
                     </view>
                 </view>
                 
@@ -170,26 +220,7 @@
             </view>
         </view>
         
-        <!-- 时间选择器 -->
-        <picker
-            v-if="showStartTimePicker"
-            mode="datetime"
-            :value="startTimeValue"
-            @change="onStartTimeChange"
-            @cancel="showStartTimePicker = false"
-        >
-            <view></view>
-        </picker>
-        
-        <picker
-            v-if="showEndTimePicker"
-            mode="datetime"
-            :value="endTimeValue"
-            @change="onEndTimeChange"
-            @cancel="showEndTimePicker = false"
-        >
-            <view></view>
-        </picker>
+
         
         <!-- 主办方选择器 -->
         <picker
@@ -359,31 +390,26 @@ const eventTypeOptions = [
 ]
 
 // 时间相关
-const showStartTimePicker = ref(false)
-const showEndTimePicker = ref(false)
+const startDateValue = ref('')
 const startTimeValue = ref('')
+const endDateValue = ref('')
 const endTimeValue = ref('')
 
+// 显示用的计算属性
+const startDateDisplay = computed(() => {
+    return startDateValue.value || ''
+})
+
 const startTimeDisplay = computed(() => {
-    return formData.value.start_time ? 
-        new Date(formData.value.start_time * 1000).toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        }) : ''
+    return startTimeValue.value || ''
+})
+
+const endDateDisplay = computed(() => {
+    return endDateValue.value || ''
 })
 
 const endTimeDisplay = computed(() => {
-    return formData.value.end_time ? 
-        new Date(formData.value.end_time * 1000).toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        }) : ''
+    return endTimeValue.value || ''
 })
 
 // 选择器相关
@@ -420,44 +446,74 @@ const selectedSeriesName = computed(() => {
 const submitLoading = ref(false)
 
 /**
- * 打开时间选择器
+ * 日期时间选择
  */
-const openStartTimePicker = () => {
-    showStartTimePicker.value = true
+const onStartDateChange = (e: any) => {
+    console.log('开始日期选择:', e.detail.value)
+    startDateValue.value = e.detail.value
+    updateStartDateTime()
 }
 
-const openEndTimePicker = () => {
-    showEndTimePicker.value = true
-}
-
-/**
- * 时间选择
- */
 const onStartTimeChange = (e: any) => {
-    const timeString = e.detail.value
-    const timestamp = new Date(timeString).getTime()
-    formData.value.start_time = Math.floor(timestamp / 1000)
-    formData.value.year = new Date(timestamp).getFullYear()
-    showStartTimePicker.value = false
-    
-    // 更新时间选择器的值
-    startTimeValue.value = timeString
+    console.log('开始时间选择:', e.detail.value)
+    startTimeValue.value = e.detail.value
+    updateStartDateTime()
+}
+
+const onEndDateChange = (e: any) => {
+    console.log('结束日期选择:', e.detail.value)
+    endDateValue.value = e.detail.value
+    updateEndDateTime()
 }
 
 const onEndTimeChange = (e: any) => {
-    const timeString = e.detail.value
-    const timestamp = new Date(timeString).getTime()
-    formData.value.end_time = Math.floor(timestamp / 1000)
-    showEndTimePicker.value = false
-    
-    // 更新时间选择器的值
-    endTimeValue.value = timeString
+    console.log('结束时间选择:', e.detail.value)
+    endTimeValue.value = e.detail.value
+    updateEndDateTime()
+}
+
+/**
+ * 更新开始时间戳
+ */
+const updateStartDateTime = () => {
+    if (startDateValue.value && startTimeValue.value) {
+        const dateTimeString = `${startDateValue.value} ${startTimeValue.value}`
+        const timestamp = new Date(dateTimeString).getTime()
+        formData.value.start_time = Math.floor(timestamp / 1000)
+        formData.value.year = new Date(timestamp).getFullYear()
+        
+        console.log('开始时间更新:', {
+            date: startDateValue.value,
+            time: startTimeValue.value,
+            timestamp: formData.value.start_time,
+            year: formData.value.year
+        })
+    }
+}
+
+/**
+ * 更新结束时间戳
+ */
+const updateEndDateTime = () => {
+    if (endDateValue.value && endTimeValue.value) {
+        const dateTimeString = `${endDateValue.value} ${endTimeValue.value}`
+        const timestamp = new Date(dateTimeString).getTime()
+        formData.value.end_time = Math.floor(timestamp / 1000)
+        
+        console.log('结束时间更新:', {
+            date: endDateValue.value,
+            time: endTimeValue.value,
+            timestamp: formData.value.end_time
+        })
+    }
 }
 
 /**
  * 选择地址
  */
 const chooseLocation = () => {
+    console.log('开始选择地址')
+    
     // #ifdef MP-WEIXIN
     uni.chooseLocation({
         success: (res) => {
@@ -467,23 +523,27 @@ const chooseLocation = () => {
             if (res.latitude && res.longitude) {
                 formData.value.lat = res.latitude.toString()
                 formData.value.lng = res.longitude.toString()
+                console.log('经纬度保存:', { lat: formData.value.lat, lng: formData.value.lng })
             }
             
             // 保存地址信息
-            if (res.name) {
-                formData.value.location = res.name
-            }
-            
-            // 组合完整地址
-            let fullAddress = ''
+            let locationName = ''
             if (res.address) {
-                fullAddress += res.address
+                locationName = res.address
             }
             if (res.name && res.name !== res.address) {
-                fullAddress += (fullAddress ? ' ' : '') + res.name
+                locationName += (locationName ? ' ' : '') + res.name
             }
             
-            formData.value.full_address = fullAddress
+            formData.value.location = locationName || res.name || '已选择位置'
+            
+            // 组合完整地址用于提交
+            formData.value.full_address = locationName
+            
+            console.log('地址信息保存:', {
+                location: formData.value.location,
+                full_address: formData.value.full_address
+            })
             
             uni.showToast({
                 title: '地址选择成功',
@@ -493,13 +553,14 @@ const chooseLocation = () => {
         fail: (res) => {
             console.error('选择地址失败:', res)
             if (res.errMsg && res.errMsg.includes('cancel')) {
-                // 用户取消，不显示错误
+                console.log('用户取消选择地址')
                 return
             }
             
             let message = '选择地址失败'
             if (res.errMsg) {
-                if (res.errMsg.includes('auth deny')) {
+                console.log('错误信息:', res.errMsg)
+                if (res.errMsg.includes('auth deny') || res.errMsg.includes('unauthorized')) {
                     message = '请授权地理位置权限'
                 } else if (res.errMsg.includes('system permission denied')) {
                     message = '系统权限被拒绝，请在系统设置中开启定位权限'
@@ -515,15 +576,17 @@ const chooseLocation = () => {
     // #endif
     
     // #ifdef H5
+    console.log('当前环境: H5')
     uni.showToast({
-        title: 'H5环境暂不支持地图选择',
+        title: 'H5环境暂不支持地图选择，请手动输入地址',
         icon: 'none'
     })
     // #endif
     
     // #ifdef APP-PLUS
+    console.log('当前环境: APP')
     uni.showToast({
-        title: 'APP环境暂不支持地图选择',
+        title: 'APP环境暂不支持地图选择，请手动输入地址',
         icon: 'none'
     })
     // #endif
@@ -708,7 +771,15 @@ const validateForm = () => {
     
     if (!formData.value.location.trim()) {
         uni.showToast({
-            title: '请选择举办地点',
+            title: '请先选择地图位置',
+            icon: 'none'
+        })
+        return false
+    }
+    
+    if (!formData.value.address_detail.trim()) {
+        uni.showToast({
+            title: '请输入详细地址',
             icon: 'none'
         })
         return false
@@ -812,9 +883,18 @@ onMounted(() => {
         
         // 初始化时间选择器的值（设置为当前时间）
         const now = new Date()
-        const timeString = now.toISOString().slice(0, 16)
-        startTimeValue.value = timeString
-        endTimeValue.value = timeString
+        const today = now.toISOString().slice(0, 10) // YYYY-MM-DD
+        const currentTime = now.toTimeString().slice(0, 5) // HH:MM
+        
+        startDateValue.value = today
+        startTimeValue.value = currentTime
+        endDateValue.value = today
+        endTimeValue.value = currentTime
+        
+        console.log('初始化时间选择器:', {
+            date: today,
+            time: currentTime
+        })
     }, '/addon/sport/pages/event/create')
 })
 </script>
@@ -931,18 +1011,31 @@ onMounted(() => {
     }
 }
 
-.selected-address {
-    margin-top: 16rpx;
-    padding: 16rpx;
-    background: #f8f9fa;
-    border-radius: 8rpx;
+.time-picker-container {
+    display: flex;
+    gap: 16rpx;
     
-    .address-text {
-        font-size: 24rpx;
-        color: #666;
-        line-height: 1.5;
+    .time-picker-item {
+        flex: 1;
+        position: relative;
+        display: flex;
+        align-items: center;
+        
+        .form-input {
+            flex: 1;
+            padding-right: 40rpx;
+        }
+        
+        .picker-arrow {
+            position: absolute;
+            right: 12rpx;
+            font-size: 24rpx;
+            color: #999;
+        }
     }
 }
+
+
 
 .radio-group {
     display: flex;
