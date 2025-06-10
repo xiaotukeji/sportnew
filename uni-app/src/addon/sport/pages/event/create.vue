@@ -1090,16 +1090,20 @@ const handleSubmit = async () => {
             full_address: finalFullAddress
         }
         
-        await addEvent(submitData)
+        const result: any = await addEvent(submitData)
         
         uni.showToast({
             title: '创建比赛成功',
             icon: 'success'
         })
         
-        // 延迟跳转
+        console.log('创建比赛成功，比赛ID:', result.data.id)
+        
+        // 延迟跳转到赛事详情页面
         setTimeout(() => {
-            uni.navigateBack()
+            uni.redirectTo({
+                url: `/addon/sport/pages/event/detail?id=${result.data.id}`
+            })
         }, 1500)
         
     } catch (error) {
