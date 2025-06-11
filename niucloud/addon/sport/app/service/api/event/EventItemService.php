@@ -35,9 +35,11 @@ class EventItemService extends BaseApiService
     {
         $event_id = $data['event_id'] ?? 0;
         
-        // 获取所有分类，按sort排序
+        // 只获取一级分类（12个大类），按sort排序
         $categories = (new SportCategory())->where([
-            ['status', '=', 1]
+            ['status', '=', 1],
+            ['parent_id', '=', 0],  // 只获取一级分类
+            ['level', '=', 1]       // 确保是一级分类
         ])->order('sort asc, id asc')->select()->toArray();
         
         // 获取每个分类下的基础项目
@@ -71,7 +73,7 @@ class EventItemService extends BaseApiService
             }
             
             // 设置默认展开状态（田径、球类、棋类、趣味默认展开）
-            $default_expand_names = ['田径运动', '球类运动', '棋类运动', '趣味运动'];
+            $default_expand_names = ['田径类', '球类', '棋类', '趣味比赛'];
             $category['default_expand'] = in_array($category['name'], $default_expand_names);
         }
         
