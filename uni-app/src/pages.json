@@ -29,6 +29,13 @@
             "needLogin": true
         },
         {
+            "path": "addon/sport/pages/event/items",
+            "style": {
+                "navigationBarTitleText": "选择比赛项目"
+            },
+            "needLogin": true
+        },
+        {
             "path": "addon/sport/pages/member/index",
             "style": {
                 "navigationBarTitleText": "个人中心"

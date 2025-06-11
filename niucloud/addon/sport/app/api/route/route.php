@@ -29,7 +29,7 @@ Route::group('sport', function() {
 
 
 Route::group('sport', function() {
-    
+
     /***************************************************** 赛事管理 ****************************************************/
     
     // 获取赛事列表
@@ -55,6 +55,20 @@ Route::group('sport', function() {
     
     // 更新赛事状态
     Route::put('event/:id/status', 'addon\sport\app\api\controller\event\Event@updateStatus');
+    
+    /***************************************************** 赛事项目管理 ****************************************************/
+    
+    // 获取运动分类列表（包含基础项目）
+    Route::get('event/categories', 'addon\sport\app\api\controller\event\EventItem@categories');
+    
+    // 获取基础项目列表
+    Route::get('event/base-items', 'addon\sport\app\api\controller\event\EventItem@baseItems');
+    
+    // 保存赛事项目选择
+    Route::post('event/items/save', 'addon\sport\app\api\controller\event\EventItem@save');
+    
+    // 获取赛事已选择的项目
+    Route::get('event/:event_id/items', 'addon\sport\app\api\controller\event\EventItem@getEventItems');
     
     /***************************************************** 主办方管理 ****************************************************/
     

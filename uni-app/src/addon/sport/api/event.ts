@@ -124,4 +124,40 @@ export function getEventStatusDict() {
  */
 export function getCategoryList() {
     return request.get(`sport/category/list`);
+}
+
+/**
+ * 获取运动分类列表（包含基础项目）
+ * @param params
+ * @returns
+ */
+export function getEventCategories(params: { event_id?: number } = {}) {
+    return request.get('sport/event/categories', params);
+}
+
+/**
+ * 获取基础项目列表
+ * @param params
+ * @returns
+ */
+export function getBaseItems(params: { category_id?: number; keyword?: string } = {}) {
+    return request.get('sport/event/base-items', params);
+}
+
+/**
+ * 保存赛事项目选择
+ * @param data
+ * @returns
+ */
+export function saveEventItems(data: { event_id: number; base_item_ids: number[] }) {
+    return request.post('sport/event/items/save', data, { showErrorMessage: true, showSuccessMessage: true });
+}
+
+/**
+ * 获取赛事已选择的项目
+ * @param eventId
+ * @returns
+ */
+export function getEventItems(eventId: number) {
+    return request.get(`sport/event/${eventId}/items`);
 } 
