@@ -11,9 +11,9 @@
 
 namespace addon\sport\app\service\api\event;
 
-use addon\sport\app\model\category\SportCategory;
-use addon\sport\app\model\item\SportBaseItem;
-use addon\sport\app\model\item\SportItem;
+use addon\sport\app\model\sport_category\SportCategory;
+use addon\sport\app\model\sport_base_item\SportBaseItem;
+use addon\sport\app\model\sport_item\SportItem;
 use core\base\BaseApiService;
 
 /**
@@ -108,7 +108,6 @@ class EventItemService extends BaseApiService
         }
         
         $list = (new SportBaseItem())->where($where)
-            ->with(['category'])
             ->order('sort asc, id asc')
             ->select()
             ->toArray();
@@ -196,8 +195,7 @@ class EventItemService extends BaseApiService
         $list = (new SportItem())->where([
             ['site_id', '=', $this->site_id],
             ['event_id', '=', $event_id]
-        ])->with(['category', 'baseItem'])
-            ->order('sort asc, id asc')
+        ])->order('sort asc, id asc')
             ->select()
             ->toArray();
             
