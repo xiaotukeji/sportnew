@@ -37,14 +37,12 @@ class EventItemService extends BaseApiService
         
         // 获取所有分类，按sort排序
         $categories = (new SportCategory())->where([
-            ['site_id', '=', $this->site_id],
             ['status', '=', 1]
         ])->order('sort asc, id asc')->select()->toArray();
         
         // 获取每个分类下的基础项目
         $category_ids = array_column($categories, 'id');
         $base_items = (new SportBaseItem())->where([
-            ['site_id', '=', $this->site_id],
             ['category_id', 'in', $category_ids],
             ['status', '=', 1]
         ])->order('sort asc, id asc')->select()->toArray();
@@ -59,7 +57,6 @@ class EventItemService extends BaseApiService
         $selected_base_item_ids = [];
         if ($event_id > 0) {
             $selected_base_item_ids = (new SportItem())->where([
-                ['site_id', '=', $this->site_id],
                 ['event_id', '=', $event_id]
             ])->column('base_item_id');
         }
@@ -95,7 +92,6 @@ class EventItemService extends BaseApiService
         $keyword = $data['keyword'] ?? '';
         
         $where = [
-            ['site_id', '=', $this->site_id],
             ['status', '=', 1]
         ];
         
@@ -135,7 +131,6 @@ class EventItemService extends BaseApiService
         
         // 删除原有的项目选择
         (new SportItem())->where([
-            ['site_id', '=', $this->site_id],
             ['event_id', '=', $event_id]
         ])->delete();
         
@@ -143,14 +138,12 @@ class EventItemService extends BaseApiService
         if (!empty($base_item_ids)) {
             $insert_data = [];
             $base_items = (new SportBaseItem())->where([
-                ['site_id', '=', $this->site_id],
                 ['id', 'in', $base_item_ids],
                 ['status', '=', 1]
             ])->select();
             
             foreach ($base_items as $base_item) {
                 $insert_data[] = [
-                    'site_id' => $this->site_id,
                     'event_id' => $event_id,
                     'base_item_id' => $base_item['id'],
                     'category_id' => $base_item['category_id'],
@@ -193,7 +186,6 @@ class EventItemService extends BaseApiService
         }
         
         $list = (new SportItem())->where([
-            ['site_id', '=', $this->site_id],
             ['event_id', '=', $event_id]
         ])->order('sort asc, id asc')
             ->select()
