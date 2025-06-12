@@ -14,6 +14,8 @@ namespace addon\sport\app\service\api\event;
 use addon\sport\app\model\event\SportEvent;
 use addon\sport\app\model\organizer\SportOrganizer;
 use addon\sport\app\model\series\SportEventSeries;
+use addon\sport\app\model\group\SportEventGroup;
+use addon\sport\app\model\item\SportItem;
 use core\base\BaseApiService;
 use core\exception\CommonException;
 
@@ -119,14 +121,40 @@ class EventService extends BaseApiService
             $this->checkSeriesPermission($data['series_id']);
         }
         
+        // 提取自定义分组和比赛项目数据
+        $custom_groups = $data['custom_groups'] ?? [];
+        $base_item_ids = $data['base_item_ids'] ?? [];
+        unset($data['custom_groups'], $data['base_item_ids']);
+        
         $data['create_time'] = time();
         $data['update_time'] = time();
         $data['status'] = 0;  // 默认状态为待发布
         $data['sort'] = 0;
         $data['member_id'] = $this->member_id;  // 设置发布者ID
         
-        $res = $this->model->save($data);
-        return $this->model->id;
+        // 开启事务
+        $this->model->startTrans();
+        try {
+            // 保存赛事基本信息
+            $res = $this->model->save($data);
+            $event_id = $this->model->id;
+            
+            // 保存自定义分组
+            if (!empty($custom_groups)) {
+                $this->saveEventGroups($event_id, $custom_groups);
+            }
+            
+            // 保存比赛项目
+            if (!empty($base_item_ids)) {
+                $this->saveEventItems($event_id, $base_item_ids);
+            }
+            
+            $this->model->commit();
+            return $event_id;
+        } catch (\Exception $e) {
+            $this->model->rollback();
+            throw new CommonException($e->getMessage());
+        }
     }
 
     /**
@@ -373,5 +401,109 @@ class EventService extends BaseApiService
         ]);
         
         return true;
+    }
+
+    /**
+     * 保存赛事自定义分组
+     * @param int $event_id
+     * @param array $groups
+     * @return void
+     */
+    private function saveEventGroups(int $event_id, array $groups)
+    {
+        $group_model = new SportEventGroup();
+        
+        foreach ($groups as $index => $group) {
+            if (empty($group['group_name'])) {
+                continue;
+            }
+            
+            $group_data = [
+                'event_id' => $event_id,
+                'group_name' => $group['group_name'],
+                'group_type' => $group['group_type'] ?? 'custom',
+                'description' => $group['description'] ?? '',
+                'sort' => $group['sort'] ?? $index,
+                'status' => 1,
+                'create_time' => time(),
+                'update_time' => time()
+            ];
+            
+            $group_model->save($group_data);
+            $group_model = new SportEventGroup(); // 重新实例化
+        }
+    }
+
+    /**
+     * 保存赛事比赛项目
+     * @param int $event_id
+     * @param array $base_item_ids
+     * @return void
+     */
+    private function saveEventItems(int $event_id, array $base_item_ids)
+    {
+        $item_model = new SportItem();
+        
+        foreach ($base_item_ids as $index => $base_item_id) {
+            // 获取基础项目信息
+            $base_item = \addon\sport\app\model\item\SportBaseItem::where('id', $base_item_id)->find();
+            if (!$base_item) {
+                continue;
+            }
+            
+            $item_data = [
+                'event_id' => $event_id,
+                'base_item_id' => $base_item_id,
+                'name' => $base_item['name'],
+                'category_id' => $base_item['category_id'],
+                'description' => $base_item['description'] ?? '',
+                'rules' => $base_item['rules'] ?? '',
+                'equipment' => $base_item['equipment'] ?? '',
+                'venue_requirements' => $base_item['venue_requirements'] ?? '',
+                'sort' => $index,
+                'status' => 1,
+                'create_time' => time(),
+                'update_time' => time()
+            ];
+            
+            $item_model->save($item_data);
+            $item_model = new SportItem(); // 重新实例化
+        }
+    }
+
+    /**
+     * 获取赛事自定义分组
+     * @param int $event_id
+     * @return array
+     */
+    public function getEventGroups(int $event_id)
+    {
+        $group_model = new SportEventGroup();
+        return $group_model
+            ->where([
+                ['event_id', '=', $event_id],
+                ['status', '=', 1]
+            ])
+            ->order('sort asc, id asc')
+            ->select()
+            ->toArray();
+    }
+
+    /**
+     * 获取赛事比赛项目
+     * @param int $event_id
+     * @return array
+     */
+    public function getEventItems(int $event_id)
+    {
+        $item_model = new SportItem();
+        return $item_model
+            ->where([
+                ['event_id', '=', $event_id],
+                ['status', '=', 1]
+            ])
+            ->order('sort asc, id asc')
+            ->select()
+            ->toArray();
     }
 } 

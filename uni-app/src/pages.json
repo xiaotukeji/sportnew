@@ -22,6 +22,20 @@
             "needLogin": true
         },
         {
+            "path": "addon/sport/pages/event/create_steps",
+            "style": {
+                "navigationBarTitleText": "创建比赛"
+            },
+            "needLogin": true
+        },
+        {
+            "path": "addon/sport/pages/event/create_simple",
+            "style": {
+                "navigationBarTitleText": "创建比赛（分步骤）"
+            },
+            "needLogin": true
+        },
+        {
             "path": "addon/sport/pages/event/detail",
             "style": {
                 "navigationBarTitleText": "赛事详情"
