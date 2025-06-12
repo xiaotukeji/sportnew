@@ -28,10 +28,11 @@
         <view class="form-container">
             <!-- 第1步：基本信息 -->
             <view v-if="currentStep === 1" class="form-wrapper">
+                <!-- 系列赛设置 -->
                 <view class="form-section">
-                    <view class="section-title">基本信息</view>
+                    <view class="section-title">系列赛设置</view>
                     
-                    <!-- 赛事类型 -->
+                    <!-- 是否系列赛 -->
                     <view class="form-item">
                         <view class="form-label">赛事类型</view>
                         <view class="radio-group">
@@ -46,74 +47,6 @@
                                 </view>
                                 <text class="radio-label">{{ item.label }}</text>
                             </view>
-                        </view>
-                    </view>
-                    
-                    <!-- 比赛名称 -->
-                    <view class="form-item">
-                        <view class="form-label required">比赛名称</view>
-                        <input 
-                            class="form-input" 
-                            v-model="formData.name" 
-                            placeholder="请输入比赛名称"
-                            maxlength="100"
-                        />
-                    </view>
-                    
-                    <!-- 举办地点 - 地图选择 -->
-                    <view class="form-item">
-                        <view class="form-label required">选择地点</view>
-                        <view class="location-container">
-                            <input 
-                                class="form-input readonly" 
-                                :value="formData.location || ''" 
-                                placeholder="点击地图选择地点"
-                                disabled
-                                @tap="chooseLocation"
-                            />
-                            <view class="location-action" @tap="chooseLocation">
-                                <text class="location-icon">📍</text>
-                                <text class="location-text">地图选择</text>
-                            </view>
-                        </view>
-                    </view>
-                    
-                    <!-- 详细地址 -->
-                    <view class="form-item">
-                        <view class="form-label required">详细地址</view>
-                        <input 
-                            class="form-input" 
-                            v-model="formData.address_detail" 
-                            placeholder="请输入详细地址（如：xx楼xx室）"
-                            maxlength="200"
-                        />
-                        <view class="form-tip">
-                            <text class="tip-text">先选择地图位置，再补充详细地址信息</text>
-                        </view>
-                    </view>
-                </view>
-            </view>
-
-            <!-- 第2步：主办方和时间 -->
-            <view v-if="currentStep === 2" class="form-wrapper">
-                <view class="form-section">
-                    <view class="section-title">组织信息</view>
-                    
-                    <!-- 主办方 -->
-                    <view class="form-item">
-                        <view class="form-label required">主办方</view>
-                        <input 
-                            class="form-input readonly" 
-                            :value="selectedOrganizerName" 
-                            placeholder="请选择主办方"
-                            disabled
-                            @tap="openOrganizerPicker"
-                        />
-                        <view class="form-tip">
-                            <text class="tip-text" v-if="!organizerList.length">暂无主办方，</text>
-                            <text class="tip-link" @tap="showOrganizerModal = true">
-                                {{ organizerList.length ? '添加新主办方' : '点击添加' }}
-                            </text>
                         </view>
                     </view>
                     
@@ -140,7 +73,113 @@
                 </view>
                 
                 <view class="form-section">
-                    <view class="section-title">时间设置</view>
+                    <view class="section-title">赛事信息</view>
+                    
+                    <!-- 比赛名称 -->
+                    <view class="form-item">
+                        <view class="form-label required">比赛名称</view>
+                        <input 
+                            class="form-input" 
+                            v-model="formData.name" 
+                            placeholder="请输入比赛名称"
+                            maxlength="100"
+                        />
+                    </view>
+                </view>
+                
+                <view class="form-section">
+                    <view class="section-title">组织信息</view>
+                    
+                    <!-- 主办方 -->
+                    <view class="form-item">
+                        <view class="form-label required">主办方</view>
+                        <input 
+                            class="form-input readonly" 
+                            :value="selectedOrganizerName" 
+                            placeholder="请选择主办方"
+                            disabled
+                            @tap="openOrganizerPicker"
+                        />
+                        <view class="form-tip">
+                            <text class="tip-text" v-if="!organizerList.length">暂无主办方，</text>
+                            <text class="tip-link" @tap="showOrganizerModal = true">
+                                {{ organizerList.length ? '添加新主办方' : '点击添加' }}
+                            </text>
+                        </view>
+                    </view>
+                    
+                    <!-- 协办方 -->
+                    <view class="form-item">
+                        <view class="form-label">协办方</view>
+                        <view class="co-organizer-container">
+                            <view v-if="formData.co_organizers.length === 0" class="co-organizer-empty">
+                                <text class="empty-text">暂无协办方</text>
+                                <text class="add-link" @tap="addCoOrganizer">添加协办方</text>
+                            </view>
+                            <view v-else class="co-organizer-list">
+                                <view 
+                                    v-for="(coOrganizer, index) in formData.co_organizers" 
+                                    :key="index"
+                                    class="co-organizer-item"
+                                >
+                                    <view class="co-organizer-info">
+                                        <text class="co-organizer-name">{{ coOrganizer.organizer_name }}</text>
+                                        <text class="co-organizer-type">{{ getCoOrganizerTypeText(coOrganizer.organizer_type) }}</text>
+                                    </view>
+                                    <view class="co-organizer-actions">
+                                        <text class="action-btn edit" @tap="editCoOrganizer(index)">编辑</text>
+                                        <text class="action-btn delete" @tap="deleteCoOrganizer(index)">删除</text>
+                                    </view>
+                                </view>
+                                <view class="add-co-organizer" @tap="addCoOrganizer">
+                                    <text class="add-text">+ 添加协办方</text>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+
+            <!-- 第2步：时间地点 -->
+            <view v-if="currentStep === 2" class="form-wrapper">
+                <view class="form-section">
+                    <view class="section-title">地点信息</view>
+                    
+                    <!-- 举办地点 - 地图选择 -->
+                    <view class="form-item">
+                        <view class="form-label required">选择地点</view>
+                        <view class="location-container">
+                            <input 
+                                class="form-input readonly" 
+                                :value="formData.location || ''" 
+                                placeholder="点击地图选择地点"
+                                disabled
+                                @tap="chooseLocation"
+                            />
+                            <view class="location-action" @tap="chooseLocation">
+                                <text class="location-icon">📍</text>
+                                <text class="location-text">地图选择</text>
+                            </view>
+                        </view>
+                    </view>
+                    
+                    <!-- 举办地点 - 手动输入 -->
+                    <view class="form-item">
+                        <view class="form-label required">详细地址</view>
+                        <input 
+                            class="form-input" 
+                            v-model="formData.address_detail" 
+                            placeholder="请输入详细地址（如：xx楼xx室）"
+                            maxlength="200"
+                        />
+                        <view class="form-tip">
+                            <text class="tip-text">先选择地图位置，再补充详细地址信息</text>
+                        </view>
+                    </view>
+                </view>
+                
+                <view class="form-section">
+                    <view class="section-title">时间安排</view>
                     
                     <!-- 开始时间 -->
                     <view class="form-item">
@@ -217,35 +256,43 @@
                     </view>
                 </view>
                 
+                <!-- 自定义分组 -->
                 <view class="form-section">
                     <view class="section-title">自定义分组</view>
+                    <view class="form-tip" style="margin: 0 32rpx 16rpx;">
+                        <text class="tip-text">可以创建如"12年级组"、"A组/B组"等自定义分组</text>
+                    </view>
                     
-                    <!-- 自定义分组 -->
-                    <view class="form-item">
-                        <view class="form-label">参赛分组</view>
-                        <view class="groups-container">
-                            <view 
-                                v-for="(group, index) in formData.custom_groups" 
-                                :key="index"
-                                class="group-item"
-                            >
+                    <view v-if="formData.custom_groups.length === 0" class="form-item">
+                        <view class="empty-groups">
+                            <text class="empty-text">暂无自定义分组</text>
+                            <text class="add-link" @tap="addGroup">添加分组</text>
+                        </view>
+                    </view>
+                    
+                    <view v-else>
+                        <view 
+                            v-for="(group, index) in formData.custom_groups" 
+                            :key="index"
+                            class="form-item"
+                        >
+                            <view class="group-item">
                                 <input 
                                     class="form-input group-input" 
-                                    v-model="group.group_name" 
-                                    :placeholder="`分组${index + 1}名称（如：12年级组、A组等）`"
+                                    v-model="group.name" 
+                                    :placeholder="`分组${index + 1}名称`"
                                     maxlength="50"
                                 />
-                                <view class="remove-btn" @tap="removeGroup(index)">
-                                    <text class="remove-text">删除</text>
+                                <view class="group-actions">
+                                    <text class="action-btn delete" @tap="removeGroup(index)">删除</text>
                                 </view>
                             </view>
-                            <view class="add-group-btn" @tap="addGroup">
-                                <text class="add-icon">+</text>
-                                <text class="add-text">添加分组</text>
-                            </view>
                         </view>
-                        <view class="form-tip">
-                            <text class="tip-text">可添加自定义分组，如年级组、能力组等</text>
+                        
+                        <view class="form-item">
+                            <view class="add-group-btn" @tap="addGroup">
+                                <text class="add-text">+ 添加分组</text>
+                            </view>
                         </view>
                     </view>
                 </view>
@@ -483,6 +530,63 @@
                 </view>
             </view>
         </view>
+        
+        <!-- 添加协办方模态框 -->
+        <view v-if="showCoOrganizerModal" class="modal-mask" @tap="cancelCoOrganizer">
+            <view class="modal-container" @tap.stop>
+                <view class="modal-header">
+                    <text class="modal-title">{{ editingCoOrganizerIndex >= 0 ? '编辑协办方' : '添加协办方' }}</text>
+                    <text class="modal-close" @tap="cancelCoOrganizer">×</text>
+                </view>
+                <view class="modal-content">
+                    <view class="form-item">
+                        <view class="form-label required">协办方名称</view>
+                        <input 
+                            class="form-input" 
+                            v-model="coOrganizerForm.organizer_name" 
+                            placeholder="请输入协办方名称"
+                            maxlength="100"
+                        />
+                    </view>
+                    <view class="form-item">
+                        <view class="form-label required">协办方类型</view>
+                        <radio-group @change="onCoOrganizerTypeChange">
+                            <view class="radio-group">
+                                <label class="radio-item" v-for="option in coOrganizerTypeOptions" :key="option.value">
+                                    <radio 
+                                        :value="option.value" 
+                                        :checked="coOrganizerForm.organizer_type === option.value"
+                                    />
+                                    <text class="radio-text">{{ option.label }}</text>
+                                </label>
+                            </view>
+                        </radio-group>
+                    </view>
+                    <view class="form-item">
+                        <view class="form-label">联系人</view>
+                        <input 
+                            class="form-input" 
+                            v-model="coOrganizerForm.contact_name" 
+                            placeholder="请输入联系人"
+                            maxlength="50"
+                        />
+                    </view>
+                    <view class="form-item">
+                        <view class="form-label">联系电话</view>
+                        <input 
+                            class="form-input" 
+                            v-model="coOrganizerForm.contact_phone" 
+                            placeholder="请输入联系电话"
+                            maxlength="20"
+                        />
+                    </view>
+                </view>
+                <view class="modal-footer">
+                    <button class="modal-btn cancel" @tap="cancelCoOrganizer">取消</button>
+                    <button class="modal-btn confirm" @tap="confirmCoOrganizer">确定</button>
+                </view>
+            </view>
+        </view>
     </view>
 </template>
 
@@ -503,7 +607,7 @@ const { requireLogin } = useLoginCheck()
 // 步骤配置
 const steps = [
     { title: '基本信息' },
-    { title: '主办方时间' },
+    { title: '时间地点' },
     { title: '选择项目' }
 ]
 
@@ -525,7 +629,8 @@ const formData = ref({
     event_type: 1,             // 赛事类型：1独立赛事 2系列赛事
     series_id: 0,              // 系列赛ID
     year: new Date().getFullYear(), // 举办年份
-    custom_groups: [] as any[] // 自定义分组
+    custom_groups: [] as any[], // 自定义分组
+    co_organizers: [] as any[]  // 协办方
 })
 
 // 主办方表单
@@ -544,6 +649,15 @@ const seriesForm = ref({
     description: ''
 })
 
+// 协办方表单
+const coOrganizerForm = ref({
+    organizer_name: '',
+    organizer_type: 1, // 1协办单位 2赞助商 3支持单位
+    contact_name: '',
+    contact_phone: '',
+    logo: ''
+})
+
 // 选项数据
 const organizerTypeOptions = [
     { label: '个人', value: 1 },
@@ -553,6 +667,13 @@ const organizerTypeOptions = [
 const eventTypeOptions = [
     { label: '独立赛事', value: 1 },
     { label: '系列赛事', value: 2 }
+]
+
+// 协办方类型选项
+const coOrganizerTypeOptions = [
+    { label: '协办单位', value: 1 },
+    { label: '赞助商', value: 2 },
+    { label: '支持单位', value: 3 }
 ]
 
 // 时间相关
@@ -583,6 +704,7 @@ const showOrganizerPicker = ref(false)
 const showSeriesPicker = ref(false)
 const showOrganizerModal = ref(false)
 const showSeriesModal = ref(false)
+const showCoOrganizerModal = ref(false)
 
 // 数据列表
 const organizerList = ref<any[]>([])
@@ -641,14 +763,19 @@ const mockItems = [
 // 提交状态
 const submitLoading = ref(false)
 
+// 编辑中的协办方索引
+const editingCoOrganizerIndex = ref(-1)
+
 // 是否可以进入下一步
 const canProceedToNext = computed(() => {
     switch (currentStep.value) {
         case 1:
-            return formData.value.name && formData.value.location && formData.value.address_detail
+            // 第1步：只要求比赛名称（必填）
+            return formData.value.name.trim() !== ''
         case 2:
-            return formData.value.start_time > 0 && formData.value.end_time > 0 && formData.value.organizer_id > 0 && 
-                   (formData.value.event_type === 1 || formData.value.series_id > 0)
+            // 第2步：要求地点和时间
+            return formData.value.location && formData.value.address_detail && 
+                   formData.value.start_time > 0 && formData.value.end_time > 0
         case 3:
             return selectedItems.value.length > 0
         default:
@@ -857,9 +984,21 @@ const performChooseLocation = () => {
  * 赛事类型变化
  */
 const handleEventTypeChange = (value: number) => {
+    console.log('赛事类型变化:', value, '当前系列赛列表长度:', seriesList.value.length)
     formData.value.event_type = value
     if (value === 1) {
         formData.value.series_id = 0
+        console.log('选择独立赛事，清空系列赛ID')
+    }
+    // 如果选择系列赛事且还没有系列赛数据，加载系列赛列表
+    if (value === 2) {
+        console.log('选择系列赛事')
+        if (!seriesList.value.length) {
+            console.log('系列赛列表为空，开始加载...')
+            loadSeriesList()
+        } else {
+            console.log('系列赛列表已存在，无需重新加载')
+        }
     }
 }
 
@@ -879,6 +1018,7 @@ const openOrganizerPicker = () => {
 }
 
 const openSeriesPicker = () => {
+    console.log('打开系列赛选择器, 系列赛列表:', seriesList.value)
     if (!seriesList.value.length) {
         uni.showToast({
             title: '暂无系列赛数据',
@@ -888,6 +1028,7 @@ const openSeriesPicker = () => {
     }
     tempSeriesIndex.value = selectedSeriesIndex.value
     showSeriesPicker.value = true
+    console.log('显示系列赛选择器')
 }
 
 /**
@@ -935,8 +1076,11 @@ const loadOrganizerList = async () => {
  */
 const loadSeriesList = async () => {
     try {
+        console.log('开始加载系列赛列表...')
         const response: any = await getEventSeriesList()
+        console.log('系列赛列表响应:', response)
         seriesList.value = response.data || []
+        console.log('系列赛列表加载完成:', seriesList.value.length, '条记录')
     } catch (error) {
         console.error('加载系列赛列表失败:', error)
         seriesList.value = []
@@ -1072,13 +1216,80 @@ const cancelSeriesModal = () => {
 // 分组处理
 const addGroup = () => {
     formData.value.custom_groups.push({
-        group_name: '',
-        group_type: 'custom'
+        name: '',
+        description: ''
     })
 }
 
 const removeGroup = (index: number) => {
     formData.value.custom_groups.splice(index, 1)
+}
+
+// 协办方处理
+const getCoOrganizerTypeText = (type: number) => {
+    const option = coOrganizerTypeOptions.find(item => item.value === type)
+    return option ? option.label : '未知类型'
+}
+
+const addCoOrganizer = () => {
+    editingCoOrganizerIndex.value = -1
+    coOrganizerForm.value = {
+        organizer_name: '',
+        organizer_type: 1,
+        contact_name: '',
+        contact_phone: '',
+        logo: ''
+    }
+    showCoOrganizerModal.value = true
+}
+
+const editCoOrganizer = (index: number) => {
+    editingCoOrganizerIndex.value = index
+    const coOrganizer = formData.value.co_organizers[index]
+    coOrganizerForm.value = { ...coOrganizer }
+    showCoOrganizerModal.value = true
+}
+
+const deleteCoOrganizer = (index: number) => {
+    uni.showModal({
+        title: '确认删除',
+        content: '确定要删除这个协办方吗？',
+        success: (res) => {
+            if (res.confirm) {
+                formData.value.co_organizers.splice(index, 1)
+            }
+        }
+    })
+}
+
+const confirmCoOrganizer = () => {
+    if (!coOrganizerForm.value.organizer_name.trim()) {
+        uni.showToast({
+            title: '请输入协办方名称',
+            icon: 'none'
+        })
+        return
+    }
+    
+    if (editingCoOrganizerIndex.value >= 0) {
+        // 编辑模式
+        formData.value.co_organizers[editingCoOrganizerIndex.value] = { ...coOrganizerForm.value }
+    } else {
+        // 新增模式
+        formData.value.co_organizers.push({ ...coOrganizerForm.value })
+    }
+    
+    showCoOrganizerModal.value = false
+}
+
+const cancelCoOrganizer = () => {
+    showCoOrganizerModal.value = false
+    editingCoOrganizerIndex.value = -1
+}
+
+// 协办方类型变更
+const onCoOrganizerTypeChange = (e: any) => {
+    coOrganizerForm.value.organizer_type = parseInt(e.detail.value)
 }
 
 // 项目选择
@@ -1101,9 +1312,9 @@ const confirmItemSelection = () => {
 }
 
 /**
- * 表单验证
+ * 最终提交验证
  */
-const validateForm = () => {
+const validateSubmitForm = () => {
     if (!formData.value.name.trim()) {
         uni.showToast({
             title: '请输入比赛名称',
@@ -1112,9 +1323,25 @@ const validateForm = () => {
         return false
     }
     
-    if (!formData.value.location.trim()) {
+    if (!formData.value.organizer_id) {
         uni.showToast({
-            title: '请先选择地图位置',
+            title: '请选择主办方',
+            icon: 'none'
+        })
+        return false
+    }
+    
+    if (formData.value.event_type === 2 && !formData.value.series_id) {
+        uni.showToast({
+            title: '请选择系列赛',
+            icon: 'none'
+        })
+        return false
+    }
+    
+    if (!formData.value.location) {
+        uni.showToast({
+            title: '请选择地点',
             icon: 'none'
         })
         return false
@@ -1152,22 +1379,6 @@ const validateForm = () => {
         return false
     }
     
-    if (!formData.value.organizer_id) {
-        uni.showToast({
-            title: '请选择主办方',
-            icon: 'none'
-        })
-        return false
-    }
-    
-    if (formData.value.event_type === 2 && !formData.value.series_id) {
-        uni.showToast({
-            title: '请选择系列赛',
-            icon: 'none'
-        })
-        return false
-    }
-    
     if (selectedItems.value.length === 0) {
         uni.showToast({
             title: '请选择比赛项目',
@@ -1182,7 +1393,7 @@ const validateForm = () => {
 // 提交表单
 const handleSubmit = async () => {
     // 验证表单
-    if (!validateForm()) {
+    if (!validateSubmitForm()) {
         return
     }
     
@@ -1932,6 +2143,139 @@ onMounted(() => {
             background: #007aff;
             color: white;
         }
+    }
+}
+
+/* 协办方相关样式 */
+.co-organizer-container {
+    .co-organizer-empty {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 24rpx 0;
+        
+        .empty-text {
+            color: #999;
+            font-size: 28rpx;
+        }
+        
+        .add-link {
+            color: #007aff;
+            font-size: 28rpx;
+        }
+    }
+    
+    .co-organizer-list {
+        .co-organizer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24rpx 0;
+            border-bottom: 1px solid #f0f0f0;
+            
+            &:last-child {
+                border-bottom: none;
+            }
+            
+            .co-organizer-info {
+                flex: 1;
+                
+                .co-organizer-name {
+                    display: block;
+                    font-size: 28rpx;
+                    color: #333;
+                    margin-bottom: 8rpx;
+                }
+                
+                .co-organizer-type {
+                    display: block;
+                    font-size: 24rpx;
+                    color: #666;
+                }
+            }
+            
+            .co-organizer-actions {
+                display: flex;
+                gap: 16rpx;
+                
+                .action-btn {
+                    padding: 8rpx 16rpx;
+                    border-radius: 8rpx;
+                    font-size: 24rpx;
+                    
+                    &.edit {
+                        background-color: #e3f2fd;
+                        color: #2196f3;
+                    }
+                    
+                    &.delete {
+                        background-color: #ffebee;
+                        color: #f44336;
+                    }
+                }
+            }
+        }
+        
+        .add-co-organizer {
+            padding: 24rpx 0;
+            text-align: center;
+            
+            .add-text {
+                color: #007aff;
+                font-size: 28rpx;
+            }
+        }
+    }
+}
+
+/* 分组相关样式 */
+.empty-groups {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24rpx 0;
+    
+    .empty-text {
+        color: #999;
+        font-size: 28rpx;
+    }
+    
+    .add-link {
+        color: #007aff;
+        font-size: 28rpx;
+    }
+}
+
+.group-item {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    
+    .group-input {
+        flex: 1;
+    }
+    
+    .group-actions {
+        .action-btn {
+            padding: 8rpx 16rpx;
+            border-radius: 8rpx;
+            font-size: 24rpx;
+            background-color: #ffebee;
+            color: #f44336;
+        }
+    }
+}
+
+.add-group-btn {
+    padding: 24rpx 0;
+    text-align: center;
+    border: 2rpx dashed #e0e0e0;
+    border-radius: 12rpx;
+    margin-top: 16rpx;
+    
+    .add-text {
+        color: #007aff;
+        font-size: 28rpx;
     }
 }
 </style> 
