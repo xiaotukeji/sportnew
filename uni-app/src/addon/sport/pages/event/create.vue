@@ -191,6 +191,21 @@
                         </view>
                     </view>
                 </view>
+                
+                <!-- 年龄组设置 -->
+                <view class="form-section">
+                    <view class="section-title">年龄组设置</view>
+                    
+                    <!-- 比赛项目选择 -->
+                    <u-cell-group :border="false" customStyle="margin-top: 15px;">
+                        <u-cell title="比赛项目" :isLink="true" @click="showItemSelect = true" :border="false">
+                            <template #value>
+                                <text class="text-muted" v-if="!formData.items || formData.items.length === 0">请选择比赛项目</text>
+                                <text class="text-primary" v-else>已选择{{ formData.items.length }}项</text>
+                            </template>
+                        </u-cell>
+                    </u-cell-group>
+                </view>
             </view>
             
             <!-- 提交按钮 -->
@@ -206,7 +221,170 @@
             </view>
         </view>
         
+        <!-- 项目选择弹窗（灵活多级结构） -->
+        <u-popup v-model="showItemSelect" mode="bottom" height="70%" closeable title="选择比赛项目">
+            <view class="popup-content">
+                <!-- 年龄组选择 -->
+                <view class="age-group-section">
+                    <text class="section-title">年龄组设置</text>
+                    <view class="age-group-tips">选择年龄组后，将自动为项目名称添加相应前缀</view>
+                    <view class="age-group-list">
+                        <label class="checkbox-item" v-for="group in ageGroups" :key="group.code">
+                            <checkbox 
+                                :value="group.code" 
+                                :checked="formData.age_groups.includes(group.code)"
+                                @tap="toggleAgeGroup(group.code)"
+                            />
+                            <text>{{ group.name }}</text>
+                        </label>
+                    </view>
+                    
+                    <!-- 年龄组预览 -->
+                    <view v-if="formData.age_groups.length > 0" class="age-preview">
+                        <text class="preview-title">项目名称预览：</text>
+                        <text class="preview-text">
+                            {{ generateAgeGroupPrefix() }}男子100米自由泳
+                        </text>
+                    </view>
+                </view>
 
+                <!-- 智能分类选择 -->
+                <view class="category-section">
+                    <text class="section-title">项目分类</text>
+                    
+                    <!-- 分类树形结构 -->
+                    <scroll-view scroll-y class="category-scroll">
+                        <view class="category-tree">
+                            <view v-for="category in categoryTree" :key="category.id" class="category-level-1">
+                                <!-- 一级分类 -->
+                                <view 
+                                    class="category-item level-1" 
+                                    :class="{ 'expanded': expandedCategories.includes(category.id) }"
+                                    @tap="handleCategoryTap(category)"
+                                >
+                                    <u-icon 
+                                        v-if="category.structure_type !== 'level_2'"
+                                        :name="expandedCategories.includes(category.id) ? 'arrow-down' : 'arrow-right'" 
+                                        size="16"
+                                    />
+                                    <text>{{ category.name }}</text>
+                                    <text class="category-info">({{ getStructureInfo(category.structure_type) }})</text>
+                                </view>
+
+                                <!-- 二级分类 -->
+                                <view 
+                                    v-if="expandedCategories.includes(category.id) && category.children" 
+                                    class="category-level-2"
+                                >
+                                    <view 
+                                        v-for="subCategory in category.children" 
+                                        :key="subCategory.id" 
+                                        class="category-level-2-wrapper"
+                                    >
+                                        <view 
+                                            class="category-item level-2"
+                                            :class="{ 'expanded': expandedCategories.includes(subCategory.id) }"
+                                            @tap="handleCategoryTap(subCategory)"
+                                        >
+                                            <u-icon 
+                                                v-if="!subCategory.is_final_level"
+                                                :name="expandedCategories.includes(subCategory.id) ? 'arrow-down' : 'arrow-right'" 
+                                                size="14"
+                                            />
+                                            <text>{{ subCategory.name }}</text>
+                                            <text v-if="subCategory.is_final_level" class="final-level-tag">可选项目</text>
+                                        </view>
+
+                                        <!-- 三级分类 -->
+                                        <view 
+                                            v-if="expandedCategories.includes(subCategory.id) && subCategory.children" 
+                                            class="category-level-3"
+                                        >
+                                            <view 
+                                                v-for="thirdCategory in subCategory.children" 
+                                                :key="thirdCategory.id"
+                                                class="category-item level-3"
+                                                :class="{ 'final-level': thirdCategory.is_final_level }"
+                                                @tap="handleCategoryTap(thirdCategory)"
+                                            >
+                                                <text>{{ thirdCategory.name }}</text>
+                                                <text v-if="thirdCategory.is_final_level" class="final-level-tag">可选项目</text>
+                                            </view>
+                                        </view>
+                                    </view>
+                                </view>
+                            </view>
+                        </view>
+                    </scroll-view>
+                </view>
+
+                <!-- 项目选择列表 -->
+                <view v-if="currentCategoryItems.length > 0" class="items-section">
+                    <text class="section-title">
+                        可选项目 ({{ currentCategoryName }})
+                        <text class="item-count">{{ currentCategoryItems.length }}个</text>
+                    </text>
+                    
+                    <scroll-view scroll-y class="items-scroll">
+                        <view class="items-list">
+                            <label 
+                                v-for="item in currentCategoryItems" 
+                                :key="item.id" 
+                                class="item-checkbox"
+                            >
+                                <checkbox 
+                                    :value="item.id.toString()" 
+                                    :checked="isItemSelected(item.id)"
+                                    @tap="toggleItem(item)"
+                                />
+                                <view class="item-info">
+                                    <text class="item-name">{{ item.name }}</text>
+                                    <text class="item-desc">{{ item.description }}</text>
+                                </view>
+                            </label>
+                        </view>
+                    </scroll-view>
+                </view>
+
+                <!-- 已选项目预览 -->
+                <view v-if="selectedItems.length > 0" class="selected-items-section">
+                    <text class="section-title">已选项目 ({{ selectedItems.length }}项)</text>
+                    <scroll-view scroll-x class="selected-items-scroll">
+                        <view class="selected-items">
+                            <view 
+                                v-for="item in selectedItems" 
+                                :key="item.id" 
+                                class="selected-item-tag"
+                                @tap="removeItem(item.id)"
+                            >
+                                <text>{{ item.display_name || item.name }}</text>
+                                <u-icon name="close" size="12" color="#fff"></u-icon>
+                            </view>
+                        </view>
+                    </scroll-view>
+                </view>
+
+                <!-- 底部按钮 -->
+                <view class="popup-footer">
+                    <u-button 
+                        type="default" 
+                        size="large" 
+                        @click="showItemSelect = false"
+                        customStyle="margin-right: 10px; flex: 1;"
+                    >
+                        取消
+                    </u-button>
+                    <u-button 
+                        type="primary" 
+                        size="large" 
+                        @click="confirmItemSelection"
+                        customStyle="flex: 2;"
+                    >
+                        确认选择 ({{ selectedItems.length }})
+                    </u-button>
+                </view>
+            </view>
+        </u-popup>
         
         <!-- 主办方选择器 -->
         <view v-if="showOrganizerPicker" class="picker-mask" @tap="showOrganizerPicker = false">
@@ -381,7 +559,9 @@ import {
     getOrganizerList, 
     addOrganizer, 
     getEventSeriesList, 
-    addEventSeries
+    addEventSeries,
+    getCategoryList,
+    getBaseItems
 } from '@/addon/sport/api/event'
 
 // 登录检查
@@ -400,7 +580,9 @@ const formData = ref({
     organizer_id: 0,           // 主办方ID
     event_type: 1,             // 赛事类型：1独立赛事 2系列赛事
     series_id: 0,              // 系列赛ID
-    year: new Date().getFullYear() // 举办年份
+    year: new Date().getFullYear(), // 举办年份
+    age_groups: ['不限年龄'],    // 年龄组设置，默认不限年龄
+    items: [] as any[]         // 比赛项目
 })
 
 // 主办方表单
@@ -428,6 +610,14 @@ const organizerTypeOptions = [
 const eventTypeOptions = [
     { label: '独立赛事', value: 1 },
     { label: '系列赛事', value: 2 }
+]
+
+// 年龄组选项
+const ageGroupOptions = [
+    { label: '不限年龄', value: '不限年龄' },
+    { label: '青少年', value: '青少年' },
+    { label: '成年', value: '成年' },
+    { label: '老年', value: '老年' }
 ]
 
 // 时间相关
@@ -498,8 +688,30 @@ const selectedSeriesName = computed(() => {
     return series ? series.name : ''
 })
 
+// 年龄组相关计算属性
+const selectedAgeGroups = computed(() => {
+    return formData.value.age_groups.filter(group => group !== '不限年龄')
+})
+
 // 提交状态
 const submitLoading = ref(false)
+
+// 项目选择弹窗
+const showItemSelect = ref(false)
+
+// 智能分类相关
+const categoryTree = ref<any[]>([]) // 分类树结构
+const expandedCategories = ref<number[]>([]) // 展开的分类ID
+const currentCategoryItems = ref<any[]>([]) // 当前分类的项目
+const currentCategoryName = ref<string>('') // 当前分类名称
+const selectedItems = ref<any[]>([]) // 已选择的项目
+
+// 年龄组数据
+const ageGroups = [
+    { name: '青少年', code: 'youth' },
+    { name: '成年', code: 'adult' },
+    { name: '老年', code: 'elder' }
+]
 
 /**
  * 日期时间选择
@@ -676,8 +888,6 @@ const performChooseLocation = () => {
     })
 }
 
-
-
 /**
  * 赛事类型变化
  */
@@ -724,6 +934,43 @@ const onOrganizerPickerChange = (e: any) => {
 
 const onSeriesPickerChange = (e: any) => {
     tempSeriesIndex.value = e.detail.value[0]
+}
+
+/**
+ * 年龄组处理
+ */
+const handleAgeGroupChange = (value: string) => {
+    const currentGroups = [...formData.value.age_groups]
+    
+    if (value === '不限年龄') {
+        // 选择不限年龄时，清空其他选项
+        formData.value.age_groups = ['不限年龄']
+    } else {
+        // 选择其他年龄组时，移除不限年龄
+        const index = currentGroups.indexOf(value)
+        if (index > -1) {
+            // 已选中，移除
+            currentGroups.splice(index, 1)
+        } else {
+            // 未选中，添加
+            currentGroups.push(value)
+        }
+        
+        // 移除不限年龄选项
+        const noLimitIndex = currentGroups.indexOf('不限年龄')
+        if (noLimitIndex > -1) {
+            currentGroups.splice(noLimitIndex, 1)
+        }
+        
+        // 如果没有选择任何年龄组，默认为不限年龄
+        if (currentGroups.length === 0) {
+            formData.value.age_groups = ['不限年龄']
+        } else {
+            formData.value.age_groups = currentGroups
+        }
+    }
+    
+    console.log('年龄组变更:', formData.value.age_groups)
 }
 
 const confirmOrganizerSelection = () => {
@@ -1096,7 +1343,9 @@ const handleSubmit = async () => {
             organizer_id: formData.value.organizer_id,
             event_type: formData.value.event_type,
             series_id: formData.value.series_id,
-            year: formData.value.year
+            year: formData.value.year,
+            age_groups: JSON.stringify(formData.value.age_groups), // 年龄组数据
+            age_group_display: formData.value.age_groups.length > 1 && !formData.value.age_groups.includes('不限年龄') ? 1 : 0
         }
         
         console.log('提交数据:', submitData)
@@ -1125,6 +1374,178 @@ const handleSubmit = async () => {
 }
 
 /**
+ * 智能分类相关方法
+ */
+
+// 获取结构信息描述
+const getStructureInfo = (structureType: string) => {
+    const typeMap: Record<string, string> = {
+        'level_2': '直接选择',
+        'level_3': '三级结构', 
+        'level_4': '四级结构'
+    }
+    return typeMap[structureType] || '未知结构'
+}
+
+// 年龄组切换
+const toggleAgeGroup = (code: string) => {
+    const index = formData.value.age_groups.indexOf(code)
+    if (index > -1) {
+        formData.value.age_groups.splice(index, 1)
+    } else {
+        formData.value.age_groups.push(code)
+    }
+}
+
+// 生成年龄组前缀
+const generateAgeGroupPrefix = () => {
+    if (formData.value.age_groups.length === 0 || formData.value.age_groups.includes('不限年龄')) {
+        return ''
+    }
+    if (formData.value.age_groups.length === 1) {
+        const groupMap: Record<string, string> = {
+            'youth': '青少年',
+            'adult': '成年',
+            'elder': '老年'
+        }
+        return groupMap[formData.value.age_groups[0]] || ''
+    }
+    return '多年龄组'
+}
+
+// 处理分类点击
+const handleCategoryTap = async (category: any) => {
+    console.log('点击分类:', category.name, '结构类型:', category.structure_type, '是否最终级别:', category.is_final_level)
+    
+    // 如果是最终级别或者直接有项目的分类，加载项目
+    if (category.is_final_level || category.has_items) {
+        await loadCategoryItems(category.id, category.name)
+        return
+    }
+    
+    // 如果是中间级别，展开/折叠子分类
+    const index = expandedCategories.value.indexOf(category.id)
+    if (index > -1) {
+        expandedCategories.value.splice(index, 1)
+    } else {
+        expandedCategories.value.push(category.id)
+    }
+}
+
+// 加载分类项目
+const loadCategoryItems = async (categoryId: number, categoryName: string) => {
+    try {
+        uni.showLoading({ title: '加载项目...' })
+        
+        const response = await getBaseItems({ category_id: categoryId })
+        if (response.code === 1) {
+            currentCategoryItems.value = response.data || []
+            currentCategoryName.value = categoryName
+            
+            console.log(`加载 ${categoryName} 项目:`, currentCategoryItems.value.length, '个')
+            
+            if (currentCategoryItems.value.length === 0) {
+                uni.showToast({ title: '该分类暂无可选项目', icon: 'none' })
+            }
+        } else {
+            console.error('加载项目失败:', response.msg)
+            uni.showToast({ title: response.msg || '加载项目失败', icon: 'none' })
+        }
+    } catch (error) {
+        console.error('加载项目异常:', error)
+        uni.showToast({ title: '加载项目失败', icon: 'none' })
+    } finally {
+        uni.hideLoading()
+    }
+}
+
+// 加载分类树
+const loadCategoryTree = async () => {
+    try {
+        const response = await getCategoryList()
+        if (response.code === 1) {
+            categoryTree.value = response.data || []
+            
+            // 自动展开有默认展开需求的分类
+            categoryTree.value.forEach(category => {
+                if (category.structure_type === 'level_3' || category.structure_type === 'level_4') {
+                    // 可以根据需要设置默认展开的分类
+                    if (['球类', '体操类'].includes(category.name)) {
+                        expandedCategories.value.push(category.id)
+                    }
+                }
+            })
+            
+            console.log('分类树加载完成:', categoryTree.value.length, '个一级分类')
+        } else {
+            console.error('加载分类失败:', response.msg)
+            uni.showToast({ title: '加载分类失败', icon: 'none' })
+        }
+    } catch (error) {
+        console.error('加载分类异常:', error)
+        uni.showToast({ title: '加载分类失败', icon: 'none' })
+    }
+}
+
+// 判断项目是否已选择
+const isItemSelected = (itemId: number) => {
+    return selectedItems.value.some(item => item.id === itemId)
+}
+
+// 切换项目选择
+const toggleItem = (item: any) => {
+    const index = selectedItems.value.findIndex(selected => selected.id === item.id)
+    if (index > -1) {
+        selectedItems.value.splice(index, 1)
+    } else {
+        // 生成带年龄组前缀的显示名称
+        const displayName = generateItemDisplayName(item.name)
+        selectedItems.value.push({
+            ...item,
+            display_name: displayName
+        })
+    }
+}
+
+// 移除已选项目
+const removeItem = (itemId: number) => {
+    const index = selectedItems.value.findIndex(item => item.id === itemId)
+    if (index > -1) {
+        selectedItems.value.splice(index, 1)
+    }
+}
+
+// 生成项目显示名称（包含年龄组前缀）
+const generateItemDisplayName = (originalName: string) => {
+    const prefix = generateAgeGroupPrefix()
+    return prefix + originalName
+}
+
+// 确认项目选择
+const confirmItemSelection = () => {
+    // 生成最终的项目数据，包含年龄组信息
+    const finalItems = selectedItems.value.map(item => ({
+        base_item_id: item.id,
+        name: item.display_name || item.name,
+        original_name: item.name,
+        category_id: item.category_id,
+        description: item.description,
+        rules: item.rules,
+        equipment: item.equipment,
+        venue_requirements: item.venue_requirements
+    }))
+    
+    formData.value.items = finalItems
+    showItemSelect.value = false
+    
+    console.log('确认选择项目:', finalItems.length, '个')
+    uni.showToast({ 
+        title: `已选择 ${finalItems.length} 个比赛项目`, 
+        icon: 'success' 
+    })
+}
+
+/**
  * 页面初始化
  */
 onMounted(() => {
@@ -1149,6 +1570,9 @@ onMounted(() => {
             time: currentTime
         })
     }, '/addon/sport/pages/event/create')
+
+    // 初始化时加载分类树
+    loadCategoryTree()
 })
 </script>
 
@@ -1287,10 +1711,6 @@ onMounted(() => {
         }
     }
 }
-
-
-
-
 
 .form-tip {
     margin-top: 16rpx;
@@ -1490,6 +1910,77 @@ onMounted(() => {
     }
 }
 
+// 年龄组相关样式
+.checkbox-group {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 32rpx;
+    
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        
+        .checkbox-circle {
+            width: 32rpx;
+            height: 32rpx;
+            border: 2rpx solid #ddd;
+            border-radius: 8rpx;
+            margin-right: 16rpx;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            
+            &.active {
+                border-color: #007aff;
+                background-color: #007aff;
+            }
+            
+            .checkbox-icon {
+                font-size: 20rpx;
+                color: white;
+                font-weight: bold;
+            }
+        }
+        
+        .checkbox-label {
+            font-size: 28rpx;
+            color: #333;
+        }
+    }
+}
+
+.age-group-preview {
+    margin-top: 20rpx;
+    padding: 24rpx;
+    background-color: #f8f9fa;
+    border-radius: 12rpx;
+    border: 1rpx solid #e9ecef;
+    
+    .preview-text {
+        font-size: 26rpx;
+        color: #666;
+        margin-bottom: 12rpx;
+    }
+    
+    .preview-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8rpx;
+        
+        .preview-item {
+            font-size: 24rpx;
+            color: #007aff;
+            background-color: #e3f2fd;
+            padding: 8rpx 16rpx;
+            border-radius: 20rpx;
+            border: 1rpx solid #bbdefb;
+        }
+    }
+}
+
 .modal-footer {
     display: flex;
     border-top: 1px solid #f0f0f0;
@@ -1564,5 +2055,155 @@ onMounted(() => {
     height: 100rpx;
     font-size: 28rpx;
     color: #333;
+}
+
+/* 智能分类树样式 */
+.category-section {
+    margin-bottom: 20px;
+}
+
+.category-scroll {
+    max-height: 300px;
+    border: 1px solid #e4e7ed;
+    border-radius: 8px;
+}
+
+.category-tree {
+    padding: 10px;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin: 2px 0;
+    
+    &.level-1 {
+        background: #f8f9fa;
+        font-weight: 600;
+        border-left: 3px solid #409eff;
+    }
+    
+    &.level-2 {
+        background: #f0f9ff;
+        margin-left: 20px;
+        border-left: 2px solid #67c23a;
+    }
+    
+    &.level-3 {
+        background: #fafcff;
+        margin-left: 40px;
+        border-left: 1px solid #909399;
+        
+        &.final-level {
+            background: #f0f9ff;
+            border-left: 2px solid #e6a23c;
+        }
+    }
+    
+    &.expanded {
+        background: #e3f2fd;
+    }
+    
+    text {
+        margin-left: 8px;
+        flex: 1;
+    }
+}
+
+.category-info {
+    font-size: 12px;
+    color: #909399;
+    margin-left: 8px !important;
+}
+
+.final-level-tag {
+    font-size: 10px;
+    color: #67c23a;
+    background: #f0f9ff;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 8px !important;
+}
+
+/* 项目列表样式 */
+.items-section {
+    margin-bottom: 20px;
+}
+
+.items-scroll {
+    max-height: 200px;
+    border: 1px solid #e4e7ed;
+    border-radius: 8px;
+}
+
+.items-list {
+    padding: 10px;
+}
+
+.item-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.item-info {
+    margin-left: 12px;
+    flex: 1;
+}
+
+.item-name {
+    font-size: 14px;
+    color: #303133;
+    display: block;
+}
+
+.item-desc {
+    font-size: 12px;
+    color: #909399;
+    margin-top: 4px;
+    display: block;
+}
+
+.item-count {
+    font-size: 12px;
+    color: #909399;
+    margin-left: 8px;
+}
+
+/* 已选项目样式 */
+.selected-items-section {
+    margin-bottom: 20px;
+}
+
+.selected-items-scroll {
+    white-space: nowrap;
+}
+
+.selected-items {
+    display: flex;
+    padding: 10px 0;
+}
+
+.selected-item-tag {
+    display: flex;
+    align-items: center;
+    background: #409eff;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    margin-right: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    
+    text {
+        margin-right: 6px;
+    }
 }
 </style> 
