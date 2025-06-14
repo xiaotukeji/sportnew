@@ -271,32 +271,123 @@
             <view v-if="currentStep === 4" class="form-wrapper">
                 <view class="form-section">
                     <view class="section-title">比赛项目</view>
-                    
-                    <view class="form-item">
-                        <view class="form-label required">选择项目</view>
-                        <view class="items-selection" @tap="openItemSelect">
-                            <view class="selection-display">
-                                <text class="selection-text" v-if="selectedItems.length === 0">请选择比赛项目</text>
-                                <text class="selection-text selected" v-else>已选择 {{ selectedItems.length }} 个项目</text>
-                                <text class="selection-arrow">></text>
-                            </view>
-                        </view>
-                        
-                        <!-- 已选项目预览 -->
-                        <view v-if="selectedItems.length > 0" class="selected-preview">
-                            <view class="preview-title">已选项目：</view>
-                            <view class="preview-items">
-                                <text 
-                                    v-for="(item, index) in selectedItems.slice(0, 3)" 
-                                    :key="index"
-                                    class="preview-item"
+                    <!-- 顶部一级分类tab -->
+                    <view class="category-tabs">
+                        <scroll-view class="tabs-scroll" scroll-x show-scrollbar="false">
+                            <view class="tabs-content">
+                                <view 
+                                    v-for="cat in categories" 
+                                    :key="cat.id"
+                                    class="tab-item"
+                                    :class="{ active: activeTab === cat.id }"
+                                    @tap="switchTab(cat.id)"
                                 >
-                                    {{ item.name }}
-                                </text>
-                                <text v-if="selectedItems.length > 3" class="preview-more">
-                                    等{{ selectedItems.length }}项
-                                </text>
+                                    <text class="tab-text">{{ cat.name }}</text>
+                                </view>
                             </view>
+                        </scroll-view>
+                    </view>
+                    <!-- 多级分类嵌套遍历，最多四级，修正类型和空值问题 -->
+                    <view class="categories-list">
+                      <template v-if="activeCategory && Array.isArray(activeCategory.children)">
+                        <template v-for="cat1 in activeCategory.children">
+                          <view v-if="cat1 && typeof cat1 === 'object'" :key="cat1.id">
+                            <view class="category-header" @tap="toggleCategory(cat1.id)">
+                              <text>{{ cat1.name }}</text>
+                              <text v-if="cat1.children && cat1.children.length">{{ expandedCategories.includes(cat1.id) ? '▼' : '▶' }}</text>
+                            </view>
+                            <view v-if="expandedCategories.includes(cat1.id)">
+                              <!-- 二级 -->
+                              <template v-if="cat1.children && Array.isArray(cat1.children)">
+                                <template v-for="cat2 in cat1.children">
+                                  <view v-if="cat2 && typeof cat2 === 'object'" :key="cat2.id">
+                                    <view class="category-header" style="margin-left: 24px;" @tap="toggleCategory(cat2.id)">
+                                      <text>{{ cat2.name }}</text>
+                                      <text v-if="cat2.children && cat2.children.length">{{ expandedCategories.includes(cat2.id) ? '▼' : '▶' }}</text>
+                                    </view>
+                                    <view v-if="expandedCategories.includes(cat2.id)">
+                                      <!-- 三级 -->
+                                      <template v-if="cat2.children && Array.isArray(cat2.children)">
+                                        <template v-for="cat3 in cat2.children">
+                                          <view v-if="cat3 && typeof cat3 === 'object'" :key="cat3.id">
+                                            <view class="category-header" style="margin-left: 24px;" @tap="toggleCategory(cat3.id)">
+                                              <text>{{ cat3.name }}</text>
+                                              <text v-if="cat3.children && cat3.children.length">{{ expandedCategories.includes(cat3.id) ? '▼' : '▶' }}</text>
+                                            </view>
+                                            <view v-if="expandedCategories.includes(cat3.id)">
+                                              <!-- 四级 -->
+                                              <template v-if="cat3.children && Array.isArray(cat3.children)">
+                                                <template v-for="cat4 in cat3.children">
+                                                  <view v-if="cat4 && typeof cat4 === 'object'" :key="cat4.id">
+                                                    <view class="category-header" style="margin-left: 24px;" @tap="toggleCategory(cat4.id)">
+                                                      <text>{{ cat4.name }}</text>
+                                                    </view>
+                                                    <view v-if="expandedCategories.includes(cat4.id) && cat4.base_items && Array.isArray(cat4.base_items)" class="base-items-grid">
+                                                      <view v-for="item in cat4.base_items" :key="item.id" class="base-item" :class="{ selected: selectedItems.includes(item.id) }" @tap="toggleItem(item.id)">
+                                                        <text class="item-name">{{ item.name }}</text>
+                                                        <text v-if="selectedItems.includes(item.id)" class="selected-icon">✓</text>
+                                                      </view>
+                                                    </view>
+                                                  </view>
+                                                </template>
+                                              </template>
+                                              <!-- 三级直接有项目 -->
+                                              <view v-if="cat3.base_items && Array.isArray(cat3.base_items)" class="base-items-grid">
+                                                <view v-for="item in cat3.base_items" :key="item.id" class="base-item" :class="{ selected: selectedItems.includes(item.id) }" @tap="toggleItem(item.id)">
+                                                  <text class="item-name">{{ item.name }}</text>
+                                                  <text v-if="selectedItems.includes(item.id)" class="selected-icon">✓</text>
+                                                </view>
+                                              </view>
+                                            </view>
+                                          </view>
+                                        </template>
+                                      </template>
+                                      <!-- 二级直接有项目 -->
+                                      <view v-if="cat2.base_items && Array.isArray(cat2.base_items)" class="base-items-grid">
+                                        <view v-for="item in cat2.base_items" :key="item.id" class="base-item" :class="{ selected: selectedItems.includes(item.id) }" @tap="toggleItem(item.id)">
+                                          <text class="item-name">{{ item.name }}</text>
+                                          <text v-if="selectedItems.includes(item.id)" class="selected-icon">✓</text>
+                                        </view>
+                                      </view>
+                                    </view>
+                                  </view>
+                                </template>
+                              </template>
+                              <!-- 一级直接有项目 -->
+                              <view v-if="cat1.base_items && Array.isArray(cat1.base_items)" class="base-items-grid">
+                                <view v-for="item in cat1.base_items" :key="item.id" class="base-item" :class="{ selected: selectedItems.includes(item.id) }" @tap="toggleItem(item.id)">
+                                  <text class="item-name">{{ item.name }}</text>
+                                  <text v-if="selectedItems.includes(item.id)" class="selected-icon">✓</text>
+                                </view>
+                              </view>
+                            </view>
+                          </view>
+                        </view>
+                      </template>
+                    </view>
+                    <!-- 已选项目预览 -->
+                    <view v-if="selectedItems.length > 0" class="selected-preview">
+                        <view class="preview-title">已选项目：</view>
+                        <view class="preview-items">
+                            <text 
+                                v-for="(itemId, index) in selectedItems.slice(0, 3)" 
+                                :key="itemId"
+                                class="preview-item"
+                            >
+                                {{ getItemNameById(itemId) }}
+                            </text>
+                            <text v-if="selectedItems.length > 3" class="preview-more">
+                                等{{ selectedItems.length }}项
+                            </text>
+                        </view>
+                    </view>
+                    <!-- 底部操作栏 -->
+                    <view class="bottom-actions">
+                        <view class="selected-info">
+                            <text class="selected-text">已选 {{ selectedItems.length }} 项</text>
+                        </view>
+                        <view class="action-buttons">
+                            <button class="btn-secondary" @tap="clearAll">清空</button>
                         </view>
                     </view>
                 </view>
@@ -589,7 +680,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, defineComponent, defineProps, defineEmits } from 'vue'
 import { useLoginCheck } from '@/addon/sport/hooks/useLoginCheck'
 import { uploadImage } from '@/app/api/system'
 import { img } from '@/utils/common'
@@ -598,7 +689,8 @@ import {
     getOrganizerList, 
     addOrganizer, 
     getEventSeriesList, 
-    addEventSeries
+    addEventSeries,
+    getEventCategories
 } from '@/addon/sport/api/event'
 
 // 登录检查
@@ -1707,36 +1799,33 @@ const validateSubmitForm = () => {
  * 页面初始化
  */
 onMounted(() => {
-    // 检查登录状态
     requireLogin(() => {
-        // 已登录，初始化数据
+        // 恢复缓存数据
+        initFormData()
+        // 加载基础数据
         loadOrganizerList()
         loadSeriesList()
-        
-        // 初始化时间选择器的值（设置为当前时间）
-        const now = new Date()
-        const today = now.toISOString().slice(0, 10) // YYYY-MM-DD
-        const currentTime = now.toTimeString().slice(0, 5) // HH:MM
-        
-        startDateValue.value = today
-        startTimeValue.value = currentTime
-        endDateValue.value = today
-        endTimeValue.value = currentTime
-        
-        console.log('初始化时间选择器:', {
-            date: today,
-            time: currentTime
-        })
+
+        // 如果没有缓存数据，初始化时间选择器的值（设置为当前时间）
+        if (!uni.getStorageSync('sport_event_form_data')) {
+            const now = new Date()
+            const today = now.toISOString().slice(0, 10) // YYYY-MM-DD
+            const currentTime = now.toTimeString().slice(0, 5) // HH:MM
+            startDateValue.value = today
+            startTimeValue.value = currentTime
+            endDateValue.value = today
+            endTimeValue.value = currentTime
+        }
     }, '/addon/sport/pages/event/create_simple')
 
-    // 初始化项目选择
+    // 初始化项目选择等其他逻辑
     tempSelectedItems.value = [...selectedItems.value]
 })
 
 // 表单数据
-const selectedItems = ref<Item[]>([])
+const selectedItems = ref<number[]>([])
 const showItemSelect = ref(false)
-const tempSelectedItems = ref<Item[]>([])
+const tempSelectedItems = ref<number[]>([])
 
 // 模拟项目数据
 const mockItems = [
@@ -1844,6 +1933,116 @@ const validateForm = () => {
     
     return true
 }
+
+// 项目选择相关数据
+const categories = ref<any[]>([])
+const expandedCategories = ref<number[]>([])
+const activeTab = ref<number | null>(null)
+
+const activeCategory = computed(() => {
+  return categories.value.find(cat => cat.id === activeTab.value) || categories.value[0]
+})
+
+const getItemNameById = (id: number) => {
+  // 递归查找
+  const findName = (cats: any[]): string => {
+    for (const cat of cats) {
+      if (cat.base_items) {
+        const item = cat.base_items.find((i: any) => i.id === id)
+        if (item) return item.name
+      }
+      if (cat.children) {
+        const name = findName(cat.children)
+        if (name) return name
+      }
+    }
+    return ''
+  }
+  return findName(categories.value)
+}
+
+const switchTab = (id: number) => {
+  activeTab.value = id
+}
+
+const toggleCategory = (id: number) => {
+  const idx = expandedCategories.value.indexOf(id)
+  if (idx > -1) expandedCategories.value.splice(idx, 1)
+  else expandedCategories.value.push(id)
+}
+
+const toggleItem = (id: number) => {
+  const idx = selectedItems.value.indexOf(id)
+  if (idx > -1) selectedItems.value.splice(idx, 1)
+  else selectedItems.value.push(id)
+}
+
+const clearAll = () => {
+  uni.showModal({
+    title: '确认清空',
+    content: '确定要清空所有已选择的项目吗？',
+    success: (res) => {
+      if (res.confirm) selectedItems.value = []
+    }
+  })
+}
+
+onMounted(async () => {
+  // ...登录检查等...
+  const res = await getEventCategories({})
+  categories.value = res.data.categories || []
+  if (categories.value.length > 0) activeTab.value = categories.value[0].id
+})
+
+watch(selectedItems, (val) => {
+  formData.value.items = val.map(id => ({ id, name: getItemNameById(id) }))
+})
+
+// 递归组件
+const CategoryTree = defineComponent({
+  name: 'CategoryTree',
+  props: {
+    category: Object,
+    selectedItems: Array,
+    expandedCategories: Array
+  },
+  emits: ['toggle-category', 'toggle-item'],
+  setup(props, { emit }) {
+    const isExpanded = computed(() => props.expandedCategories.includes(props.category.id))
+    const toggle = () => emit('toggle-category', props.category.id)
+    return () => (
+      <div>
+        <div class="category-header" style={{ marginLeft: `${(props.category.level-1)*24}px` }} onClick={toggle}>
+          <span>{{ props.category.name }}</span>
+          <span v-if="props.category.children">{{ isExpanded.value ? '▼' : '▶' }}</span>
+        </div>
+        { isExpanded.value && props.category.children && props.category.children.map((child: any) => (
+          <CategoryTree
+            category={child}
+            selected-items={props.selectedItems}
+            expanded-categories={props.expandedCategories}
+            onToggle-category={emit.bind(null, 'toggle-category')}
+            onToggle-item={emit.bind(null, 'toggle-item')}
+          />
+        ))}
+        { isExpanded.value && props.category.base_items && (
+          <div class="base-items-grid">
+            {props.category.base_items.map((item: any) => (
+              <div class={['base-item', props.selectedItems.includes(item.id) ? 'selected' : '']} onClick={() => emit('toggle-item', item.id)}>
+                <span class="item-name">{{ item.name }}</span>
+                {props.selectedItems.includes(item.id) && <span class="selected-icon">✓</span>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+})
+
+// 注册递归组件
+defineProps(['category', 'selectedItems', 'expandedCategories'])
+defineEmits(['toggle-category', 'toggle-item'])
 </script>
 
 <style lang="scss" scoped>
@@ -2715,6 +2914,118 @@ const validateForm = () => {
     .add-link {
         color: #007aff;
         font-size: 28rpx;
+    }
+}
+
+.category-tabs {
+    display: flex;
+    margin-bottom: 20rpx;
+    background: #fff;
+    border-radius: 12rpx;
+    box-shadow: 0 2rpx 8rpx #f0f0f0;
+}
+.tabs-scroll {
+    flex: 1;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.tabs-content {
+    display: flex;
+}
+.tab-item {
+    padding: 16rpx 32rpx;
+    margin-right: 12rpx;
+    border-radius: 24rpx;
+    background: #f8f9fa;
+    color: #333;
+    font-weight: 500;
+    cursor: pointer;
+    &.active {
+        background: linear-gradient(90deg, #4f8aff 0%, #6f6fff 100%);
+        color: #fff;
+    }
+}
+.category-header {
+    display: flex;
+    align-items: center;
+    font-size: 28rpx;
+    color: #333;
+    padding: 12rpx 0 12rpx 24rpx;
+    cursor: pointer;
+    font-weight: 500;
+}
+.base-items-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16rpx;
+    margin-left: 32rpx;
+    margin-bottom: 12rpx;
+}
+.base-item {
+    background: #f8f9fa;
+    border-radius: 12rpx;
+    padding: 12rpx 24rpx;
+    font-size: 26rpx;
+    color: #333;
+    margin-bottom: 8rpx;
+    cursor: pointer;
+    border: 2rpx solid transparent;
+    &.selected {
+        background: #e3f2fd;
+        border-color: #4f8aff;
+        color: #4f8aff;
+        font-weight: bold;
+    }
+    .selected-icon {
+        margin-left: 8rpx;
+        color: #4f8aff;
+        font-size: 24rpx;
+    }
+}
+.selected-preview {
+    margin: 16rpx 0 0 0;
+    .preview-title {
+        font-size: 24rpx;
+        color: #666;
+        margin-bottom: 8rpx;
+    }
+    .preview-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8rpx;
+        .preview-item {
+            background: #e3f2fd;
+            color: #4f8aff;
+            border-radius: 16rpx;
+            padding: 6rpx 16rpx;
+            font-size: 24rpx;
+        }
+        .preview-more {
+            color: #999;
+            font-size: 22rpx;
+            margin-left: 8rpx;
+        }
+    }
+}
+.bottom-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 24rpx;
+    .selected-info {
+        font-size: 28rpx;
+        color: #333;
+    }
+    .action-buttons {
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #666;
+            border-radius: 12rpx;
+            padding: 12rpx 32rpx;
+            font-size: 28rpx;
+            border: 1rpx solid #e0e0e0;
+            cursor: pointer;
+        }
     }
 }
 </style> 
