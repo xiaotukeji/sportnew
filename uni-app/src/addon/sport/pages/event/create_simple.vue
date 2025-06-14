@@ -85,10 +85,6 @@
                             maxlength="100"
                         />
                     </view>
-                </view>
-                
-                <view class="form-section">
-                    <view class="section-title">组织信息</view>
                     
                     <!-- 主办方 -->
                     <view class="form-item">
@@ -107,40 +103,10 @@
                             </text>
                         </view>
                     </view>
-                    
-                    <!-- 协办方 -->
-                    <view class="form-item">
-                        <view class="form-label">协办方</view>
-                        <view class="co-organizer-container">
-                            <view v-if="formData.co_organizers.length === 0" class="co-organizer-empty">
-                                <text class="empty-text">暂无协办方</text>
-                                <text class="add-link" @tap="addCoOrganizer">添加协办方</text>
-                            </view>
-                            <view v-else class="co-organizer-list">
-                                <view 
-                                    v-for="(coOrganizer, index) in formData.co_organizers" 
-                                    :key="index"
-                                    class="co-organizer-item"
-                                >
-                                    <view class="co-organizer-info">
-                                        <text class="co-organizer-name">{{ coOrganizer.organizer_name }}</text>
-                                        <text class="co-organizer-type">{{ getCoOrganizerTypeText(coOrganizer.organizer_type) }}</text>
-                                    </view>
-                                    <view class="co-organizer-actions">
-                                        <text class="action-btn edit" @tap="editCoOrganizer(index)">编辑</text>
-                                        <text class="action-btn delete" @tap="deleteCoOrganizer(index)">删除</text>
-                                    </view>
-                                </view>
-                                <view class="add-co-organizer" @tap="addCoOrganizer">
-                                    <text class="add-text">+ 添加协办方</text>
-                                </view>
-                            </view>
-                        </view>
-                    </view>
                 </view>
             </view>
 
-            <!-- 第2步：时间地点 -->
+            <!-- 第2步：地点信息 -->
             <view v-if="currentStep === 2" class="form-wrapper">
                 <view class="form-section">
                     <view class="section-title">地点信息</view>
@@ -177,7 +143,10 @@
                         </view>
                     </view>
                 </view>
-                
+            </view>
+
+            <!-- 第3步：时间安排 -->
+            <view v-if="currentStep === 3" class="form-wrapper">
                 <view class="form-section">
                     <view class="section-title">时间安排</view>
                     
@@ -263,14 +232,14 @@
                         <text class="tip-text">可以创建如"12年级组"、"A组/B组"等自定义分组</text>
                     </view>
                     
-                    <view v-if="formData.custom_groups.length === 0" class="form-item">
-                        <view class="empty-groups">
-                            <text class="empty-text">暂无自定义分组</text>
+                    <view class="form-item">
+                        <view class="group-default">
+                            <text class="group-default-text">默认不分组</text>
                             <text class="add-link" @tap="addGroup">添加分组</text>
                         </view>
                     </view>
                     
-                    <view v-else>
+                    <view v-if="formData.custom_groups.length > 0">
                         <view 
                             v-for="(group, index) in formData.custom_groups" 
                             :key="index"
@@ -279,7 +248,7 @@
                             <view class="group-item">
                                 <input 
                                     class="form-input group-input" 
-                                    v-model="group.name" 
+                                    v-model="group.group_name" 
                                     :placeholder="`分组${index + 1}名称`"
                                     maxlength="50"
                                 />
@@ -298,14 +267,14 @@
                 </view>
             </view>
 
-            <!-- 第3步：选择项目 -->
-            <view v-if="currentStep === 3" class="form-wrapper">
+            <!-- 第4步：选择项目 -->
+            <view v-if="currentStep === 4" class="form-wrapper">
                 <view class="form-section">
                     <view class="section-title">比赛项目</view>
                     
                     <view class="form-item">
                         <view class="form-label required">选择项目</view>
-                        <view class="items-selection" @tap="showItemSelect = true">
+                        <view class="items-selection" @tap="openItemSelect">
                             <view class="selection-display">
                                 <text class="selection-text" v-if="selectedItems.length === 0">请选择比赛项目</text>
                                 <text class="selection-text selected" v-else>已选择 {{ selectedItems.length }} 个项目</text>
@@ -317,13 +286,16 @@
                         <view v-if="selectedItems.length > 0" class="selected-preview">
                             <view class="preview-title">已选项目：</view>
                             <view class="preview-items">
-                                <view 
-                                    v-for="item in selectedItems" 
-                                    :key="item.id" 
+                                <text 
+                                    v-for="(item, index) in selectedItems.slice(0, 3)" 
+                                    :key="index"
                                     class="preview-item"
                                 >
-                                    <text>{{ item.name }}</text>
-                                </view>
+                                    {{ item.name }}
+                                </text>
+                                <text v-if="selectedItems.length > 3" class="preview-more">
+                                    等{{ selectedItems.length }}项
+                                </text>
                             </view>
                         </view>
                     </view>
@@ -341,7 +313,7 @@
                 上一步
             </button>
             <button 
-                v-if="currentStep < 3" 
+                v-if="currentStep < 4" 
                 class="action-btn next-btn" 
                 :class="{ 'disabled': !canProceedToNext }"
                 :disabled="!canProceedToNext"
@@ -350,7 +322,7 @@
                 下一步
             </button>
             <button 
-                v-if="currentStep === 3" 
+                v-if="currentStep === 4" 
                 class="action-btn submit-btn" 
                 :class="{ 'loading': submitLoading }"
                 :disabled="submitLoading || !canProceedToNext"
@@ -441,9 +413,9 @@
                 <view class="modal-content">
                     <view class="form-item">
                         <view class="form-label required">类型</view>
-                        <radio-group @change="onOrganizerTypeChange">
+                        <radio-group @change="onOrganizerTypeChange" @tap.stop>
                             <view class="radio-group">
-                                <label class="radio-item" v-for="option in organizerTypeOptions" :key="option.value">
+                                <label class="radio-item" v-for="option in organizerTypeOptions" :key="option.value" @tap.stop>
                                     <radio 
                                         :value="option.value" 
                                         :checked="organizerForm.organizer_type === option.value"
@@ -462,6 +434,32 @@
                             maxlength="100"
                         />
                     </view>
+                    
+                    <!-- 机构证件上传（仅机构显示） -->
+                    <view v-if="organizerForm.organizer_type === 2" class="form-item">
+                        <view class="form-label">机构证件</view>
+                        <view class="upload-container">
+                            <!-- 已上传的图片预览 -->
+                            <view v-if="organizerForm.organizer_license_img" class="image-preview">
+                                <image 
+                                    :src="img(organizerForm.organizer_license_img)" 
+                                    class="preview-image"
+                                    @click="previewOrganizerImage"
+                                    mode="aspectFill"
+                                />
+                                <view class="delete-btn" @click="deleteOrganizerImage">
+                                    <text class="nc-iconfont nc-icon-guanbiV6xx"></text>
+                                </view>
+                            </view>
+                            
+                            <!-- 上传按钮 -->
+                            <view v-else class="upload-btn" @click="chooseOrganizerImage">
+                                <text class="nc-iconfont nc-icon-xiangjiV6xx"></text>
+                                <text class="upload-text">上传机构证件（可选）</text>
+                            </view>
+                        </view>
+                    </view>
+                    
                     <view class="form-item">
                         <view class="form-label">联系人</view>
                         <input 
@@ -591,8 +589,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useLoginCheck } from '@/addon/sport/hooks/useLoginCheck'
+import { uploadImage } from '@/app/api/system'
+import { img } from '@/utils/common'
 import { 
     addEvent, 
     getOrganizerList, 
@@ -607,7 +607,8 @@ const { requireLogin } = useLoginCheck()
 // 步骤配置
 const steps = [
     { title: '基本信息' },
-    { title: '时间地点' },
+    { title: '地点信息' },
+    { title: '时间安排' },
     { title: '选择项目' }
 ]
 
@@ -615,8 +616,63 @@ const steps = [
 const currentStep = ref(1)
 const maxReachedStep = ref(1)
 
+// 类型定义
+interface FormData {
+    name: string
+    location: string
+    lng: string
+    lat: string
+    full_address: string
+    address_detail: string
+    start_time: number
+    end_time: number
+    organizer_id: number
+    event_type: number
+    series_id: number
+    year: number
+    age_groups: string[]
+    items: Item[]
+    custom_groups: CustomGroup[]
+    co_organizers: CoOrganizer[]
+}
+
+interface Organizer {
+    id: number
+    organizer_name: string
+    organizer_type: number
+    contact_name: string
+    contact_phone: string
+    logo: string
+}
+
+interface Series {
+    id: number
+    name: string
+    sort: number
+}
+
+interface Item {
+    id: number
+    name: string
+}
+
+interface CustomGroup {
+    id?: number
+    group_name: string
+    sort: number
+}
+
+interface CoOrganizer {
+    id?: number
+    organizer_name: string
+    organizer_type: number
+    contact_name: string
+    contact_phone: string
+    logo: string
+}
+
 // 表单数据
-const formData = ref({
+const formData = ref<FormData>({
     name: '',                   // 比赛名称
     location: '',              // 举办地点（地图选择的地址名称）
     lng: '',                   // 经度
@@ -629,9 +685,56 @@ const formData = ref({
     event_type: 1,             // 赛事类型：1独立赛事 2系列赛事
     series_id: 0,              // 系列赛ID
     year: new Date().getFullYear(), // 举办年份
-    custom_groups: [] as any[], // 自定义分组
-    co_organizers: [] as any[]  // 协办方
+    age_groups: ['不限年龄'],    // 年龄组设置，默认不限年龄
+    items: [],                 // 比赛项目
+    custom_groups: [],         // 自定义分组
+    co_organizers: []          // 协办方
 })
+
+// 添加自定义分组
+const handleAddCustomGroup = () => {
+    const newGroup: CustomGroup = {
+        group_name: '',
+        sort: formData.value.custom_groups.length + 1
+    }
+    formData.value.custom_groups.push(newGroup)
+}
+
+// 添加协办方
+const handleAddCoOrganizer = () => {
+    const newOrganizer: CoOrganizer = {
+        organizer_name: '',
+        organizer_type: 1,
+        contact_name: '',
+        contact_phone: '',
+        logo: ''
+    }
+    formData.value.co_organizers.push(newOrganizer)
+}
+
+// 删除自定义分组
+const handleDeleteCustomGroup = (index: number) => {
+    formData.value.custom_groups.splice(index, 1)
+    // 重新排序
+    formData.value.custom_groups.forEach((group, idx) => {
+        group.sort = idx + 1
+    })
+}
+
+// 删除协办方
+const handleDeleteCoOrganizer = (index: number) => {
+    formData.value.co_organizers.splice(index, 1)
+}
+
+// 更新自定义分组名称
+const handleUpdateCustomGroupName = (index: number, value: string) => {
+    formData.value.custom_groups[index].group_name = value
+}
+
+// 更新协办方信息
+const handleUpdateCoOrganizer = (index: number, field: keyof CoOrganizer, value: any) => {
+    (formData.value.co_organizers[index] as any)[field] = value
+}
 
 // 主办方表单
 const organizerForm = ref({
@@ -681,102 +784,190 @@ const startDateValue = ref('')
 const startTimeValue = ref('')
 const endDateValue = ref('')
 const endTimeValue = ref('')
+const startDateDisplay = ref('')
+const startTimeDisplay = ref('')
+const endDateDisplay = ref('')
+const endTimeDisplay = ref('')
 
-// 显示用的计算属性
-const startDateDisplay = computed(() => {
-    return startDateValue.value || ''
-})
+// 格式化日期显示
+const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
+}
 
-const startTimeDisplay = computed(() => {
-    return startTimeValue.value || ''
-})
+// 初始化表单数据
+const initFormData = () => {
+    // 获取当前日期
+    const now = new Date()
+    const today = now.toISOString().split('T')[0]
+    
+    // 从缓存中恢复数据
+    const cachedData = uni.getStorageSync('sport_event_form_data')
+    if (cachedData) {
+        try {
+            const parsedData = JSON.parse(cachedData)
+            formData.value = {
+                ...formData.value,
+                ...parsedData
+            }
+            
+            // 恢复时间显示
+            if (parsedData.start_time) {
+                const startDate = new Date(parsedData.start_time * 1000)
+                startDateValue.value = startDate.toISOString().split('T')[0]
+                startTimeValue.value = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`
+                startDateDisplay.value = formatDate(startDateValue.value)
+                startTimeDisplay.value = startTimeValue.value
+            }
+            
+            if (parsedData.end_time) {
+                const endDate = new Date(parsedData.end_time * 1000)
+                endDateValue.value = endDate.toISOString().split('T')[0]
+                endTimeValue.value = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`
+                endDateDisplay.value = formatDate(endDateValue.value)
+                endTimeDisplay.value = endTimeValue.value
+            }
+            
+            return
+        } catch (e) {
+            console.error('解析缓存数据失败:', e)
+        }
+    }
+    
+    // 如果没有缓存数据，设置默认值
+    formData.value = {
+        name: '',
+        organizer_id: 0,
+        location: '',
+        lng: '',
+        lat: '',
+        full_address: '',
+        address_detail: '',
+        start_time: 0,
+        end_time: 0,
+        custom_groups: [],
+        event_type: 1,
+        series_id: 0,
+        year: now.getFullYear(),
+        age_groups: ['不限年龄'],
+        items: [],
+        co_organizers: []
+    }
+    
+    // 设置默认时间
+    startDateValue.value = today
+    startTimeValue.value = '00:00'
+    endDateValue.value = today
+    endTimeValue.value = '23:59'
+    
+    // 更新显示值
+    startDateDisplay.value = formatDate(today)
+    startTimeDisplay.value = '00:00'
+    endDateDisplay.value = formatDate(today)
+    endTimeDisplay.value = '23:59'
+    
+    // 更新时间戳
+    updateStartTimestamp()
+    updateEndTimestamp()
+}
 
-const endDateDisplay = computed(() => {
-    return endDateValue.value || ''
-})
+// 保存表单数据到缓存
+const saveFormDataToCache = () => {
+    try {
+        uni.setStorageSync('sport_event_form_data', JSON.stringify(formData.value))
+    } catch (e) {
+        console.error('保存表单数据到缓存失败:', e)
+    }
+}
 
-const endTimeDisplay = computed(() => {
-    return endTimeValue.value || ''
-})
+// 监听表单数据变化，自动保存到缓存
+watch(formData, () => {
+    saveFormDataToCache()
+}, { deep: true })
 
-// 选择器相关
-const showOrganizerPicker = ref(false)
-const showSeriesPicker = ref(false)
-const showOrganizerModal = ref(false)
-const showSeriesModal = ref(false)
-const showCoOrganizerModal = ref(false)
+// 表单提交
+const handleSubmit = async () => {
+    // 验证表单
+    if (!validateForm()) {
+        return
+    }
+    
+    try {
+        submitLoading.value = true
+        
+        // 组合完整地址信息
+        let finalFullAddress = formData.value.full_address
+        if (formData.value.address_detail) {
+            finalFullAddress += (finalFullAddress ? ' ' : '') + formData.value.address_detail
+        }
+        
+        // 提交数据
+        const submitData: any = {
+            name: formData.value.name,
+            location: formData.value.location,
+            location_detail: finalFullAddress,
+            latitude: formData.value.lat ? parseFloat(formData.value.lat) : null,
+            longitude: formData.value.lng ? parseFloat(formData.value.lng) : null,
+            start_time: formData.value.start_time,
+            end_time: formData.value.end_time,
+            organizer_id: formData.value.organizer_id,
+            event_type: formData.value.event_type,
+            series_id: formData.value.series_id,
+            year: formData.value.year,
+            age_groups: JSON.stringify(formData.value.age_groups),
+            age_group_display: formData.value.age_groups.length > 1 && !formData.value.age_groups.includes('不限年龄') ? 1 : 0
+        }
+        
+        const result: any = await addEvent(submitData)
+        
+        // 提交成功后清除缓存
+        uni.removeStorageSync('sport_event_form_data')
+        
+        uni.showToast({
+            title: '创建比赛成功',
+            icon: 'success'
+        })
+        
+        // 延迟跳转到赛事详情页面
+        setTimeout(() => {
+            uni.redirectTo({
+                url: `/addon/sport/pages/event/detail?id=${result.data.id}`
+            })
+        }, 1500)
+        
+    } catch (error) {
+        console.error('创建比赛失败:', error)
+    } finally {
+        submitLoading.value = false
+    }
+}
 
-// 数据列表
-const organizerList = ref<any[]>([])
-const seriesList = ref<any[]>([])
-
-// 选择器数据
-const organizerPickerList = computed(() => {
-    return organizerList.value
-})
-
-const seriesPickerList = computed(() => {
-    return seriesList.value
-})
-
-// 选择器临时索引
-const tempOrganizerIndex = ref(0)
-const tempSeriesIndex = ref(0)
-
-// 选中的索引
-const selectedOrganizerIndex = computed(() => {
-    const index = organizerList.value.findIndex((item: any) => item.id === formData.value.organizer_id)
-    return index >= 0 ? index : 0
-})
-
-const selectedSeriesIndex = computed(() => {
-    const index = seriesList.value.findIndex((item: any) => item.id === formData.value.series_id)
-    return index >= 0 ? index : 0
-})
-
-// 选中的显示名称
-const selectedOrganizerName = computed(() => {
-    const organizer = organizerList.value.find((item: any) => item.id === formData.value.organizer_id)
-    return organizer ? organizer.organizer_name : ''
-})
-
-const selectedSeriesName = computed(() => {
-    const series = seriesList.value.find((item: any) => item.id === formData.value.series_id)
-    return series ? series.name : ''
-})
-
-// 项目选择相关
-const selectedItems = ref<any[]>([])
-const showItemSelect = ref(false)
-const tempSelectedItems = ref<any[]>([])
-
-// 模拟项目数据
-const mockItems = [
-    { id: 1, name: '100米短跑' },
-    { id: 2, name: '200米短跑' },
-    { id: 3, name: '跳高' },
-    { id: 4, name: '跳远' },
-    { id: 5, name: '铅球' },
-    { id: 6, name: '4x100米接力' }
-]
-
-// 提交状态
-const submitLoading = ref(false)
-
-// 编辑中的协办方索引
-const editingCoOrganizerIndex = ref(-1)
+// 验证时间是否有效
+const validateTime = () => {
+    if (formData.value.start_time >= formData.value.end_time) {
+        uni.showToast({
+            title: '结束时间必须大于开始时间',
+            icon: 'none'
+        })
+        return false
+    }
+    return true
+}
 
 // 是否可以进入下一步
 const canProceedToNext = computed(() => {
     switch (currentStep.value) {
         case 1:
-            // 第1步：只要求比赛名称（必填）
-            return formData.value.name.trim() !== ''
+            // 第1步：要求比赛名称和主办方（必填）
+            return formData.value.name.trim() !== '' && formData.value.organizer_id > 0
         case 2:
-            // 第2步：要求地点和时间
-            return formData.value.location && formData.value.address_detail && 
-                   formData.value.start_time > 0 && formData.value.end_time > 0
+            // 第2步：要求地点信息
+            return formData.value.location && formData.value.address_detail
         case 3:
+            // 第3步：要求时间信息，且结束时间必须大于开始时间
+            return formData.value.start_time > 0 && formData.value.end_time > 0 && validateTime()
+        case 4:
+            // 第4步：要求选择项目
             return selectedItems.value.length > 0
         default:
             return false
@@ -791,7 +982,7 @@ const goToStep = (step: number) => {
 }
 
 const nextStep = () => {
-    if (canProceedToNext.value && currentStep.value < 3) {
+    if (canProceedToNext.value && currentStep.value < 4) {
         currentStep.value++
         if (currentStep.value > maxReachedStep.value) {
             maxReachedStep.value = currentStep.value
@@ -809,62 +1000,71 @@ const prevStep = () => {
  * 日期时间选择
  */
 const onStartDateChange = (e: any) => {
-    console.log('开始日期选择:', e.detail.value)
     startDateValue.value = e.detail.value
-    updateStartDateTime()
+    startDateDisplay.value = formatDate(e.detail.value)
+    updateStartTimestamp()
+    // 如果结束时间小于开始时间，自动调整结束时间
+    if (formData.value.start_time >= formData.value.end_time) {
+        const startDate = new Date(startDateValue.value)
+        endDateValue.value = startDateValue.value
+        endTimeValue.value = '23:59'
+        endDateDisplay.value = formatDate(startDateValue.value)
+        endTimeDisplay.value = '23:59'
+        updateEndTimestamp()
+    }
 }
 
 const onStartTimeChange = (e: any) => {
-    console.log('开始时间选择:', e.detail.value)
     startTimeValue.value = e.detail.value
-    updateStartDateTime()
+    startTimeDisplay.value = e.detail.value
+    updateStartTimestamp()
+    // 如果结束时间小于开始时间，自动调整结束时间
+    if (formData.value.start_time >= formData.value.end_time) {
+        const [hours, minutes] = startTimeValue.value.split(':')
+        const newEndTime = `${parseInt(hours) + 1}:${minutes}`
+        endTimeValue.value = newEndTime
+        endTimeDisplay.value = newEndTime
+        updateEndTimestamp()
+    }
 }
 
 const onEndDateChange = (e: any) => {
-    console.log('结束日期选择:', e.detail.value)
     endDateValue.value = e.detail.value
-    updateEndDateTime()
+    endDateDisplay.value = formatDate(e.detail.value)
+    updateEndTimestamp()
+    // 验证时间
+    validateTime()
 }
 
 const onEndTimeChange = (e: any) => {
-    console.log('结束时间选择:', e.detail.value)
     endTimeValue.value = e.detail.value
-    updateEndDateTime()
+    endTimeDisplay.value = e.detail.value
+    updateEndTimestamp()
+    // 验证时间
+    validateTime()
 }
 
 /**
  * 更新开始时间戳
  */
-const updateStartDateTime = () => {
+const updateStartTimestamp = () => {
     if (startDateValue.value && startTimeValue.value) {
-        const dateTimeString = `${startDateValue.value} ${startTimeValue.value}`
-        const timestamp = new Date(dateTimeString).getTime()
-        formData.value.start_time = Math.floor(timestamp / 1000)
-        formData.value.year = new Date(timestamp).getFullYear()
-        
-        console.log('开始时间更新:', {
-            date: startDateValue.value,
-            time: startTimeValue.value,
-            timestamp: formData.value.start_time,
-            year: formData.value.year
-        })
+        const [hours, minutes] = startTimeValue.value.split(':')
+        const date = new Date(startDateValue.value)
+        date.setHours(parseInt(hours), parseInt(minutes))
+        formData.value.start_time = Math.floor(date.getTime() / 1000)
     }
 }
 
 /**
  * 更新结束时间戳
  */
-const updateEndDateTime = () => {
+const updateEndTimestamp = () => {
     if (endDateValue.value && endTimeValue.value) {
-        const dateTimeString = `${endDateValue.value} ${endTimeValue.value}`
-        const timestamp = new Date(dateTimeString).getTime()
-        formData.value.end_time = Math.floor(timestamp / 1000)
-        
-        console.log('结束时间更新:', {
-            date: endDateValue.value,
-            time: endTimeValue.value,
-            timestamp: formData.value.end_time
-        })
+        const [hours, minutes] = endTimeValue.value.split(':')
+        const date = new Date(endDateValue.value)
+        date.setHours(parseInt(hours), parseInt(minutes))
+        formData.value.end_time = Math.floor(date.getTime() / 1000)
     }
 }
 
@@ -1091,23 +1291,125 @@ const loadSeriesList = async () => {
  * 主办方类型变更
  */
 const onOrganizerTypeChange = (e: any) => {
-    console.log('主办方类型变更:', e.detail.value, typeof e.detail.value)
-    organizerForm.value.organizer_type = parseInt(e.detail.value)
-    console.log('设置后的类型:', organizerForm.value.organizer_type, typeof organizerForm.value.organizer_type)
-    // 切换类型时清空证件图片
-    organizerForm.value.organizer_license_img = ''
+    const newType = parseInt(e.detail.value)
+    
+    // 只有当类型真正改变时才清空证件图片
+    if (organizerForm.value.organizer_type !== newType) {
+        organizerForm.value.organizer_license_img = ''
+    }
+    
+    organizerForm.value.organizer_type = newType
+    console.log('主办方类型已更新为:', newType)
+}
+
+/**
+ * 选择主办方证件图片
+ */
+const chooseOrganizerImage = () => {
+    // #ifdef MP-WEIXIN
+    // 检查是否支持隐私协议API
+    if (typeof (global as any).wx !== 'undefined' && (global as any).wx.requirePrivacyAuthorize) {
+        (global as any).wx.requirePrivacyAuthorize({
+            success: () => {
+                console.log('隐私协议已同意，可以选择图片')
+                performChooseImage()
+            },
+            fail: () => {
+                console.log('用户拒绝了隐私协议')
+                uni.showToast({
+                    title: '需要同意隐私协议才能选择图片',
+                    icon: 'none'
+                })
+            }
+        })
+    } else {
+        // 旧版本或不支持隐私协议的情况下直接调用
+        performChooseImage()
+    }
+    // #endif
+    
+    // #ifndef MP-WEIXIN
+    performChooseImage()
+    // #endif
+}
+
+/**
+ * 执行图片选择
+ */
+const performChooseImage = () => {
+    uni.chooseImage({
+        count: 1,
+        sizeType: ['original', 'compressed'],
+        sourceType: ['camera', 'album'],
+        success: (res) => {
+            uploadOrganizerImageFile(res.tempFilePaths[0])
+        },
+        fail: (err) => {
+            console.error('选择图片失败:', err)
+            let message = '选择图片失败'
+            if (err.errMsg && err.errMsg.includes('privacy agreement')) {
+                message = '请在小程序管理后台配置隐私协议'
+            }
+            uni.showToast({
+                title: message,
+                icon: 'none'
+            })
+        }
+    })
+}
+
+/**
+ * 上传主办方证件图片
+ */
+const uploadOrganizerImageFile = (filePath: string) => {
+    uni.showLoading({ title: '上传中...' })
+    
+    uploadImage({
+        filePath: filePath,
+        name: 'file'
+    }).then((res: any) => {
+        uni.hideLoading()
+        organizerForm.value.organizer_license_img = res.data.url
+        uni.showToast({ title: '上传成功', icon: 'success' })
+    }).catch(err => {
+        uni.hideLoading()
+        uni.showToast({ title: '上传失败', icon: 'none' })
+        console.error('上传失败:', err)
+    })
+}
+
+/**
+ * 预览主办方证件图片
+ */
+const previewOrganizerImage = () => {
+    uni.previewImage({
+        urls: [img(organizerForm.value.organizer_license_img)],
+        current: 0
+    })
+}
+
+/**
+ * 删除主办方证件图片
+ */
+const deleteOrganizerImage = () => {
+    uni.showModal({
+        title: '提示',
+        content: '确定要删除这张图片吗？',
+        success: (res) => {
+            if (res.confirm) {
+                organizerForm.value.organizer_license_img = ''
+            }
+        }
+    })
 }
 
 /**
  * 添加主办方
  */
 const addOrganizerConfirm = async () => {
+    // 移除不必要的验证提示，因为输入框已经有placeholder提示了
     if (!organizerForm.value.organizer_name.trim()) {
-        uni.showToast({
-            title: '请输入主办方名称',
-            icon: 'none'
-        })
-        return
+        return // 直接返回，不显示toast
     }
     
     try {
@@ -1213,16 +1515,21 @@ const cancelSeriesModal = () => {
     }
 }
 
-// 分组处理
+// 添加分组
 const addGroup = () => {
     formData.value.custom_groups.push({
-        name: '',
-        description: ''
+        group_name: '',
+        sort: formData.value.custom_groups.length + 1
     })
 }
 
+// 删除分组
 const removeGroup = (index: number) => {
     formData.value.custom_groups.splice(index, 1)
+    // 重新排序
+    formData.value.custom_groups.forEach((group, idx) => {
+        group.sort = idx + 1
+    })
 }
 
 // 协办方处理
@@ -1293,6 +1600,12 @@ const onCoOrganizerTypeChange = (e: any) => {
 }
 
 // 项目选择
+const openItemSelect = () => {
+    // 初始化临时选择数据
+    tempSelectedItems.value = [...selectedItems.value]
+    showItemSelect.value = true
+}
+
 const isMockItemSelected = (item: any) => {
     return tempSelectedItems.value.some(selected => selected.id === item.id)
 }
@@ -1390,64 +1703,6 @@ const validateSubmitForm = () => {
     return true
 }
 
-// 提交表单
-const handleSubmit = async () => {
-    // 验证表单
-    if (!validateSubmitForm()) {
-        return
-    }
-    
-    try {
-        submitLoading.value = true
-        
-        // 组合完整地址信息
-        let finalFullAddress = formData.value.full_address
-        if (formData.value.address_detail) {
-            finalFullAddress += (finalFullAddress ? ' ' : '') + formData.value.address_detail
-        }
-        
-        // 提交数据 - 映射字段名
-        const submitData: any = {
-            name: formData.value.name,
-            location: formData.value.location,
-            location_detail: finalFullAddress, // 详细地址
-            latitude: formData.value.lat ? parseFloat(formData.value.lat) : null,   // 纬度
-            longitude: formData.value.lng ? parseFloat(formData.value.lng) : null,  // 经度
-            start_time: formData.value.start_time,
-            end_time: formData.value.end_time,
-            organizer_id: formData.value.organizer_id,
-            event_type: formData.value.event_type,
-            series_id: formData.value.series_id,
-            year: formData.value.year,
-            custom_groups: formData.value.custom_groups.filter(group => group.group_name.trim()),
-            base_item_ids: selectedItems.value.map(item => item.id)
-        }
-        
-        console.log('提交数据:', submitData)
-        
-        const result: any = await addEvent(submitData)
-        
-        uni.showToast({
-            title: '创建比赛成功',
-            icon: 'success'
-        })
-        
-        console.log('创建比赛成功，比赛ID:', result.data.id)
-        
-        // 延迟跳转到赛事详情页面
-        setTimeout(() => {
-            uni.redirectTo({
-                url: `/addon/sport/pages/event/detail?id=${result.data.id}`
-            })
-        }, 1500)
-        
-    } catch (error) {
-        console.error('创建比赛失败:', error)
-    } finally {
-        submitLoading.value = false
-    }
-}
-
 /**
  * 页面初始化
  */
@@ -1477,6 +1732,118 @@ onMounted(() => {
     // 初始化项目选择
     tempSelectedItems.value = [...selectedItems.value]
 })
+
+// 表单数据
+const selectedItems = ref<Item[]>([])
+const showItemSelect = ref(false)
+const tempSelectedItems = ref<Item[]>([])
+
+// 模拟项目数据
+const mockItems = [
+    { id: 1, name: '100米短跑' },
+    { id: 2, name: '200米短跑' },
+    { id: 3, name: '跳高' },
+    { id: 4, name: '跳远' },
+    { id: 5, name: '铅球' },
+    { id: 6, name: '4x100米接力' }
+]
+
+// 提交状态
+const submitLoading = ref(false)
+
+// 编辑中的协办方索引
+const editingCoOrganizerIndex = ref(-1)
+
+// 选择器相关
+const showOrganizerPicker = ref(false)
+const showSeriesPicker = ref(false)
+const showOrganizerModal = ref(false)
+const showSeriesModal = ref(false)
+const showCoOrganizerModal = ref(false)
+
+// 数据列表
+const organizerList = ref<Organizer[]>([])
+const seriesList = ref<Series[]>([])
+
+// 选择器数据
+const organizerPickerList = computed(() => {
+    return organizerList.value
+})
+
+const seriesPickerList = computed(() => {
+    return seriesList.value
+})
+
+// 选择器临时索引
+const tempOrganizerIndex = ref(0)
+const tempSeriesIndex = ref(0)
+
+// 选中的索引
+const selectedOrganizerIndex = computed(() => {
+    const index = organizerList.value.findIndex((item: any) => item.id === formData.value.organizer_id)
+    return index >= 0 ? index : 0
+})
+
+const selectedSeriesIndex = computed(() => {
+    const index = seriesList.value.findIndex((item: any) => item.id === formData.value.series_id)
+    return index >= 0 ? index : 0
+})
+
+// 选中的显示名称
+const selectedOrganizerName = computed(() => {
+    const organizer = organizerList.value.find((item: any) => item.id === formData.value.organizer_id)
+    return organizer ? organizer.organizer_name : ''
+})
+
+const selectedSeriesName = computed(() => {
+    const series = seriesList.value.find((item: any) => item.id === formData.value.series_id)
+    return series ? series.name : ''
+})
+
+// 验证表单
+const validateForm = () => {
+    if (!formData.value.name) {
+        uni.showToast({
+            title: '请输入比赛名称',
+            icon: 'none'
+        })
+        return false
+    }
+    
+    if (!formData.value.organizer_id) {
+        uni.showToast({
+            title: '请选择主办方',
+            icon: 'none'
+        })
+        return false
+    }
+    
+    if (!formData.value.location) {
+        uni.showToast({
+            title: '请选择比赛地点',
+            icon: 'none'
+        })
+        return false
+    }
+    
+    if (!formData.value.start_time || !formData.value.end_time) {
+        uni.showToast({
+            title: '请选择比赛时间',
+            icon: 'none'
+        })
+        return false
+    }
+    
+    if (formData.value.start_time >= formData.value.end_time) {
+        uni.showToast({
+            title: '结束时间必须大于开始时间',
+            icon: 'none'
+        })
+        return false
+    }
+    
+    return true
+}
 </script>
 
 <style lang="scss" scoped>
@@ -2123,6 +2490,61 @@ onMounted(() => {
     overflow-y: auto;
 }
 
+/* 图片上传相关样式 */
+.upload-container {
+    margin-top: 20rpx;
+    
+    .image-preview {
+        position: relative;
+        width: 200rpx;
+        height: 200rpx;
+        border-radius: 10rpx;
+        overflow: hidden;
+        
+        .preview-image {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40rpx;
+            height: 40rpx;
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 0 10rpx 0 20rpx;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24rpx;
+        }
+    }
+    
+    .upload-btn {
+        width: 200rpx;
+        height: 200rpx;
+        border: 2rpx dashed #ddd;
+        border-radius: 10rpx;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        
+        .nc-iconfont {
+            font-size: 60rpx;
+            margin-bottom: 20rpx;
+        }
+        
+        .upload-text {
+            font-size: 24rpx;
+            text-align: center;
+        }
+    }
+}
+
 .modal-footer {
     display: flex;
     border-top: 1px solid #f0f0f0;
@@ -2274,6 +2696,23 @@ onMounted(() => {
     margin-top: 16rpx;
     
     .add-text {
+        color: #007aff;
+        font-size: 28rpx;
+    }
+}
+
+.group-default {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24rpx 0;
+    
+    .group-default-text {
+        color: #999;
+        font-size: 28rpx;
+    }
+    
+    .add-link {
         color: #007aff;
         font-size: 28rpx;
     }
