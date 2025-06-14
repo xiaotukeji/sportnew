@@ -271,123 +271,216 @@
             <view v-if="currentStep === 4" class="form-wrapper">
                 <view class="form-section">
                     <view class="section-title">比赛项目</view>
-                    <!-- 顶部一级分类tab -->
-                    <view class="category-tabs">
-                        <scroll-view class="tabs-scroll" scroll-x show-scrollbar="false">
-                            <view class="tabs-content">
-                                <view 
-                                    v-for="cat in categories" 
-                                    :key="cat.id"
-                                    class="tab-item"
-                                    :class="{ active: activeTab === cat.id }"
-                                    @tap="switchTab(cat.id)"
-                                >
-                                    <text class="tab-text">{{ cat.name }}</text>
-                                </view>
-                            </view>
-                        </scroll-view>
+                    
+                    <!-- 加载状态 -->
+                    <view v-if="categoriesLoading" class="loading-container">
+                        <text>加载中...</text>
                     </view>
-                    <!-- 多级分类嵌套遍历，最多四级，修正类型和空值问题 -->
-                    <view class="categories-list">
-                      <template v-if="activeCategory && Array.isArray(activeCategory.children)">
-                        <template v-for="cat1 in activeCategory.children">
-                          <view v-if="cat1 && typeof cat1 === 'object'" :key="cat1.id">
-                            <view class="category-header" @tap="toggleCategory(cat1.id)">
-                              <text>{{ cat1.name }}</text>
-                              <text v-if="cat1.children && cat1.children.length">{{ expandedCategories.includes(cat1.id) ? '▼' : '▶' }}</text>
-                            </view>
-                            <view v-if="expandedCategories.includes(cat1.id)">
-                              <!-- 二级 -->
-                              <template v-if="cat1.children && Array.isArray(cat1.children)">
-                                <template v-for="cat2 in cat1.children">
-                                  <view v-if="cat2 && typeof cat2 === 'object'" :key="cat2.id">
-                                    <view class="category-header" style="margin-left: 24px;" @tap="toggleCategory(cat2.id)">
-                                      <text>{{ cat2.name }}</text>
-                                      <text v-if="cat2.children && cat2.children.length">{{ expandedCategories.includes(cat2.id) ? '▼' : '▶' }}</text>
+                    
+                    <!-- 错误状态 -->
+                    <view v-else-if="categoriesError" class="error-container">
+                        <text class="error-text">{{ categoriesError }}</text>
+                        <button class="retry-btn" @tap="loadCategories">重新加载</button>
+                    </view>
+                    
+                    <!-- 正常内容 -->
+                    <view v-else>
+                        <!-- 分类标签切换 -->
+                        <view class="category-tabs">
+                            <scroll-view class="tabs-scroll" scroll-x show-scrollbar="false">
+                                <view class="tabs-content">
+                                    <view 
+                                        class="tab-item" 
+                                        :class="{ active: activeTab === 'all' }"
+                                        @tap="switchTab('all')"
+                                    >
+                                        <text class="tab-text">全部</text>
                                     </view>
-                                    <view v-if="expandedCategories.includes(cat2.id)">
-                                      <!-- 三级 -->
-                                      <template v-if="cat2.children && Array.isArray(cat2.children)">
-                                        <template v-for="cat3 in cat2.children">
-                                          <view v-if="cat3 && typeof cat3 === 'object'" :key="cat3.id">
-                                            <view class="category-header" style="margin-left: 24px;" @tap="toggleCategory(cat3.id)">
-                                              <text>{{ cat3.name }}</text>
-                                              <text v-if="cat3.children && cat3.children.length">{{ expandedCategories.includes(cat3.id) ? '▼' : '▶' }}</text>
-                                            </view>
-                                            <view v-if="expandedCategories.includes(cat3.id)">
-                                              <!-- 四级 -->
-                                              <template v-if="cat3.children && Array.isArray(cat3.children)">
-                                                <template v-for="cat4 in cat3.children">
-                                                  <view v-if="cat4 && typeof cat4 === 'object'" :key="cat4.id">
-                                                    <view class="category-header" style="margin-left: 24px;" @tap="toggleCategory(cat4.id)">
-                                                      <text>{{ cat4.name }}</text>
-                                                    </view>
-                                                    <view v-if="expandedCategories.includes(cat4.id) && cat4.base_items && Array.isArray(cat4.base_items)" class="base-items-grid">
-                                                      <view v-for="item in cat4.base_items" :key="item.id" class="base-item" :class="{ selected: selectedItems.includes(item.id) }" @tap="toggleItem(item.id)">
-                                                        <text class="item-name">{{ item.name }}</text>
-                                                        <text v-if="selectedItems.includes(item.id)" class="selected-icon">✓</text>
-                                                      </view>
-                                                    </view>
-                                                  </view>
-                                                </template>
-                                              </template>
-                                              <!-- 三级直接有项目 -->
-                                              <view v-if="cat3.base_items && Array.isArray(cat3.base_items)" class="base-items-grid">
-                                                <view v-for="item in cat3.base_items" :key="item.id" class="base-item" :class="{ selected: selectedItems.includes(item.id) }" @tap="toggleItem(item.id)">
-                                                  <text class="item-name">{{ item.name }}</text>
-                                                  <text v-if="selectedItems.includes(item.id)" class="selected-icon">✓</text>
-                                                </view>
-                                              </view>
-                                            </view>
-                                          </view>
-                                        </template>
-                                      </template>
-                                      <!-- 二级直接有项目 -->
-                                      <view v-if="cat2.base_items && Array.isArray(cat2.base_items)" class="base-items-grid">
-                                        <view v-for="item in cat2.base_items" :key="item.id" class="base-item" :class="{ selected: selectedItems.includes(item.id) }" @tap="toggleItem(item.id)">
-                                          <text class="item-name">{{ item.name }}</text>
-                                          <text v-if="selectedItems.includes(item.id)" class="selected-icon">✓</text>
-                                        </view>
-                                      </view>
+                                    <view 
+                                        v-for="category in categories" 
+                                        :key="category.id"
+                                        class="tab-item" 
+                                        :class="{ active: activeTab === category.id }"
+                                        @tap="switchTab(category.id)"
+                                    >
+                                        <text class="tab-text">{{ category.name.replace('运动', '') }}</text>
                                     </view>
-                                  </view>
-                                </template>
-                              </template>
-                              <!-- 一级直接有项目 -->
-                              <view v-if="cat1.base_items && Array.isArray(cat1.base_items)" class="base-items-grid">
-                                <view v-for="item in cat1.base_items" :key="item.id" class="base-item" :class="{ selected: selectedItems.includes(item.id) }" @tap="toggleItem(item.id)">
-                                  <text class="item-name">{{ item.name }}</text>
-                                  <text v-if="selectedItems.includes(item.id)" class="selected-icon">✓</text>
                                 </view>
-                              </view>
-                            </view>
-                          </view>
+                            </scroll-view>
                         </view>
-                      </template>
-                    </view>
-                    <!-- 已选项目预览 -->
-                    <view v-if="selectedItems.length > 0" class="selected-preview">
-                        <view class="preview-title">已选项目：</view>
-                        <view class="preview-items">
-                            <text 
-                                v-for="(itemId, index) in selectedItems.slice(0, 3)" 
-                                :key="itemId"
-                                class="preview-item"
+                        
+                        <!-- 分类列表 -->
+                        <view class="categories-list">
+                            <view 
+                                v-for="category in filteredCategories" 
+                                :key="category.id"
+                                class="category-section"
                             >
-                                {{ getItemNameById(itemId) }}
-                            </text>
-                            <text v-if="selectedItems.length > 3" class="preview-more">
-                                等{{ selectedItems.length }}项
-                            </text>
+                                <!-- 分类标题 -->
+                                <view class="category-header" @tap="toggleCategory(category.id)">
+                                    <view class="category-info">
+                                        <text class="category-name">{{ category.name }}</text>
+                                        <text class="category-count">({{ getTotalItemCount(category) }}项)</text>
+                                    </view>
+                                    <view 
+                                        v-if="category.has_children || category.base_items?.length > 0"
+                                        class="category-arrow" 
+                                        :class="{ expanded: expandedCategories.includes(category.id) }"
+                                    >
+                                        <text class="arrow-icon">›</text>
+                                    </view>
+                                </view>
+                                
+                                <!-- 展开内容 -->
+                                <view v-if="expandedCategories.includes(category.id)" class="category-content">
+                                    <!-- 子分类 -->
+                                    <view 
+                                        v-if="category.children && category.children.length > 0"
+                                        class="sub-categories"
+                                    >
+                                        <view 
+                                            v-for="subCategory in category.children" 
+                                            :key="subCategory.id"
+                                            class="sub-category-section"
+                                        >
+                                            <!-- 子分类标题 -->
+                                            <view class="sub-category-header" @tap="toggleCategory(subCategory.id)">
+                                                <view class="sub-category-info">
+                                                    <text class="sub-category-name">{{ subCategory.name }}</text>
+                                                    <text class="sub-category-count">({{ getTotalItemCount(subCategory) }}项)</text>
+                                                </view>
+                                                <view 
+                                                    v-if="subCategory.has_children || subCategory.base_items?.length > 0"
+                                                    class="sub-category-arrow" 
+                                                    :class="{ expanded: expandedCategories.includes(subCategory.id) }"
+                                                >
+                                                    <text class="arrow-icon">›</text>
+                                                </view>
+                                            </view>
+                                            
+                                            <!-- 子分类展开内容 -->
+                                            <view v-if="expandedCategories.includes(subCategory.id)" class="sub-category-content">
+                                                <!-- 三级分类 -->
+                                                <view 
+                                                    v-if="subCategory.children && subCategory.children.length > 0"
+                                                    class="third-categories"
+                                                >
+                                                    <view 
+                                                        v-for="thirdCategory in subCategory.children" 
+                                                        :key="thirdCategory.id"
+                                                        class="third-category-section"
+                                                    >
+                                                        <!-- 三级分类标题 -->
+                                                        <view class="third-category-header" @tap="toggleCategory(thirdCategory.id)">
+                                                            <view class="third-category-info">
+                                                                <text class="third-category-name">{{ thirdCategory.name }}</text>
+                                                                <text class="third-category-count">({{ thirdCategory.base_items?.length || 0 }}项)</text>
+                                                            </view>
+                                                            <view 
+                                                                v-if="thirdCategory.base_items?.length > 0"
+                                                                class="third-category-arrow" 
+                                                                :class="{ expanded: expandedCategories.includes(thirdCategory.id) }"
+                                                            >
+                                                                <text class="arrow-icon">›</text>
+                                                            </view>
+                                                        </view>
+                                                        
+                                                        <!-- 三级分类的基础项目 -->
+                                                        <view 
+                                                            v-if="expandedCategories.includes(thirdCategory.id) && thirdCategory.base_items?.length > 0"
+                                                            class="base-items-grid"
+                                                        >
+                                                            <view 
+                                                                v-for="item in thirdCategory.base_items" 
+                                                                :key="item.id"
+                                                                class="base-item" 
+                                                                :class="{ selected: selectedItems.includes(item.id) }"
+                                                                @tap="toggleItem(item.id)"
+                                                            >
+                                                                <view class="item-content">
+                                                                    <text class="item-name">{{ item.name }}</text>
+                                                                    <view v-if="selectedItems.includes(item.id)" class="selected-icon">
+                                                                        <text class="icon-check">✓</text>
+                                                                    </view>
+                                                                </view>
+                                                            </view>
+                                                        </view>
+                                                    </view>
+                                                </view>
+                                                
+                                                <!-- 二级分类的基础项目 -->
+                                                <view 
+                                                    v-if="subCategory.base_items?.length > 0"
+                                                    class="base-items-grid"
+                                                >
+                                                    <view 
+                                                        v-for="item in subCategory.base_items" 
+                                                        :key="item.id"
+                                                        class="base-item" 
+                                                        :class="{ selected: selectedItems.includes(item.id) }"
+                                                        @tap="toggleItem(item.id)"
+                                                    >
+                                                        <view class="item-content">
+                                                            <text class="item-name">{{ item.name }}</text>
+                                                            <view v-if="selectedItems.includes(item.id)" class="selected-icon">
+                                                                <text class="icon-check">✓</text>
+                                                            </view>
+                                                        </view>
+                                                    </view>
+                                                </view>
+                                            </view>
+                                        </view>
+                                    </view>
+                                    
+                                    <!-- 一级分类的基础项目 -->
+                                    <view 
+                                        v-if="category.base_items?.length > 0"
+                                        class="base-items-grid"
+                                    >
+                                        <view 
+                                            v-for="item in category.base_items" 
+                                            :key="item.id"
+                                            class="base-item" 
+                                            :class="{ selected: selectedItems.includes(item.id) }"
+                                            @tap="toggleItem(item.id)"
+                                        >
+                                            <view class="item-content">
+                                                <text class="item-name">{{ item.name }}</text>
+                                                <view v-if="selectedItems.includes(item.id)" class="selected-icon">
+                                                    <text class="icon-check">✓</text>
+                                                </view>
+                                            </view>
+                                        </view>
+                                    </view>
+                                </view>
+                            </view>
                         </view>
-                    </view>
-                    <!-- 底部操作栏 -->
-                    <view class="bottom-actions">
-                        <view class="selected-info">
-                            <text class="selected-text">已选 {{ selectedItems.length }} 项</text>
+                        
+                        <!-- 已选项目预览 -->
+                        <view v-if="selectedItems.length > 0" class="selected-preview">
+                            <view class="preview-title">已选项目：</view>
+                            <view class="preview-items">
+                                <text 
+                                    v-for="(itemId, index) in selectedItems.slice(0, 3)" 
+                                    :key="itemId"
+                                    class="preview-item"
+                                >
+                                    {{ getItemNameById(itemId) }}
+                                </text>
+                                <text v-if="selectedItems.length > 3" class="preview-more">
+                                    等{{ selectedItems.length }}项
+                                </text>
+                            </view>
                         </view>
-                        <view class="action-buttons">
-                            <button class="btn-secondary" @tap="clearAll">清空</button>
+                        
+                        <!-- 底部操作栏 -->
+                        <view class="bottom-actions">
+                            <view class="selected-info">
+                                <text class="selected-text">已选 {{ selectedItems.length }} 项</text>
+                            </view>
+                            <view class="action-buttons">
+                                <button class="btn-secondary" @tap="clearAllItems">清空</button>
+                            </view>
                         </view>
                     </view>
                 </view>
@@ -680,7 +773,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, defineComponent, defineProps, defineEmits } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useLoginCheck } from '@/addon/sport/hooks/useLoginCheck'
 import { uploadImage } from '@/app/api/system'
 import { img } from '@/utils/common'
@@ -1078,6 +1171,11 @@ const nextStep = () => {
         currentStep.value++
         if (currentStep.value > maxReachedStep.value) {
             maxReachedStep.value = currentStep.value
+        }
+        
+        // 进入第4步时加载分类数据
+        if (currentStep.value === 4) {
+            loadCategories()
         }
     }
 }
@@ -1699,15 +1797,15 @@ const openItemSelect = () => {
 }
 
 const isMockItemSelected = (item: any) => {
-    return tempSelectedItems.value.some(selected => selected.id === item.id)
+    return tempSelectedItems.value.includes(item.id)
 }
 
 const toggleMockItem = (item: any) => {
-    const index = tempSelectedItems.value.findIndex(selected => selected.id === item.id)
+    const index = tempSelectedItems.value.indexOf(item.id)
     if (index > -1) {
         tempSelectedItems.value.splice(index, 1)
     } else {
-        tempSelectedItems.value.push(item)
+        tempSelectedItems.value.push(item.id)
     }
 }
 
@@ -1823,7 +1921,6 @@ onMounted(() => {
 })
 
 // 表单数据
-const selectedItems = ref<number[]>([])
 const showItemSelect = ref(false)
 const tempSelectedItems = ref<number[]>([])
 
@@ -1936,113 +2033,124 @@ const validateForm = () => {
 
 // 项目选择相关数据
 const categories = ref<any[]>([])
+const selectedItems = ref<number[]>([])
 const expandedCategories = ref<number[]>([])
-const activeTab = ref<number | null>(null)
+const activeTab = ref<string | number>('all')
+const categoriesLoading = ref(false)
+const categoriesError = ref('')
 
-const activeCategory = computed(() => {
-  return categories.value.find(cat => cat.id === activeTab.value) || categories.value[0]
+const filteredCategories = computed(() => {
+    if (activeTab.value === 'all') {
+        return categories.value
+    }
+    return categories.value.filter(cat => cat.id === activeTab.value)
 })
 
+// 获取项目名称
 const getItemNameById = (id: number) => {
-  // 递归查找
-  const findName = (cats: any[]): string => {
-    for (const cat of cats) {
-      if (cat.base_items) {
-        const item = cat.base_items.find((i: any) => i.id === id)
+    const findItemInCategory = (category: any): any => {
+        // 检查当前分类的基础项目
+        if (category.base_items) {
+            const item = category.base_items.find((i: any) => i.id === id)
+            if (item) return item
+        }
+        
+        // 递归检查子分类
+        if (category.children) {
+            for (const child of category.children) {
+                const item = findItemInCategory(child)
+                if (item) return item
+            }
+        }
+        
+        return null
+    }
+    
+    for (const cat of categories.value) {
+        const item = findItemInCategory(cat)
         if (item) return item.name
-      }
-      if (cat.children) {
-        const name = findName(cat.children)
-        if (name) return name
-      }
     }
     return ''
-  }
-  return findName(categories.value)
 }
 
-const switchTab = (id: number) => {
-  activeTab.value = id
+// 获取分类总项目数
+const getTotalItemCount = (category: any) => {
+    return category.total_item_count || category.base_items?.length || 0
 }
 
-const toggleCategory = (id: number) => {
-  const idx = expandedCategories.value.indexOf(id)
-  if (idx > -1) expandedCategories.value.splice(idx, 1)
-  else expandedCategories.value.push(id)
+// 切换标签
+const switchTab = (tabId: string | number) => {
+    activeTab.value = tabId
 }
 
-const toggleItem = (id: number) => {
-  const idx = selectedItems.value.indexOf(id)
-  if (idx > -1) selectedItems.value.splice(idx, 1)
-  else selectedItems.value.push(id)
-}
-
-const clearAll = () => {
-  uni.showModal({
-    title: '确认清空',
-    content: '确定要清空所有已选择的项目吗？',
-    success: (res) => {
-      if (res.confirm) selectedItems.value = []
+// 切换分类展开/收起
+const toggleCategory = (categoryId: number) => {
+    const index = expandedCategories.value.indexOf(categoryId)
+    if (index > -1) {
+        expandedCategories.value.splice(index, 1)
+    } else {
+        expandedCategories.value.push(categoryId)
     }
-  })
 }
 
-onMounted(async () => {
-  // ...登录检查等...
-  const res = await getEventCategories({})
-  categories.value = res.data.categories || []
-  if (categories.value.length > 0) activeTab.value = categories.value[0].id
-})
+// 切换项目选择状态
+const toggleItem = (itemId: number) => {
+    const index = selectedItems.value.indexOf(itemId)
+    if (index > -1) {
+        selectedItems.value.splice(index, 1)
+    } else {
+        selectedItems.value.push(itemId)
+    }
+}
 
+// 清空所有选择
+const clearAllItems = () => {
+    uni.showModal({
+        title: '确认清空',
+        content: '确定要清空所有已选择的项目吗？',
+        success: (res) => {
+            if (res.confirm) {
+                selectedItems.value = []
+            }
+        }
+    })
+}
+
+// 分类数据加载
+const loadCategories = async () => {
+    try {
+        categoriesLoading.value = true
+        categoriesError.value = ''
+        
+        const response: any = await getEventCategories()
+        console.log('分类数据:', response.data)
+        
+        categories.value = response.data.categories || []
+        
+        // 设置默认展开的分类
+        const defaultExpandCategories: number[] = []
+        categories.value.forEach(category => {
+            if (category.default_expand) {
+                defaultExpandCategories.push(category.id)
+            }
+        })
+        
+        expandedCategories.value = defaultExpandCategories
+        
+    } catch (err: any) {
+        console.error('加载分类失败:', err)
+        categoriesError.value = err.message || '加载失败'
+    } finally {
+        categoriesLoading.value = false
+    }
+}
+
+// 实时同步到formData.items
 watch(selectedItems, (val) => {
-  formData.value.items = val.map(id => ({ id, name: getItemNameById(id) }))
+    formData.value.items = val.map(id => ({ id, name: getItemNameById(id) }))
 })
 
-// 递归组件
-const CategoryTree = defineComponent({
-  name: 'CategoryTree',
-  props: {
-    category: Object,
-    selectedItems: Array,
-    expandedCategories: Array
-  },
-  emits: ['toggle-category', 'toggle-item'],
-  setup(props, { emit }) {
-    const isExpanded = computed(() => props.expandedCategories.includes(props.category.id))
-    const toggle = () => emit('toggle-category', props.category.id)
-    return () => (
-      <div>
-        <div class="category-header" style={{ marginLeft: `${(props.category.level-1)*24}px` }} onClick={toggle}>
-          <span>{{ props.category.name }}</span>
-          <span v-if="props.category.children">{{ isExpanded.value ? '▼' : '▶' }}</span>
-        </div>
-        { isExpanded.value && props.category.children && props.category.children.map((child: any) => (
-          <CategoryTree
-            category={child}
-            selected-items={props.selectedItems}
-            expanded-categories={props.expandedCategories}
-            onToggle-category={emit.bind(null, 'toggle-category')}
-            onToggle-item={emit.bind(null, 'toggle-item')}
-          />
-        ))}
-        { isExpanded.value && props.category.base_items && (
-          <div class="base-items-grid">
-            {props.category.base_items.map((item: any) => (
-              <div class={['base-item', props.selectedItems.includes(item.id) ? 'selected' : '']} onClick={() => emit('toggle-item', item.id)}>
-                <span class="item-name">{{ item.name }}</span>
-                {props.selectedItems.includes(item.id) && <span class="selected-icon">✓</span>}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    )
-  }
-})
 
-// 注册递归组件
-defineProps(['category', 'selectedItems', 'expandedCategories'])
-defineEmits(['toggle-category', 'toggle-item'])
 </script>
 
 <style lang="scss" scoped>
@@ -2164,6 +2272,186 @@ defineEmits(['toggle-category', 'toggle-item'])
             font-weight: bold;
             color: #333;
             border-bottom: 1px solid #f0f0f0;
+        }
+    }
+}
+
+.loading-container,
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400rpx;
+    
+    .error-text {
+        font-size: 28rpx;
+        color: #999;
+        margin-bottom: 40rpx;
+    }
+    
+    .retry-btn {
+        padding: 20rpx 40rpx;
+        background-color: #007aff;
+        color: white;
+        border-radius: 10rpx;
+        border: none;
+        font-size: 28rpx;
+    }
+}
+
+.category-tabs {
+    background-color: white;
+    border-bottom: 1rpx solid #f0f0f0;
+    
+    .tabs-scroll {
+        white-space: nowrap;
+        
+        .tabs-content {
+            display: flex;
+            padding: 0 32rpx;
+            
+            .tab-item {
+                flex-shrink: 0;
+                padding: 24rpx 32rpx;
+                margin-right: 16rpx;
+                border-radius: 24rpx;
+                background-color: #f8f9fa;
+                transition: all 0.3s ease;
+                
+                &.active {
+                    background-color: #007aff;
+                    
+                    .tab-text {
+                        color: white;
+                    }
+                }
+                
+                .tab-text {
+                    font-size: 28rpx;
+                    color: #666;
+                }
+            }
+        }
+    }
+}
+
+.categories-list {
+    .category-section {
+        background-color: white;
+        margin: 20rpx 32rpx;
+        border-radius: 16rpx;
+        overflow: hidden;
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 32rpx;
+            border-bottom: 1rpx solid #f0f0f0;
+            
+            .category-info {
+                display: flex;
+                align-items: center;
+                
+                .category-name {
+                    font-size: 32rpx;
+                    font-weight: bold;
+                    color: #333;
+                    margin-right: 16rpx;
+                }
+                
+                .category-count {
+                    font-size: 24rpx;
+                    color: #999;
+                }
+            }
+            
+            .category-arrow {
+                transition: transform 0.3s ease;
+                
+                &.expanded {
+                    transform: rotate(90deg);
+                }
+                
+                .arrow-icon {
+                    font-size: 32rpx;
+                    color: #999;
+                }
+            }
+        }
+        
+        .base-items-grid {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 32rpx;
+            gap: 16rpx;
+            
+            .base-item {
+                flex: 0 0 calc(50% - 8rpx);
+                background-color: #f8f9fa;
+                border-radius: 12rpx;
+                padding: 24rpx;
+                transition: all 0.3s ease;
+                
+                &.selected {
+                    background-color: #e3f2fd;
+                    border: 2rpx solid #2196f3;
+                }
+                
+                .item-content {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    
+                    .item-name {
+                        font-size: 28rpx;
+                        color: #333;
+                        flex: 1;
+                    }
+                    
+                    .selected-icon {
+                        margin-left: 16rpx;
+                        
+                        .icon-check {
+                            font-size: 24rpx;
+                            color: #2196f3;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+.selected-preview {
+    background-color: white;
+    margin: 20rpx 32rpx;
+    border-radius: 16rpx;
+    padding: 32rpx;
+    
+    .preview-title {
+        font-size: 28rpx;
+        color: #333;
+        margin-bottom: 16rpx;
+    }
+    
+    .preview-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16rpx;
+        
+        .preview-item {
+            background-color: #e3f2fd;
+            color: #2196f3;
+            padding: 8rpx 16rpx;
+            border-radius: 20rpx;
+            font-size: 24rpx;
+        }
+        
+        .preview-more {
+            color: #999;
+            font-size: 24rpx;
         }
     }
 }
@@ -2919,112 +3207,231 @@ defineEmits(['toggle-category', 'toggle-item'])
 
 .category-tabs {
     display: flex;
+    justify-content: space-between;
     margin-bottom: 20rpx;
-    background: #fff;
-    border-radius: 12rpx;
-    box-shadow: 0 2rpx 8rpx #f0f0f0;
 }
+
 .tabs-scroll {
     flex: 1;
     overflow-x: auto;
     white-space: nowrap;
 }
+
 .tabs-content {
-    display: flex;
+    display: inline-block;
 }
+
 .tab-item {
-    padding: 16rpx 32rpx;
-    margin-right: 12rpx;
-    border-radius: 24rpx;
-    background: #f8f9fa;
-    color: #333;
-    font-weight: 500;
+    display: inline-block;
+    padding: 12rpx 24rpx;
+    margin-right: 16rpx;
+    border: 2rpx solid #e0e0e0;
+    border-radius: 12rpx;
     cursor: pointer;
+    
     &.active {
-        background: linear-gradient(90deg, #4f8aff 0%, #6f6fff 100%);
-        color: #fff;
+        border-color: #007aff;
+        background-color: #007aff;
+        color: white;
     }
 }
+
+.category-section {
+    margin-bottom: 20rpx;
+}
+
 .category-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    padding: 16rpx 24rpx;
+    border: 2rpx solid #e0e0e0;
+    border-radius: 12rpx;
+    cursor: pointer;
+    
+    &.expanded {
+        border-color: #007aff;
+    }
+}
+
+.category-info {
+    display: flex;
+    align-items: center;
+}
+
+.category-name {
     font-size: 28rpx;
     color: #333;
-    padding: 12rpx 0 12rpx 24rpx;
-    cursor: pointer;
-    font-weight: 500;
+    margin-right: 16rpx;
 }
+
+.category-count {
+    font-size: 24rpx;
+    color: #999;
+}
+
+.category-arrow {
+    font-size: 24rpx;
+    color: #999;
+    
+    &.expanded {
+        transform: rotate(90deg);
+    }
+}
+
 .base-items-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 16rpx;
-    margin-left: 32rpx;
-    margin-bottom: 12rpx;
+    padding: 16rpx 24rpx;
 }
+
 .base-item {
-    background: #f8f9fa;
-    border-radius: 12rpx;
-    padding: 12rpx 24rpx;
-    font-size: 26rpx;
-    color: #333;
-    margin-bottom: 8rpx;
-    cursor: pointer;
-    border: 2rpx solid transparent;
-    &.selected {
-        background: #e3f2fd;
-        border-color: #4f8aff;
-        color: #4f8aff;
-        font-weight: bold;
-    }
-    .selected-icon {
-        margin-left: 8rpx;
-        color: #4f8aff;
-        font-size: 24rpx;
-    }
-}
-.selected-preview {
-    margin: 16rpx 0 0 0;
-    .preview-title {
-        font-size: 24rpx;
-        color: #666;
-        margin-bottom: 8rpx;
-    }
-    .preview-items {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8rpx;
-        .preview-item {
-            background: #e3f2fd;
-            color: #4f8aff;
-            border-radius: 16rpx;
-            padding: 6rpx 16rpx;
-            font-size: 24rpx;
-        }
-        .preview-more {
-            color: #999;
-            font-size: 22rpx;
-            margin-left: 8rpx;
-        }
-    }
-}
-.bottom-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-top: 24rpx;
-    .selected-info {
-        font-size: 28rpx;
-        color: #333;
+    padding: 12rpx 24rpx;
+    border: 2rpx solid #e0e0e0;
+    border-radius: 12rpx;
+    cursor: pointer;
+    
+    &.selected {
+        border-color: #007aff;
+        background-color: #e3f2fd;
     }
-    .action-buttons {
-        .btn-secondary {
-            background: #f8f9fa;
-            color: #666;
-            border-radius: 12rpx;
-            padding: 12rpx 32rpx;
-            font-size: 28rpx;
-            border: 1rpx solid #e0e0e0;
-            cursor: pointer;
+}
+
+.item-content {
+    display: flex;
+    align-items: center;
+}
+
+.item-name {
+    font-size: 28rpx;
+    color: #333;
+    margin-right: 16rpx;
+}
+
+.selected-icon {
+    font-size: 24rpx;
+    color: #007aff;
+}
+
+.selected-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20rpx;
+}
+
+.selected-text {
+    font-size: 28rpx;
+    color: #333;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 16rpx;
+}
+
+.btn-secondary {
+    padding: 12rpx 24rpx;
+    border: 2rpx solid #e0e0e0;
+    border-radius: 12rpx;
+    font-size: 28rpx;
+    color: #333;
+    background-color: #f8f8f8;
+    cursor: pointer;
+}
+
+.sub-categories {
+    .sub-category-section {
+        margin-left: 32rpx;
+        border-left: 2rpx solid #e0e0e0;
+        
+        .sub-category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24rpx 32rpx;
+            background-color: #f8f9fa;
+            
+            .sub-category-info {
+                display: flex;
+                align-items: center;
+                
+                .sub-category-name {
+                    font-size: 28rpx;
+                    font-weight: 500;
+                    color: #555;
+                    margin-right: 16rpx;
+                }
+                
+                .sub-category-count {
+                    font-size: 22rpx;
+                    color: #999;
+                }
+            }
+            
+            .sub-category-arrow {
+                transition: transform 0.3s ease;
+                
+                &.expanded {
+                    transform: rotate(90deg);
+                }
+                
+                .arrow-icon {
+                    font-size: 28rpx;
+                    color: #999;
+                }
+            }
+        }
+        
+        .sub-category-content {
+            background-color: #fafafa;
+        }
+    }
+}
+
+.third-categories {
+    .third-category-section {
+        margin-left: 32rpx;
+        border-left: 2rpx solid #e0e0e0;
+        
+        .third-category-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20rpx 32rpx;
+            background-color: #f0f0f0;
+            
+            .third-category-info {
+                display: flex;
+                align-items: center;
+                
+                .third-category-name {
+                    font-size: 26rpx;
+                    color: #666;
+                    margin-right: 16rpx;
+                }
+                
+                .third-category-count {
+                    font-size: 20rpx;
+                    color: #999;
+                }
+            }
+            
+            .third-category-arrow {
+                transition: transform 0.3s ease;
+                
+                &.expanded {
+                    transform: rotate(90deg);
+                }
+                
+                .arrow-icon {
+                    font-size: 24rpx;
+                    color: #999;
+                }
+            }
         }
     }
 }

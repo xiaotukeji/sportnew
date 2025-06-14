@@ -27,68 +27,19 @@ class EventItemService extends BaseApiService
     }
 
     /**
-     * 获取运动分类树形结构（四级分类）
+     * 获取运动分类树形结构（支持2-4级灵活结构）
      * @param array $data
      * @return array
      */
     public function getCategories(array $data)
     {
         $event_id = $data['event_id'] ?? 0;
-        $level = $data['level'] ?? 1;
-        $parent_id = $data['parent_id'] ?? 0;
         
-        // 获取指定层级的分类
-        $categories = (new SportCategory())->where([
+        // 获取所有一级分类
+        $level1_categories = (new SportCategory())->where([
             ['status', '=', 1],
-            ['parent_id', '=', $parent_id],
-            ['level', '=', $level]
+            ['level', '=', 1]
         ])->order('sort asc, id asc')->select()->toArray();
-        
-        // 如果是获取三级分类，则需要加载对应的基础项目
-        if ($level == 3) {
-            return $this->getLevel3CategoriesWithItems($categories, $event_id);
-        }
-        
-        // 对于一级和二级分类，获取子分类数量
-        foreach ($categories as &$category) {
-            $category['has_children'] = (new SportCategory())->where([
-                ['parent_id', '=', $category['id']],
-                ['status', '=', 1]
-            ])->count() > 0;
-            
-            // 设置默认展开状态
-            if ($level == 1) {
-                $default_expand_names = ['水上运动', '田径类', '球类'];
-                $category['default_expand'] = in_array($category['name'], $default_expand_names);
-            }
-        }
-        
-        return [
-            'categories' => $categories,
-            'level' => $level
-        ];
-    }
-    
-    /**
-     * 获取三级分类及其基础项目
-     * @param array $categories
-     * @param int $event_id
-     * @return array
-     */
-    private function getLevel3CategoriesWithItems($categories, $event_id = 0)
-    {
-        // 获取三级分类下的基础项目
-        $category_ids = array_column($categories, 'id');
-        $base_items = (new SportBaseItem())->where([
-            ['category_id', 'in', $category_ids],
-            ['status', '=', 1]
-        ])->order('sort asc, id asc')->select()->toArray();
-        
-        // 按分类组织基础项目
-        $base_items_by_category = [];
-        foreach ($base_items as $item) {
-            $base_items_by_category[$item['category_id']][] = $item;
-        }
         
         // 获取赛事已选择的基础项目ID（如果有赛事ID）
         $selected_base_item_ids = [];
@@ -98,22 +49,86 @@ class EventItemService extends BaseApiService
             ])->column('base_item_id');
         }
         
-        // 整合数据
-        foreach ($categories as &$category) {
-            $category['base_items'] = $base_items_by_category[$category['id']] ?? [];
-            $category['item_count'] = count($category['base_items']);
+        // 为每个一级分类构建完整的树形结构
+        foreach ($level1_categories as &$category) {
+            $this->buildCategoryTree($category, $selected_base_item_ids);
             
-            // 标记已选择的项目
-            foreach ($category['base_items'] as &$item) {
-                $item['selected'] = in_array($item['id'], $selected_base_item_ids);
-            }
+            // 设置默认展开状态
+            $default_expand_names = ['水上运动', '田径类', '球类'];
+            $category['default_expand'] = in_array($category['name'], $default_expand_names);
         }
         
         return [
-            'categories' => $categories,
-            'selected_count' => count($selected_base_item_ids),
-            'level' => 3
+            'categories' => $level1_categories,
+            'selected_count' => count($selected_base_item_ids)
         ];
+    }
+    
+    /**
+     * 递归构建分类树形结构
+     * @param array $category
+     * @param array $selected_base_item_ids
+     * @return void
+     */
+    private function buildCategoryTree(&$category, $selected_base_item_ids = [])
+    {
+        // 获取子分类
+        $children = (new SportCategory())->where([
+            ['parent_id', '=', $category['id']],
+            ['status', '=', 1]
+        ])->order('sort asc, id asc')->select()->toArray();
+        
+        if (!empty($children)) {
+            // 有子分类，递归构建
+            foreach ($children as &$child) {
+                $this->buildCategoryTree($child, $selected_base_item_ids);
+            }
+            $category['children'] = $children;
+            $category['has_children'] = true;
+        } else {
+            // 没有子分类，检查是否有基础项目
+            $category['children'] = [];
+            $category['has_children'] = false;
+        }
+        
+        // 获取当前分类下的基础项目
+        $base_items = (new SportBaseItem())->where([
+            ['category_id', '=', $category['id']],
+            ['status', '=', 1]
+        ])->order('sort asc, id asc')->select()->toArray();
+        
+        // 标记已选择的项目
+        foreach ($base_items as &$item) {
+            $item['selected'] = in_array($item['id'], $selected_base_item_ids);
+        }
+        
+        $category['base_items'] = $base_items;
+        $category['item_count'] = count($base_items);
+        
+        // 计算总项目数（包括子分类的项目）
+        $total_items = count($base_items);
+        if (!empty($category['children'])) {
+            foreach ($category['children'] as $child) {
+                $total_items += $this->countCategoryItems($child);
+            }
+        }
+        $category['total_item_count'] = $total_items;
+    }
+    
+    /**
+     * 递归计算分类下的总项目数
+     * @param array $category
+     * @return int
+     */
+    private function countCategoryItems($category)
+    {
+        $count = $category['item_count'] ?? 0;
+        if (!empty($category['children'])) {
+            foreach ($category['children'] as $child) {
+                $count += $this->countCategoryItems($child);
+            }
+        }
+        return $count;
     }
 
     /**
