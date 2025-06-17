@@ -57,17 +57,9 @@ class EventItemService extends BaseApiService
             $default_expand_names = ['水上运动', '田径类', '球类'];
             $category['default_expand'] = in_array($category['name'], $default_expand_names);
         }
+        unset($category); // 清除引用，避免后续意外修改
         
-        // 添加调试日志
-        \think\facade\Log::info('分类数据调试 - 一级分类数量: ' . count($level1_categories));
-        foreach ($level1_categories as $category) {
-            \think\facade\Log::info('一级分类: ' . $category['name'] . ' (ID: ' . $category['id'] . ')');
-            if (!empty($category['children'])) {
-                foreach ($category['children'] as $child) {
-                    \think\facade\Log::info('  二级分类: ' . $child['name'] . ' (ID: ' . $child['id'] . ')');
-                }
-            }
-        }
+
         
         return [
             'categories' => $level1_categories,
@@ -94,6 +86,7 @@ class EventItemService extends BaseApiService
             foreach ($children as &$child) {
                 $this->buildCategoryTree($child, $selected_base_item_ids);
             }
+            unset($child); // 清除引用，避免后续意外修改
             $category['children'] = $children;
             $category['has_children'] = true;
         } else {
@@ -112,6 +105,7 @@ class EventItemService extends BaseApiService
         foreach ($base_items as &$item) {
             $item['selected'] = in_array($item['id'], $selected_base_item_ids);
         }
+        unset($item); // 清除引用，避免后续意外修改
         
         $category['base_items'] = $base_items;
         $category['item_count'] = count($base_items);
