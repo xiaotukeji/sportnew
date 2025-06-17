@@ -1,9 +1,9 @@
--- Sport插件灵活分类结构升级脚本（简化稳定版）
--- 支持2-4级不等的分类深度，智能适配不同运动项目特点
+-- Sport插件二级分类结构升级脚本（简化实用版）
+-- 采用二级分类结构，操作简单，覆盖常用运动项目
 -- 执行时间：2024-03-21
 
 -- ============================================
--- 数据备份
+-- 数据备份和清理
 -- ============================================
 SELECT '=== 开始备份现有数据 ===' AS info;
 
@@ -20,186 +20,212 @@ INSERT INTO `sport_base_item_backup` SELECT * FROM `sport_base_item`;
 SELECT '数据备份完成' AS backup_status;
 
 -- ============================================
--- 清空现有数据，重建灵活结构
+-- 清空现有数据，重建二级结构
 -- ============================================
-SELECT '=== 重建灵活分类结构 ===' AS info;
+SELECT '=== 重建二级分类结构 ===' AS info;
 
 -- 清空数据并重置AUTO_INCREMENT
-DELETE FROM `sport_base_item`;
-DELETE FROM `sport_category`;
-ALTER TABLE `sport_category` AUTO_INCREMENT = 1;
-ALTER TABLE `sport_base_item` AUTO_INCREMENT = 1;
+TRUNCATE TABLE `sport_base_item`;
+TRUNCATE TABLE `sport_category`;
 
 -- ============================================
--- 一级分类（12个大类）
+-- 一级分类（7个大类）
 -- ============================================
 INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('田径类', 'track_field', 0, 1, '1', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('球类', 'ball_sports', 0, 1, '2', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('水上运动', 'water_sports', 0, 1, '3', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('体操类', 'gymnastics', 0, 1, '4', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('武术类', 'martial_arts', 0, 1, '5', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('极限运动', 'extreme_sports', 0, 1, '6', 6, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('冰雪运动', 'ice_snow_sports', 0, 1, '7', 7, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('格斗类', 'combat_sports', 0, 1, '8', 8, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('射击类', 'shooting', 0, 1, '9', 9, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('棋类', 'chess', 0, 1, '10', 10, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('趣味比赛', 'fun_sports', 0, 1, '11', 11, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('其他', 'others', 0, 1, '12', 12, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+('球类', 'ball_sports', 0, 1, '1', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('田赛', 'field_events', 0, 1, '2', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('径赛', 'track_events', 0, 1, '3', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('游泳', 'swimming', 0, 1, '4', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('棋类', 'chess', 0, 1, '5', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('趣味', 'fun_sports', 0, 1, '6', 6, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('其他', 'others', 0, 1, '7', 7, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
 -- ============================================
--- 二级分类（分批插入，避免复杂查询）
+-- 二级分类
 -- ============================================
 
--- 【四级结构】水上运动的二级分类（parent_id=3）
+-- 球类二级分类（parent_id=1）
 INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('游泳', 'swimming', 3, 2, '3', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('跳水', 'diving', 3, 2, '3', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('水球', 'water_polo', 3, 2, '3', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('花样游泳', 'synchronized_swimming', 3, 2, '3', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+('羽毛球', 'badminton', 1, 2, '1,8', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('乒乓球', 'table_tennis', 1, 2, '1,9', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('篮球', 'basketball', 1, 2, '1,10', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('足球', 'football', 1, 2, '1,11', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('排球', 'volleyball', 1, 2, '1,12', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('网球', 'tennis', 1, 2, '1,13', 6, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 【四级结构】田径类的二级分类（parent_id=1）
+-- 田赛二级分类（parent_id=2）
 INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('径赛', 'track_events', 1, 2, '1', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('田赛', 'field_events', 1, 2, '1', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('全能', 'combined_events', 1, 2, '1', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+('跳高', 'high_jump', 2, 2, '2,14', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('撑杆跳高', 'pole_vault', 2, 2, '2,15', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('跳远', 'long_jump', 2, 2, '2,16', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('三级跳远', 'triple_jump', 2, 2, '2,17', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('铅球', 'shot_put', 2, 2, '2,18', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('铁饼', 'discus', 2, 2, '2,19', 6, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('链球', 'hammer', 2, 2, '2,20', 7, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('标枪', 'javelin', 2, 2, '2,21', 8, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 【三级结构】球类的二级分类（parent_id=2）
+-- 径赛二级分类（parent_id=3）
 INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('大球', 'big_ball', 2, 2, '2', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('小球', 'small_ball', 2, 2, '2', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+('短跑', 'sprint', 3, 2, '3,22', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('中长跑', 'middle_distance', 3, 2, '3,23', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('接力', 'relay', 3, 2, '3,24', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('马拉松', 'marathon', 3, 2, '3,25', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('竞走', 'race_walk', 3, 2, '3,26', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('越野', 'cross_country', 3, 2, '3,27', 6, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 【三级结构】体操类的二级分类（parent_id=4）
+-- 游泳二级分类（parent_id=4）
 INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('竞技体操', 'artistic_gymnastics', 4, 2, '4', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('艺术体操', 'rhythmic_gymnastics', 4, 2, '4', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('蹦床', 'trampoline', 4, 2, '4', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+('自由泳', 'freestyle', 4, 2, '4,28', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('蛙泳', 'breaststroke', 4, 2, '4,29', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('蝶泳', 'butterfly', 4, 2, '4,30', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('仰泳', 'backstroke', 4, 2, '4,31', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('接力', 'swimming_relay', 4, 2, '4,32', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('混合', 'medley', 4, 2, '4,33', 6, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 【三级结构】武术类的二级分类（parent_id=5）
+-- 棋类二级分类（parent_id=5）
 INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('套路', 'taolu', 5, 2, '5', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('散打', 'sanda', 5, 2, '5', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('推手', 'tuishou', 5, 2, '5', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+('中国象棋', 'chinese_chess', 5, 2, '5,34', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('围棋', 'go', 5, 2, '5,35', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+('国际象棋', 'international_chess', 5, 2, '5,36', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+
+-- 趣味分类不设二级分类，直接在基础项目中挂载到一级分类下
 
 -- ============================================
--- 三级分类（使用固定ID，避免查询）
+-- 基础项目数据（挂在二级分类下）
 -- ============================================
 
--- 【四级结构】游泳的三级分类（parent_id预计为13）
-INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('自由泳', 'freestyle', 13, 3, '3,13', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('仰泳', 'backstroke', 13, 3, '3,13', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('蛙泳', 'breaststroke', 13, 3, '3,13', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('蝶泳', 'butterfly', 13, 3, '3,13', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('混合泳', 'medley', 13, 3, '3,13', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('接力', 'relay', 13, 3, '3,13', 6, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
-
--- 【四级结构】径赛的三级分类（parent_id预计为17）
-INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('短跑', 'sprint', 17, 3, '1,17', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('中跑', 'middle_distance', 17, 3, '1,17', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('长跑', 'long_distance', 17, 3, '1,17', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('跨栏', 'hurdles', 17, 3, '1,17', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('接力', 'track_relay', 17, 3, '1,17', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
-
--- 【四级结构】田赛的三级分类（parent_id预计为18）
-INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('跳跃', 'jumping', 18, 3, '1,18', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('投掷', 'throwing', 18, 3, '1,18', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
-
--- 【三级结构】大球的三级分类（parent_id预计为20）
-INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('足球', 'football', 20, 3, '2,20', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('篮球', 'basketball', 20, 3, '2,20', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('排球', 'volleyball', 20, 3, '2,20', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
-
--- 【三级结构】小球的三级分类（parent_id预计为21）
-INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('乒乓球', 'table_tennis', 21, 3, '2,21', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('羽毛球', 'badminton', 21, 3, '2,21', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('网球', 'tennis', 21, 3, '2,21', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
-
--- 【三级结构】竞技体操的三级分类（parent_id预计为22）
-INSERT INTO `sport_category` (`name`, `code`, `parent_id`, `level`, `path`, `sort`, `status`, `create_time`, `update_time`) VALUES
-('自由体操', 'floor_exercise', 22, 3, '4,22', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('鞍马', 'pommel_horse', 22, 3, '4,22', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('吊环', 'rings', 22, 3, '4,22', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('跳马', 'vault', 22, 3, '4,22', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('双杠', 'parallel_bars', 22, 3, '4,22', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('单杠', 'horizontal_bar', 22, 3, '4,22', 6, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('高低杠', 'uneven_bars', 22, 3, '4,22', 7, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-('平衡木', 'balance_beam', 22, 3, '4,22', 8, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
-
--- ============================================
--- 基础项目数据（使用预计的分类ID）
--- ============================================
-
--- 【四级结构】游泳项目（挂在三级分类下）
+-- 球类项目
+-- 羽毛球项目（category_id=8）
 INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(8, '男子单打', 'male_badminton_singles', 1, 1, '青少年', '男子羽毛球单打比赛', 'BWF标准规则', '羽毛球拍、羽毛球', '标准羽毛球场', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(8, '女子单打', 'female_badminton_singles', 1, 2, '青少年', '女子羽毛球单打比赛', 'BWF标准规则', '羽毛球拍、羽毛球', '标准羽毛球场', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(8, '男子双打', 'male_badminton_doubles', 2, 1, '青少年', '男子羽毛球双打比赛', 'BWF标准规则', '羽毛球拍、羽毛球', '标准羽毛球场', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(8, '女子双打', 'female_badminton_doubles', 2, 2, '青少年', '女子羽毛球双打比赛', 'BWF标准规则', '羽毛球拍、羽毛球', '标准羽毛球场', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(8, '混合双打', 'mixed_badminton_doubles', 2, 3, '青少年', '混合羽毛球双打比赛', 'BWF标准规则', '羽毛球拍、羽毛球', '标准羽毛球场', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 自由泳项目（category_id预计为31）
-(31, '男子50米自由泳', 'male_50m_freestyle', 1, 1, '青少年', '男子50米自由泳项目', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(31, '男子100米自由泳', 'male_100m_freestyle', 1, 1, '青少年', '男子100米自由泳项目', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(31, '女子50米自由泳', 'female_50m_freestyle', 1, 2, '青少年', '女子50米自由泳项目', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 11, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(31, '女子100米自由泳', 'female_100m_freestyle', 1, 2, '青少年', '女子100米自由泳项目', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 12, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 乒乓球项目（category_id=9）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(9, '男子单打', 'male_table_tennis_singles', 1, 1, '青少年', '男子乒乓球单打比赛', 'ITTF标准规则', '乒乓球拍、乒乓球', '标准乒乓球台', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(9, '女子单打', 'female_table_tennis_singles', 1, 2, '青少年', '女子乒乓球单打比赛', 'ITTF标准规则', '乒乓球拍、乒乓球', '标准乒乓球台', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(9, '男子双打', 'male_table_tennis_doubles', 2, 1, '青少年', '男子乒乓球双打比赛', 'ITTF标准规则', '乒乓球拍、乒乓球', '标准乒乓球台', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(9, '女子双打', 'female_table_tennis_doubles', 2, 2, '青少年', '女子乒乓球双打比赛', 'ITTF标准规则', '乒乓球拍、乒乓球', '标准乒乓球台', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(9, '混合双打', 'mixed_table_tennis_doubles', 2, 3, '青少年', '混合乒乓球双打比赛', 'ITTF标准规则', '乒乓球拍、乒乓球', '标准乒乓球台', 5, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 仰泳项目（category_id预计为32）
-(32, '男子100米仰泳', 'male_100m_backstroke', 1, 1, '青少年', '男子100米仰泳项目', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 21, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(32, '女子100米仰泳', 'female_100m_backstroke', 1, 2, '青少年', '女子100米仰泳项目', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 22, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 篮球项目（category_id=10）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(10, '男子篮球', 'male_basketball', 2, 1, '青少年', '男子5人制篮球比赛', 'FIBA标准规则', '篮球、球衣、篮球鞋', '标准篮球场', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(10, '女子篮球', 'female_basketball', 2, 2, '青少年', '女子5人制篮球比赛', 'FIBA标准规则', '篮球、球衣、篮球鞋', '标准篮球场', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(10, '三人篮球（男子）', 'male_3v3_basketball', 2, 1, '青少年', '男子3人制篮球比赛', 'FIBA 3x3标准规则', '篮球、球衣、篮球鞋', '半场篮球场', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(10, '三人篮球（女子）', 'female_3v3_basketball', 2, 2, '青少年', '女子3人制篮球比赛', 'FIBA 3x3标准规则', '篮球、球衣、篮球鞋', '半场篮球场', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 【四级结构】短跑项目（category_id预计为37）
-(37, '男子100米', 'male_100m_sprint', 1, 1, '青少年', '男子100米短跑项目', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 51, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(37, '男子200米', 'male_200m_sprint', 1, 1, '青少年', '男子200米短跑项目', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 52, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(37, '女子100米', 'female_100m_sprint', 1, 2, '青少年', '女子100米短跑项目', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 53, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(37, '女子200米', 'female_200m_sprint', 1, 2, '青少年', '女子200米短跑项目', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 54, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 足球项目（category_id=11）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(11, '男子足球', 'male_football', 2, 1, '青少年', '男子11人制足球比赛', 'FIFA标准规则', '足球、球衣、护腿板、球鞋', '标准足球场', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(11, '女子足球', 'female_football', 2, 2, '青少年', '女子11人制足球比赛', 'FIFA标准规则', '足球、球衣、护腿板、球鞋', '标准足球场', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(11, '五人制足球（男子）', 'male_futsal', 2, 1, '青少年', '男子5人制足球比赛', 'FIFA室内足球规则', '足球、球衣、护腿板、球鞋', '室内足球场', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(11, '五人制足球（女子）', 'female_futsal', 2, 2, '青少年', '女子5人制足球比赛', 'FIFA室内足球规则', '足球、球衣、护腿板、球鞋', '室内足球场', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 【三级结构】球类项目
--- 足球项目（category_id预计为44）
-(44, '男子足球', 'male_football', 2, 1, '青少年', '男子11人制足球比赛', 'FIFA标准规则', '足球、球衣、护腿板', '标准足球场', 101, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(44, '女子足球', 'female_football', 2, 2, '青少年', '女子11人制足球比赛', 'FIFA标准规则', '足球、球衣、护腿板', '标准足球场', 102, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(44, '混合足球', 'mixed_football', 2, 3, '青少年', '男女混合足球比赛', 'FIFA标准规则', '足球、球衣、护腿板', '标准足球场', 103, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 田赛项目
+-- 跳高项目（category_id=14）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(14, '男子跳高', 'male_high_jump', 1, 1, '青少年', '男子跳高比赛', '国际田联标准规则', '跑鞋、运动服', '跳高设施', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(14, '女子跳高', 'female_high_jump', 1, 2, '青少年', '女子跳高比赛', '国际田联标准规则', '跑鞋、运动服', '跳高设施', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 篮球项目（category_id预计为45）
-(45, '男子篮球', 'male_basketball', 2, 1, '青少年', '男子5人制篮球比赛', 'FIBA标准规则', '篮球、球衣、篮球鞋', '标准篮球场', 111, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(45, '女子篮球', 'female_basketball', 2, 2, '青少年', '女子5人制篮球比赛', 'FIBA标准规则', '篮球、球衣、篮球鞋', '标准篮球场', 112, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 跳远项目（category_id=16）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(16, '男子跳远', 'male_long_jump', 1, 1, '青少年', '男子跳远比赛', '国际田联标准规则', '跑鞋、运动服', '跳远沙坑', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(16, '女子跳远', 'female_long_jump', 1, 2, '青少年', '女子跳远比赛', '国际田联标准规则', '跑鞋、运动服', '跳远沙坑', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 乒乓球项目（category_id预计为47）
-(47, '男子单打', 'male_table_tennis_singles', 1, 1, '青少年', '男子乒乓球单打比赛', 'ITTF标准规则', '乒乓球拍、乒乓球', '标准乒乓球台', 121, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(47, '女子单打', 'female_table_tennis_singles', 1, 2, '青少年', '女子乒乓球单打比赛', 'ITTF标准规则', '乒乓球拍、乒乓球', '标准乒乓球台', 122, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(47, '混合双打', 'mixed_table_tennis_doubles', 2, 3, '青少年', '混合乒乓球双打比赛', 'ITTF标准规则', '乒乓球拍、乒乓球', '标准乒乓球台', 125, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 铅球项目（category_id=18）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(18, '男子铅球', 'male_shot_put', 1, 1, '青少年', '男子铅球比赛', '国际田联标准规则', '铅球、运动服、运动鞋', '铅球投掷区', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(18, '女子铅球', 'female_shot_put', 1, 2, '青少年', '女子铅球比赛', '国际田联标准规则', '铅球、运动服、运动鞋', '铅球投掷区', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 【三级结构】体操项目
--- 自由体操（category_id预计为50）
-(50, '男子自由体操', 'male_floor_exercise', 1, 1, '青少年', '男子自由体操项目', 'FIG标准规则', '体操服、体操鞋', '标准体操垫', 201, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(50, '女子自由体操', 'female_floor_exercise', 1, 2, '青少年', '女子自由体操项目', 'FIG标准规则', '体操服、体操鞋', '标准体操垫', 202, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 径赛项目
+-- 短跑项目（category_id=22）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(22, '男子100米', 'male_100m_sprint', 1, 1, '青少年', '男子100米短跑比赛', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(22, '女子100米', 'female_100m_sprint', 1, 2, '青少年', '女子100米短跑比赛', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(22, '男子200米', 'male_200m_sprint', 1, 1, '青少年', '男子200米短跑比赛', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(22, '女子200米', 'female_200m_sprint', 1, 2, '青少年', '女子200米短跑比赛', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 鞍马（category_id预计为51）
-(51, '男子鞍马', 'male_pommel_horse', 1, 1, '青少年', '男子鞍马项目', 'FIG标准规则', '体操服、体操鞋', '标准鞍马', 211, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 中长跑项目（category_id=23）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(23, '男子800米', 'male_800m', 1, 1, '青少年', '男子800米中跑比赛', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(23, '女子800米', 'female_800m', 1, 2, '青少年', '女子800米中跑比赛', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(23, '男子1500米', 'male_1500m', 1, 1, '青少年', '男子1500米中长跑比赛', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(23, '女子1500米', 'female_1500m', 1, 2, '青少年', '女子1500米中长跑比赛', '国际田联标准规则', '跑鞋、运动服', '400米标准田径场', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 【二级结构】棋类项目（直接挂在一级分类下，category_id=10）
-(10, '中国象棋', 'chinese_chess', 1, 3, '青少年', '中国象棋比赛', '中国象棋协会标准规则', '象棋棋盘、象棋子', '标准比赛桌椅', 301, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(10, '国际象棋', 'international_chess', 1, 3, '青少年', '国际象棋比赛', '国际象棋联合会标准规则', '国际象棋棋盘、棋子', '标准比赛桌椅', 302, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(10, '围棋', 'go', 1, 3, '青少年', '围棋比赛', '中国围棋协会标准规则', '围棋棋盘、围棋子', '标准比赛桌椅', 303, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(10, '五子棋', 'gomoku', 1, 3, '青少年', '五子棋比赛', '五子棋协会标准规则', '五子棋棋盘、棋子', '标准比赛桌椅', 305, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 接力项目（category_id=24）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(24, '男子4×100米接力', 'male_4x100_relay', 2, 1, '青少年', '男子4×100米接力比赛', '国际田联标准规则', '接力棒、跑鞋、运动服', '400米标准田径场', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(24, '女子4×100米接力', 'female_4x100_relay', 2, 2, '青少年', '女子4×100米接力比赛', '国际田联标准规则', '接力棒、跑鞋、运动服', '400米标准田径场', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(24, '男子4×400米接力', 'male_4x400_relay', 2, 1, '青少年', '男子4×400米接力比赛', '国际田联标准规则', '接力棒、跑鞋、运动服', '400米标准田径场', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(24, '女子4×400米接力', 'female_4x400_relay', 2, 2, '青少年', '女子4×400米接力比赛', '国际田联标准规则', '接力棒、跑鞋、运动服', '400米标准田径场', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
--- 【二级结构】趣味比赛项目（直接挂在一级分类下，category_id=11）
-(11, '拔河比赛', 'tug_of_war', 2, 3, '青少年', '团队拔河比赛', '国际拔河协会标准规则', '拔河绳、标志线', '平坦场地', 401, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(11, '三人四足', 'three_legged_race', 2, 3, '青少年', '三人四足接力赛', '趣味运动标准规则', '绑腿绳', '平坦跑道', 402, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(11, '袋鼠跳', 'sack_race', 1, 3, '青少年', '袋鼠跳比赛', '趣味运动标准规则', '麻袋或布袋', '平坦跑道', 403, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(11, '背夹球接力', 'back_to_back_ball_relay', 2, 3, '青少年', '背夹球接力比赛', '趣味运动标准规则', '气球或排球', '平坦场地', 404, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
-(11, '跳绳比赛', 'rope_jumping', 1, 3, '青少年', '跳绳比赛', '跳绳协会标准规则', '跳绳', '平坦场地', 409, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+-- 游泳项目
+-- 自由泳项目（category_id=28）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(28, '男子50米自由泳', 'male_50m_freestyle', 1, 1, '青少年', '男子50米自由泳比赛', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(28, '女子50米自由泳', 'female_50m_freestyle', 1, 2, '青少年', '女子50米自由泳比赛', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(28, '男子100米自由泳', 'male_100m_freestyle', 1, 1, '青少年', '男子100米自由泳比赛', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(28, '女子100米自由泳', 'female_100m_freestyle', 1, 2, '青少年', '女子100米自由泳比赛', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+
+-- 蛙泳项目（category_id=29）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(29, '男子100米蛙泳', 'male_100m_breaststroke', 1, 1, '青少年', '男子100米蛙泳比赛', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(29, '女子100米蛙泳', 'female_100m_breaststroke', 1, 2, '青少年', '女子100米蛙泳比赛', '国际泳联标准规则', '泳衣、泳帽、泳镜', '50米标准游泳池', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+
+-- 棋类项目
+-- 中国象棋项目（category_id=34）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(34, '中国象棋比赛', 'chinese_chess_match', 1, 3, '青少年', '中国象棋比赛', '中国象棋协会标准规则', '象棋棋盘、象棋子', '标准比赛桌椅', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+
+-- 围棋项目（category_id=35）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(35, '围棋比赛', 'go_match', 1, 3, '青少年', '围棋比赛', '中国围棋协会标准规则', '围棋棋盘、围棋子', '标准比赛桌椅', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+
+-- 国际象棋项目（category_id=36）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+(36, '国际象棋比赛', 'international_chess_match', 1, 3, '青少年', '国际象棋比赛', '国际象棋联合会标准规则', '国际象棋棋盘、棋子', '标准比赛桌椅', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
+
+-- 趣味项目（直接挂在一级分类下，category_id=6）
+INSERT INTO `sport_base_item` (`category_id`, `name`, `code`, `competition_type`, `gender_type`, `age_group`, `description`, `rules`, `equipment`, `venue_requirements`, `sort`, `status`, `create_time`, `update_time`) VALUES
+-- 团队协作类
+(6, '拔河比赛', 'tug_of_war', 2, 3, '青少年', '团队拔河比赛', '国际拔河协会标准规则', '拔河绳、标志线', '平坦场地', 1, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '三人四足', 'three_legged_race', 2, 3, '青少年', '三人四足接力赛', '趣味运动标准规则', '绑腿绳', '平坦跑道', 2, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '人桥接力', 'human_bridge_relay', 2, 3, '青少年', '人桥接力比赛', '趣味运动标准规则', '无特殊器材', '平坦场地', 3, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '团队跳绳', 'team_rope_jumping', 2, 3, '青少年', '团队跳绳比赛', '跳绳协会标准规则', '长跳绳', '平坦场地', 4, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 平衡技巧类
+(6, '踩气球', 'balloon_stepping', 1, 3, '青少年', '踩气球比赛', '趣味运动标准规则', '气球、绳子', '平坦场地', 11, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '滚铁环', 'hoop_rolling', 1, 3, '青少年', '滚铁环比赛', '传统体育规则', '铁环、铁钩', '平坦跑道', 12, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '独轮车比赛', 'unicycle_race', 1, 3, '青少年', '独轮车比赛', '独轮车协会标准规则', '独轮车、护具', '平坦跑道', 13, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '平衡木行走', 'balance_beam_walking', 1, 3, '青少年', '平衡木行走比赛', '趣味运动标准规则', '平衡木', '室内或室外场地', 14, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 投掷类
+(6, '飞镖投掷', 'dart_throwing', 1, 3, '青少年', '飞镖投掷比赛', '国际飞镖协会标准规则', '飞镖、飞镖靶', '室内场地', 21, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '沙包投准', 'sandbag_throwing', 1, 3, '青少年', '沙包投准比赛', '趣味运动标准规则', '沙包、目标圈', '平坦场地', 22, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '套圈游戏', 'ring_toss', 1, 3, '青少年', '套圈游戏比赛', '趣味运动标准规则', '圆圈、目标柱', '平坦场地', 23, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '趣味保龄球', 'fun_bowling', 1, 3, '青少年', '用球击倒矿泉水瓶比赛', '趣味运动标准规则', '球、矿泉水瓶', '平坦场地', 24, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 趣味竞技类
+(6, '吃西瓜比赛', 'watermelon_eating', 1, 3, '青少年', '吃西瓜速度比赛', '趣味运动标准规则', '西瓜、餐具', '室内或室外场地', 31, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '穿针引线', 'needle_threading', 1, 3, '青少年', '穿针引线比赛', '趣味运动标准规则', '针、线', '室内场地', 32, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '背靠背运球', 'back_to_back_ball_carry', 2, 3, '青少年', '背靠背运球比赛', '趣味运动标准规则', '气球或排球', '平坦场地', 33, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '蒙眼摸象', 'blind_man_bluff', 1, 3, '青少年', '蒙眼摸象比赛', '趣味运动标准规则', '眼罩、目标物品', '安全场地', 34, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+-- 水上趣味项目
+(6, '水上拔河', 'water_tug_of_war', 2, 3, '青少年', '水上拔河比赛', '水上运动安全规则', '防水拔河绳、救生设备', '游泳池或安全水域', 41, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '水上篮球', 'water_basketball', 2, 3, '青少年', '水上篮球比赛', '水上运动安全规则', '防水篮球、浮动篮筐、救生设备', '游泳池', 42, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP()),
+(6, '水上漂浮比赛', 'water_floating', 1, 3, '青少年', '水上漂浮时长比赛', '水上运动安全规则', '救生设备', '游泳池或安全水域', 43, 1, UNIX_TIMESTAMP(), UNIX_TIMESTAMP());
 
 -- ============================================
 -- 完成统计和验证
 -- ============================================
-SELECT '=== 灵活分类结构升级完成 ===' AS info;
+SELECT '=== 二级分类结构升级完成 ===' AS info;
 
 -- 分类结构统计
 SELECT 
     '分类结构统计' AS category_stats,
     CONCAT('一级分类: ', COUNT(CASE WHEN level = 1 THEN 1 END), '个') AS level1_count,
     CONCAT('二级分类: ', COUNT(CASE WHEN level = 2 THEN 1 END), '个') AS level2_count,
-    CONCAT('三级分类: ', COUNT(CASE WHEN level = 3 THEN 1 END), '个') AS level3_count,
     CONCAT('总分类数: ', COUNT(*), '个') AS total_categories
 FROM sport_category;
 
@@ -209,21 +235,19 @@ SELECT
     CONCAT('总项目数: ', COUNT(*), '个') AS total_items
 FROM sport_base_item;
 
--- 结构类型展示
+-- 每个一级分类的项目分布
 SELECT 
-    level,
-    name,
+    c1.name AS first_level_category,
     CASE 
-        WHEN level = 1 AND code IN ('chess', 'fun_sports') THEN '二级结构：直接挂项目'
-        WHEN level = 1 AND code IN ('ball_sports', 'gymnastics', 'martial_arts') THEN '三级结构：需要两级子分类'
-        WHEN level = 1 AND code IN ('track_field', 'water_sports') THEN '四级结构：需要三级子分类'
-        WHEN level = 2 THEN '中间级别'
-        WHEN level = 3 THEN '最终级别'
-        ELSE '其他'
-    END AS structure_description,
-    (SELECT COUNT(*) FROM sport_base_item WHERE category_id = sport_category.id) AS direct_items
-FROM sport_category 
-WHERE level <= 3
-ORDER BY level, sort;
+        WHEN c1.code = 'fun_sports' THEN COUNT(bi.id)
+        ELSE COUNT(c2.id)
+    END AS second_level_count,
+    COUNT(bi.id) AS base_items_count
+FROM sport_category c1
+LEFT JOIN sport_category c2 ON c2.parent_id = c1.id AND c2.level = 2
+LEFT JOIN sport_base_item bi ON (bi.category_id = c2.id OR (c1.code = 'fun_sports' AND bi.category_id = c1.id))
+WHERE c1.level = 1
+GROUP BY c1.id, c1.name, c1.code
+ORDER BY c1.sort;
 
-SELECT '升级完成！系统现在支持灵活的2-4级分类结构' AS completion_message; 
+SELECT '升级完成！系统现在使用简化的二级分类结构，趣味项目直接挂在一级分类下' AS completion_message; 

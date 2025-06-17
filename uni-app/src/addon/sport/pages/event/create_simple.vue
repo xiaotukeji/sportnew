@@ -311,9 +311,17 @@
                         
                         <!-- 分类列表 -->
                         <view class="categories-list">
+                            <!-- 调试信息 -->
+                            <view class="debug-info" style="background: #f0f0f0; padding: 20rpx; margin: 20rpx; border-radius: 10rpx; font-size: 24rpx;">
+                                <text>🔍 调试信息:</text><br/>
+                                <text>总分类数: {{ categories.length }}</text><br/>
+                                <text>过滤后分类数: {{ filteredCategories.length }}</text><br/>
+                                <text>当前标签: {{ activeTab }}</text>
+                            </view>
+                            
                             <view 
-                                v-for="category in filteredCategories" 
-                                :key="category.id"
+                                v-for="(category, categoryIndex) in filteredCategories" 
+                                :key="`${category.id}-${categoryIndex}`"
                                 class="category-section"
                             >
                                 <!-- 分类标题 -->
@@ -2123,9 +2131,22 @@ const loadCategories = async () => {
         categoriesError.value = ''
         
         const response: any = await getEventCategories()
-        console.log('分类数据:', response.data)
+        console.log('🔍 分类数据调试 - 原始响应:', response)
+        console.log('🔍 分类数据调试 - response.data:', response.data)
+        console.log('🔍 分类数据调试 - categories数组:', response.data?.categories)
         
         categories.value = response.data.categories || []
+        
+        // 详细打印每个分类
+        console.log('🔍 分类详细信息:')
+        categories.value.forEach((category: any, index: number) => {
+            console.log(`  ${index + 1}. ${category.name} (ID: ${category.id})`)
+            if (category.children && category.children.length > 0) {
+                category.children.forEach((child: any, childIndex: number) => {
+                    console.log(`    ${childIndex + 1}. ${child.name} (ID: ${child.id})`)
+                })
+            }
+        })
         
         // 设置默认展开的分类
         const defaultExpandCategories: number[] = []

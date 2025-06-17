@@ -58,6 +58,17 @@ class EventItemService extends BaseApiService
             $category['default_expand'] = in_array($category['name'], $default_expand_names);
         }
         
+        // 添加调试日志
+        \think\facade\Log::info('分类数据调试 - 一级分类数量: ' . count($level1_categories));
+        foreach ($level1_categories as $category) {
+            \think\facade\Log::info('一级分类: ' . $category['name'] . ' (ID: ' . $category['id'] . ')');
+            if (!empty($category['children'])) {
+                foreach ($category['children'] as $child) {
+                    \think\facade\Log::info('  二级分类: ' . $child['name'] . ' (ID: ' . $child['id'] . ')');
+                }
+            }
+        }
+        
         return [
             'categories' => $level1_categories,
             'selected_count' => count($selected_base_item_ids)
