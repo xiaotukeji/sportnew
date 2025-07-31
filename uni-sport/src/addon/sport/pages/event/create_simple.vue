@@ -783,7 +783,8 @@ import {
     addOrganizer, 
     getEventSeriesList, 
     addEventSeries,
-    getEventCategories
+    getEventCategories,
+    saveEventItems
 } from '@/addon/sport/api/event'
 
 // 登录检查
@@ -1104,6 +1105,23 @@ const handleSubmit = async () => {
         }
         
         const result: any = await addEvent(submitData)
+        
+        // 保存选择的比赛项目
+        if (selectedItems.value.length > 0) {
+            try {
+                await saveEventItems({
+                    event_id: result.data.id,
+                    base_item_ids: selectedItems.value
+                })
+                console.log('比赛项目保存成功:', selectedItems.value)
+            } catch (error) {
+                console.error('保存比赛项目失败:', error)
+                uni.showToast({
+                    title: '比赛创建成功，但项目保存失败',
+                    icon: 'none'
+                })
+            }
+        }
         
         // 提交成功后清除缓存
         uni.removeStorageSync('sport_event_form_data')
