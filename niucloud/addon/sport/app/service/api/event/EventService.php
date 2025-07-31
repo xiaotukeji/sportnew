@@ -87,7 +87,7 @@ class EventService extends BaseApiService
      */
     public function getInfo(int $id)
     {
-        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.create_time, se.update_time';
+        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.create_time, se.update_time';
         
         $info = $this->model
             ->alias('se')

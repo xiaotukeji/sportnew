@@ -180,12 +180,20 @@ class EventItemService extends BaseApiService
             throw new \Exception('赛事ID不能为空');
         }
         
-        // 验证赛事权限
+        // 验证赛事权限和获取赛事信息
         $event_service = new EventService();
-        $event_service->checkEventPermission($event_id);
+        $event_info = $event_service->getInfo($event_id);
+        
+        if (empty($event_info)) {
+            throw new \Exception('赛事不存在');
+        }
+        
+        // 验证权限：只能操作自己创建的赛事
+        if ($event_info['member_id'] != $this->member_id) {
+            throw new \Exception('无权限操作此赛事');
+        }
         
         // 获取赛事的年龄组设置
-        $event_info = $event_service->getEventInfo($event_id);
         $age_groups = json_decode($event_info['age_groups'] ?? '["不限年龄"]', true);
         $age_group_display = $event_info['age_group_display'] ?? 0;
         
