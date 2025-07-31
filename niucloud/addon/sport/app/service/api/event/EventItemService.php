@@ -284,11 +284,25 @@ class EventItemService extends BaseApiService
             return [];
         }
         
-        $list = (new SportItem())->where([
-            ['event_id', '=', $event_id]
-        ])->order('sort asc, id asc')
+        // 获取赛事项目列表，关联基础项目信息
+        $list = (new SportItem())
+            ->alias('si')
+            ->join('sport_base_item sbi', 'si.base_item_id = sbi.id')
+            ->join('sport_category sc', 'sbi.category_id = sc.id')
+            ->where([
+                ['si.event_id', '=', $event_id]
+            ])
+            ->field('si.*, sbi.name as base_item_name, sbi.competition_type, sbi.gender_type, sbi.remark as base_item_remark, sc.name as category_name')
+            ->order('si.sort asc, si.id asc')
             ->select()
             ->toArray();
+            
+        // 处理返回数据
+        foreach ($list as &$item) {
+            $item['name'] = $item['base_item_name']; // 使用基础项目名称
+            $item['remark'] = $item['base_item_remark']; // 使用基础项目备注
+        }
+        unset($item);
             
         return $list;
     }
