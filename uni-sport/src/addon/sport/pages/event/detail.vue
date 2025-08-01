@@ -289,7 +289,7 @@ const loadEventDetail = async () => {
 const editEvent = () => {
     requireLogin(() => {
         uni.navigateTo({
-            url: `/addon/sport/pages/event/create?id=${eventId.value}&mode=edit`
+            url: `/addon/sport/pages/event/create_simple?id=${eventId.value}&mode=edit`
         })
     })
 }

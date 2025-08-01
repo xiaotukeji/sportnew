@@ -512,7 +512,7 @@
                 :disabled="submitLoading || !canProceedToNext"
                 @tap="handleSubmit"
             >
-                {{ submitLoading ? '创建中...' : '创建比赛' }}
+                {{ submitLoading ? (isEditMode ? '保存中...' : '创建中...') : (isEditMode ? '保存修改' : '创建比赛') }}
             </button>
         </view>
 
@@ -779,6 +779,9 @@ import { uploadImage } from '@/app/api/system'
 import { img } from '@/utils/common'
 import { 
     addEvent, 
+    editEvent,
+    getEventInfo,
+    getEventItems,
     getOrganizerList, 
     addOrganizer, 
     getEventSeriesList, 
@@ -798,9 +801,18 @@ const steps = [
     { title: '选择项目' }
 ]
 
+// 页面标题
+const pageTitle = computed(() => {
+    return isEditMode.value ? '编辑比赛' : '创建比赛'
+})
+
 // 当前步骤和最大到达步骤
 const currentStep = ref(1)
 const maxReachedStep = ref(1)
+
+// 编辑模式相关
+const isEditMode = ref(false) // 是否为编辑模式
+const eventId = ref(0) // 编辑时的赛事ID
 
 // 类型定义
 interface FormData {
@@ -1104,42 +1116,80 @@ const handleSubmit = async () => {
             age_group_display: formData.value.age_groups.length > 1 && !formData.value.age_groups.includes('不限年龄') ? 1 : 0
         }
         
-        const result: any = await addEvent(submitData)
+        let result: any
         
-        // 保存选择的比赛项目
-        if (selectedItems.value.length > 0) {
-            try {
-                await saveEventItems({
-                    event_id: result.data.id,
-                    base_item_ids: selectedItems.value
-                })
-                console.log('比赛项目保存成功:', selectedItems.value)
-            } catch (error) {
-                console.error('保存比赛项目失败:', error)
-                uni.showToast({
-                    title: '比赛创建成功，但项目保存失败',
-                    icon: 'none'
-                })
+        if (isEditMode.value) {
+            // 编辑模式：更新赛事
+            result = await editEvent(eventId.value, submitData)
+            
+            // 更新比赛项目
+            if (selectedItems.value.length > 0) {
+                try {
+                    await saveEventItems({
+                        event_id: eventId.value,
+                        base_item_ids: selectedItems.value
+                    })
+                    console.log('比赛项目更新成功:', selectedItems.value)
+                } catch (error) {
+                    console.error('更新比赛项目失败:', error)
+                    uni.showToast({
+                        title: '赛事更新成功，但项目更新失败',
+                        icon: 'none'
+                    })
+                }
             }
+            
+            uni.showToast({
+                title: '保存修改成功',
+                icon: 'success'
+            })
+            
+            // 延迟跳转到赛事详情页面
+            setTimeout(() => {
+                uni.redirectTo({
+                    url: `/addon/sport/pages/event/detail?id=${eventId.value}`
+                })
+            }, 1500)
+            
+        } else {
+            // 创建模式：新增赛事
+            result = await addEvent(submitData)
+            
+            // 保存选择的比赛项目
+            if (selectedItems.value.length > 0) {
+                try {
+                    await saveEventItems({
+                        event_id: result.data.id,
+                        base_item_ids: selectedItems.value
+                    })
+                    console.log('比赛项目保存成功:', selectedItems.value)
+                } catch (error) {
+                    console.error('保存比赛项目失败:', error)
+                    uni.showToast({
+                        title: '比赛创建成功，但项目保存失败',
+                        icon: 'none'
+                    })
+                }
+            }
+            
+            // 提交成功后清除缓存
+            uni.removeStorageSync('sport_event_form_data')
+            
+            uni.showToast({
+                title: '创建比赛成功',
+                icon: 'success'
+            })
+            
+            // 延迟跳转到赛事详情页面
+            setTimeout(() => {
+                uni.redirectTo({
+                    url: `/addon/sport/pages/event/detail?id=${result.data.id}`
+                })
+            }, 1500)
         }
         
-        // 提交成功后清除缓存
-        uni.removeStorageSync('sport_event_form_data')
-        
-        uni.showToast({
-            title: '创建比赛成功',
-            icon: 'success'
-        })
-        
-        // 延迟跳转到赛事详情页面
-        setTimeout(() => {
-            uni.redirectTo({
-                url: `/addon/sport/pages/event/detail?id=${result.data.id}`
-            })
-        }, 1500)
-        
     } catch (error) {
-        console.error('创建比赛失败:', error)
+        console.error(isEditMode.value ? '保存修改失败:' : '创建比赛失败:', error)
     } finally {
         submitLoading.value = false
     }
@@ -1912,26 +1962,159 @@ const validateSubmitForm = () => {
 }
 
 /**
+ * 加载现有赛事数据（编辑模式）
+ */
+const loadEventData = async () => {
+    if (!eventId.value) return
+    
+    try {
+        // 显示加载提示
+        uni.showLoading({
+            title: '加载中...'
+        })
+        // 加载赛事基本信息
+        const eventResponse: any = await getEventInfo(eventId.value)
+        const eventData = eventResponse.data
+        
+        // 处理地址字段
+        let fullAddress = eventData.full_address || eventData.location_detail || ''
+        let addressDetail = eventData.address_detail || ''
+        
+        // 如果没有详细地址，尝试从完整地址中分离
+        if (!addressDetail && fullAddress) {
+            const addressParts = fullAddress.split(' ')
+            if (addressParts.length > 1) {
+                fullAddress = addressParts[0]
+                addressDetail = addressParts.slice(1).join(' ')
+            }
+        }
+        
+        // 填充表单数据
+        formData.value = {
+            name: eventData.name || '',
+            location: eventData.location || '',
+            lng: eventData.longitude || eventData.lng || '',
+            lat: eventData.latitude || eventData.lat || '',
+            full_address: fullAddress,
+            address_detail: addressDetail,
+            start_time: eventData.start_time || 0,
+            end_time: eventData.end_time || 0,
+            organizer_id: eventData.organizer_id || 0,
+            event_type: eventData.event_type || 1,
+            series_id: eventData.series_id || 0,
+            year: eventData.year || new Date().getFullYear(),
+            age_groups: eventData.age_groups ? (typeof eventData.age_groups === 'string' ? JSON.parse(eventData.age_groups) : eventData.age_groups) : ['不限年龄'],
+            items: [],
+            custom_groups: [],
+            co_organizers: []
+        }
+        
+        // 设置时间选择器的值
+        if (eventData.start_time) {
+            const startDate = new Date(eventData.start_time * 1000)
+            startDateValue.value = startDate.toISOString().slice(0, 10)
+            startTimeValue.value = startDate.toTimeString().slice(0, 5)
+            startDateDisplay.value = formatDate(startDateValue.value)
+            startTimeDisplay.value = startTimeValue.value
+        }
+        
+        if (eventData.end_time) {
+            const endDate = new Date(eventData.end_time * 1000)
+            endDateValue.value = endDate.toISOString().slice(0, 10)
+            endTimeValue.value = endDate.toTimeString().slice(0, 5)
+            endDateDisplay.value = formatDate(endDateValue.value)
+            endTimeDisplay.value = endTimeValue.value
+        }
+        
+        // 加载赛事项目
+        const itemsResponse: any = await getEventItems(eventId.value)
+        const items = itemsResponse.data || []
+        selectedItems.value = items.map((item: any) => item.base_item_id || item.id)
+        tempSelectedItems.value = [...selectedItems.value]
+        
+        // 更新步骤状态
+        maxReachedStep.value = 4
+        
+        // 等待主办方和系列赛列表加载完成后再设置显示名称
+        setTimeout(() => {
+            // 触发计算属性重新计算
+            console.log('主办方列表:', organizerList.value)
+            console.log('系列赛列表:', seriesList.value)
+            console.log('选中的主办方ID:', formData.value.organizer_id)
+            console.log('选中的系列赛ID:', formData.value.series_id)
+            
+            // 检查主办方和系列赛是否在列表中
+            const organizerExists = organizerList.value.some((org: any) => org.id === formData.value.organizer_id)
+            const seriesExists = seriesList.value.some((series: any) => series.id === formData.value.series_id)
+            
+            if (!organizerExists) {
+                console.warn('主办方不在列表中，可能需要重新选择')
+            }
+            if (!seriesExists && formData.value.event_type === 2) {
+                console.warn('系列赛不在列表中，可能需要重新选择')
+            }
+        }, 100)
+        
+        console.log('编辑模式：加载赛事数据成功', eventData)
+        
+    } catch (error) {
+        console.error('加载赛事数据失败:', error)
+        uni.showToast({
+            title: '加载赛事数据失败',
+            icon: 'none'
+        })
+        // 加载失败时返回上一页
+        setTimeout(() => {
+            uni.navigateBack()
+        }, 1500)
+    } finally {
+        // 隐藏加载提示
+        uni.hideLoading()
+    }
+}
+
+/**
  * 页面初始化
  */
 onMounted(() => {
     requireLogin(() => {
-        // 恢复缓存数据
-        initFormData()
+        // 获取页面参数
+        const pages = getCurrentPages()
+        const currentPage = pages[pages.length - 1] as any
+        const options = currentPage.options || {}
+        
         // 加载基础数据
         loadOrganizerList()
         loadSeriesList()
-
-        // 如果没有缓存数据，初始化时间选择器的值（设置为当前时间）
-        if (!uni.getStorageSync('sport_event_form_data')) {
-            const now = new Date()
-            const today = now.toISOString().slice(0, 10) // YYYY-MM-DD
-            const currentTime = now.toTimeString().slice(0, 5) // HH:MM
-            startDateValue.value = today
-            startTimeValue.value = currentTime
-            endDateValue.value = today
-            endTimeValue.value = currentTime
+        
+        // 检查是否为编辑模式
+        if (options.id && options.mode === 'edit') {
+            isEditMode.value = true
+            eventId.value = parseInt(options.id)
+            // 等待基础数据加载完成后再加载赛事数据
+            setTimeout(() => {
+                loadEventData()
+            }, 500)
+        } else {
+            // 创建模式：恢复缓存数据
+            initFormData()
+            
+            // 如果没有缓存数据，初始化时间选择器的值（设置为当前时间）
+            if (!uni.getStorageSync('sport_event_form_data')) {
+                const now = new Date()
+                const today = now.toISOString().slice(0, 10) // YYYY-MM-DD
+                const currentTime = now.toTimeString().slice(0, 5) // HH:MM
+                startDateValue.value = today
+                startTimeValue.value = currentTime
+                endDateValue.value = today
+                endTimeValue.value = currentTime
+            }
         }
+        
+        // 设置页面标题
+        uni.setNavigationBarTitle({
+            title: pageTitle.value
+        })
     }, '/addon/sport/pages/event/create_simple')
 
     // 初始化项目选择等其他逻辑

@@ -797,9 +797,11 @@ onMounted(() => {
                         font-size: 28rpx;
                         color: #333;
                         background-color: white;
+                        z-index: 1; /* 设置较低的z-index */
                         
                         &:focus {
                             border-color: #007aff;
+                            z-index: 10; /* 聚焦时稍微提升，但不超过按钮 */
                         }
                     }
                     
@@ -820,9 +822,11 @@ onMounted(() => {
                         background-color: white;
                         line-height: 1.5;
                         box-sizing: border-box;
+                        z-index: 1; /* 设置较低的z-index */
                         
                         &:focus {
                             border-color: #007aff;
+                            z-index: 10; /* 聚焦时稍微提升，但不超过按钮 */
                         }
                     }
                     
@@ -905,6 +909,7 @@ onMounted(() => {
                 justify-content: space-between;
                 font-size: 28rpx;
                 color: #333;
+                z-index: 1; /* 设置较低的z-index */
                 
                 .picker-arrow {
                     color: #999;
@@ -925,6 +930,7 @@ onMounted(() => {
     border-top: 1rpx solid #f0f0f0;
     display: flex;
     gap: 24rpx;
+    z-index: 1000; /* 确保按钮在最上层 */
     
     .action-btn {
         flex: 1;
