@@ -156,4 +156,31 @@ class Event extends BaseApiController
         (new EventService())->updateStatus($id, $data['status']);
         return success('UPDATE_SUCCESS');
     }
+    
+    /**
+     * 更新赛事设置
+     * @param int $id
+     * @return \think\Response
+     */
+    public function updateSettings(int $id)
+    {
+        $data = $this->request->params([
+            ['status', 0],                          // 赛事状态
+            ['sort', 0],                            // 排序权重
+            ['registration_start_time', ''],        // 报名开始时间
+            ['registration_end_time', ''],          // 报名结束时间
+            ['registration_fee', 0],                // 报名费
+            ['max_participants', 0],                // 总报名人数限制
+            ['group_size', 0],                      // 每组人数
+            ['rounds', 0],                          // 比赛轮次
+            ['allow_duplicate_registration', 0],    // 是否允许重复报名
+            ['age_group_display', 0],               // 是否显示年龄组
+            ['show_participant_count', 1],          // 是否显示报名人数
+            ['show_progress', 1],                   // 是否显示比赛进度
+            ['remark', ''],                         // 备注说明
+        ]);
+        
+        (new EventService())->updateSettings($id, $data);
+        return success('UPDATE_SUCCESS');
+    }
 } 

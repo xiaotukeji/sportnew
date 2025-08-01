@@ -87,7 +87,7 @@ class EventService extends BaseApiService
      */
     public function getInfo(int $id)
     {
-        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.create_time, se.update_time';
+        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.registration_start_time, se.registration_end_time, se.registration_fee, se.max_participants, se.group_size, se.rounds, se.allow_duplicate_registration, se.show_participant_count, se.show_progress, se.create_time, se.update_time';
         
         $info = $this->model
             ->alias('se')
@@ -505,5 +505,54 @@ class EventService extends BaseApiService
             ->order('sort asc, id asc')
             ->select()
             ->toArray();
+    }
+    
+    /**
+     * 更新赛事设置
+     * @param int $id
+     * @param array $data
+     * @return void
+     */
+    public function updateSettings(int $id, array $data)
+    {
+        // 验证权限
+        $this->checkEventPermission($id);
+        
+        // 验证数据
+        if (isset($data['registration_start_time']) && isset($data['registration_end_time'])) {
+            if (!empty($data['registration_start_time']) && !empty($data['registration_end_time'])) {
+                if (strtotime($data['registration_start_time']) >= strtotime($data['registration_end_time'])) {
+                    throw new CommonException('报名开始时间不能晚于结束时间');
+                }
+            }
+        }
+        
+        if (isset($data['registration_fee']) && $data['registration_fee'] < 0) {
+            throw new CommonException('报名费不能为负数');
+        }
+        
+        if (isset($data['max_participants']) && $data['max_participants'] < 0) {
+            throw new CommonException('报名人数限制不能为负数');
+        }
+        
+        // 更新数据
+        $update_data = [
+            'status' => $data['status'] ?? 0,
+            'sort' => $data['sort'] ?? 0,
+            'registration_start_time' => $data['registration_start_time'] ?? '',
+            'registration_end_time' => $data['registration_end_time'] ?? '',
+            'registration_fee' => $data['registration_fee'] ?? 0,
+            'max_participants' => $data['max_participants'] ?? 0,
+            'group_size' => $data['group_size'] ?? 0,
+            'rounds' => $data['rounds'] ?? 0,
+            'allow_duplicate_registration' => $data['allow_duplicate_registration'] ?? 0,
+            'age_group_display' => $data['age_group_display'] ?? 0,
+            'show_participant_count' => $data['show_participant_count'] ?? 1,
+            'show_progress' => $data['show_progress'] ?? 1,
+            'remark' => $data['remark'] ?? '',
+            'update_time' => time()
+        ];
+        
+        $this->model->where('id', $id)->update($update_data);
     }
 } 

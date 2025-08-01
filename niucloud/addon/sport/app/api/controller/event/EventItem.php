@@ -70,4 +70,23 @@ class EventItem extends BaseApiController
         ]);
         return success((new EventItemService())->getEventItems($data));
     }
+    
+    /**
+     * 更新项目设置
+     * @param int $id
+     * @return \think\Response
+     */
+    public function updateItemSettings(int $id)
+    {
+        $data = $this->request->params([
+            ['registration_fee', 0],                // 报名费
+            ['max_participants', 0],                // 人数限制
+            ['rounds', 0],                          // 比赛轮次
+            ['allow_duplicate_registration', 0],    // 是否允许重复报名
+            ['remark', ''],                         // 项目说明
+        ]);
+        
+        (new EventItemService())->updateItemSettings($id, $data);
+        return success('UPDATE_SUCCESS');
+    }
 } 

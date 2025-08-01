@@ -567,4 +567,50 @@ class EventItemService extends BaseApiService
 
         return $result;
     }
+    
+    /**
+     * 更新项目设置
+     * @param int $id
+     * @param array $data
+     * @return void
+     */
+    public function updateItemSettings(int $id, array $data)
+    {
+        // 验证项目是否存在
+        $item = \addon\sport\app\model\item\SportItem::where('id', $id)->find();
+        if (!$item) {
+            throw new \core\exception\CommonException('项目不存在');
+        }
+        
+        // 验证权限：只能修改自己创建的赛事中的项目
+        $event = \addon\sport\app\model\event\SportEvent::where('id', $item['event_id'])->find();
+        if (!$event || $event['member_id'] != $this->member_id) {
+            throw new \core\exception\CommonException('无权限操作此项目');
+        }
+        
+        // 验证数据
+        if (isset($data['registration_fee']) && $data['registration_fee'] < 0) {
+            throw new \core\exception\CommonException('报名费不能为负数');
+        }
+        
+        if (isset($data['max_participants']) && $data['max_participants'] < 0) {
+            throw new \core\exception\CommonException('人数限制不能为负数');
+        }
+        
+        if (isset($data['rounds']) && $data['rounds'] < 0) {
+            throw new \core\exception\CommonException('比赛轮次不能为负数');
+        }
+        
+        // 更新数据
+        $update_data = [
+            'registration_fee' => $data['registration_fee'] ?? 0,
+            'max_participants' => $data['max_participants'] ?? 0,
+            'rounds' => $data['rounds'] ?? 0,
+            'allow_duplicate_registration' => $data['allow_duplicate_registration'] ?? 0,
+            'remark' => $data['remark'] ?? '',
+            'update_time' => time()
+        ];
+        
+        \addon\sport\app\model\item\SportItem::where('id', $id)->update($update_data);
+    }
 } 

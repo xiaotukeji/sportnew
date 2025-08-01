@@ -160,4 +160,22 @@ export function saveEventItems(data: { event_id: number; base_item_ids: number[]
  */
 export function getEventItems(eventId: number) {
     return request.get(`sport/event/${eventId}/items`);
+}
+
+/**
+ * 更新赛事设置
+ * @param params
+ * @returns
+ */
+export function updateEventSettings(params: Record<string, any>) {
+    return request.put(`sport/event/${params.event_id}/settings`, params, { showErrorMessage: true, showSuccessMessage: true });
+}
+
+/**
+ * 更新项目设置
+ * @param params
+ * @returns
+ */
+export function updateItemSettings(params: Record<string, any>) {
+    return request.put(`sport/item/${params.item_id}/settings`, params, { showErrorMessage: true, showSuccessMessage: true });
 } 

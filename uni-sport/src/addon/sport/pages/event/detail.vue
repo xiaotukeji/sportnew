@@ -295,12 +295,12 @@ const editEvent = () => {
 }
 
 /**
- * 下一步 - 进入比赛项目选择
+ * 下一步 - 进入项目详细设置
  */
 const nextStep = () => {
     requireLogin(() => {
         uni.navigateTo({
-            url: `/addon/sport/pages/event/items?event_id=${eventId.value}`
+            url: `/addon/sport/pages/event/item-settings?event_id=${eventId.value}`
         })
     })
 }
