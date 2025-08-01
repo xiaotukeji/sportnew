@@ -7,5 +7,6 @@
     "pages.auth.register": "Register",
     "pages.auth.resetpwd": "Retrieve password",
     "pages.setting.index": "Settings",
-    "pages.auth.bind": "Bind Mobile"
+    "pages.auth.bind": "Bind Mobile",
+    "addon.sport.pages.event.item-settings": "Item Settings"
 }

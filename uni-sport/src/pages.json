@@ -50,6 +50,13 @@
             "needLogin": true
         },
         {
+            "path": "addon/sport/pages/event/item-settings",
+            "style": {
+                "navigationBarTitleText": "%addon.sport.pages.event.item-settings%"
+            },
+            "needLogin": true
+        },
+        {
             "path": "addon/sport/pages/member/index",
             "style": {
                 "navigationBarTitleText": "个人中心"

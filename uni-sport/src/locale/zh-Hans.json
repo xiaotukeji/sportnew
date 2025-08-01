@@ -73,5 +73,6 @@
     "shop.pages.point.order_list": "积分兑换记录",
     "shop.pages.newcomer.list": "新人专享",
     "shop.pages.pay.index": "待支付",
-    "shop.pages.pay.result": ""
+    "shop.pages.pay.result": "",
+    "addon.sport.pages.event.item-settings": "项目设置"
 }
