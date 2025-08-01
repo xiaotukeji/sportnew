@@ -160,7 +160,7 @@ export function saveEventItems(data: { event_id: number; base_item_ids: number[]
  */
 export function getEventItems(eventId: number) {
     return request.get(`sport/event/${eventId}/items`);
-}
+} 
 
 /**
  * 更新赛事设置

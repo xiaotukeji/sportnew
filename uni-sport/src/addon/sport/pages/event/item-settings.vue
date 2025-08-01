@@ -56,7 +56,7 @@
                             <input 
                                 class="setting-input" 
                                 type="digit" 
-                                :value="item.registration_fee === 0 ? '' : item.registration_fee"
+                                :value="getRegistrationFeeDisplayValue(item.registration_fee)"
                                 placeholder="0表示免费"
                                 @input="onRegistrationFeeChange(index, $event)"
                                 @focus="onRegistrationFeeFocus(index, $event)"
@@ -70,7 +70,7 @@
                             <input 
                                 class="setting-input" 
                                 type="number" 
-                                :value="item.max_participants === 0 ? '' : item.max_participants"
+                                :value="getMaxParticipantsDisplayValue(item.max_participants)"
                                 placeholder="0表示不限制"
                                 @input="onMaxParticipantsChange(index, $event)"
                                 @blur="onMaxParticipantsBlur(index, $event)"
@@ -107,7 +107,7 @@
                                     v-model="item.remark"
                                     placeholder="请输入项目说明..."
                                     maxlength="200"
-                                    @input="onItemSettingChange(index, 'remark', $event)"
+                                    @input="onRemarkChange(index, $event)"
                                 />
                                 <text class="textarea-count">{{ item.remark.length }}/200</text>
                             </view>
@@ -279,13 +279,25 @@ const onRegistrationFeeChange = (index: number, event: any) => {
 }
 
 /**
+ * 获取报名费显示值
+ */
+const getRegistrationFeeDisplayValue = (value: number) => {
+    return value === 0 ? '' : value.toString()
+}
+
+/**
+ * 获取人数限制显示值
+ */
+const getMaxParticipantsDisplayValue = (value: number) => {
+    return value === 0 ? '' : value.toString()
+}
+
+/**
  * 报名费获得焦点
  */
 const onRegistrationFeeFocus = (index: number, event: any) => {
-    // 如果当前值为0，清空输入框
-    if (eventItems.value[index].registration_fee === 0) {
-        eventItems.value[index].registration_fee = ''
-    }
+    // 焦点事件不需要修改数据，只是触发重新渲染
+    // 通过 :value 绑定来控制显示
 }
 
 /**
@@ -334,6 +346,23 @@ const onMaxParticipantsBlur = (index: number, event: any) => {
     // 如果为空或无效值，设置为0
     if (!value || value === '' || isNaN(parseInt(value))) {
         eventItems.value[index].max_participants = 0
+    }
+}
+
+/**
+ * 项目说明变更
+ */
+const onRemarkChange = (index: number, event: any) => {
+    const value = event.detail?.value || event.target?.value || event
+    eventItems.value[index].remark = value
+    eventItems.value[index].is_configured = true
+    
+    // 批量模式同步
+    if (batchMode.value && index === 0) {
+        for (let i = 1; i < eventItems.value.length; i++) {
+            eventItems.value[i].remark = value
+            eventItems.value[i].is_configured = true
+        }
     }
 }
 
@@ -472,11 +501,11 @@ const loadEventItems = async () => {
         // 为每个项目添加默认设置
         eventItems.value = items.map((item: any) => ({
             ...item,
-            registration_fee: item.registration_fee || 0,
-            max_participants: item.max_participants || 0,
-            rounds: item.rounds || 0,
-            allow_duplicate_registration: item.allow_duplicate_registration || false,
-            remark: item.remark || '',
+            registration_fee: item.registration_fee ?? 0, // 使用 ?? 确保 0 值不被覆盖
+            max_participants: item.max_participants ?? 0, // 使用 ?? 确保 0 值不被覆盖
+            rounds: item.rounds ?? 0,
+            allow_duplicate_registration: item.allow_duplicate_registration ?? false,
+            remark: item.remark ?? '',
             is_configured: !!(item.registration_fee || item.max_participants || item.rounds || item.remark)
         }))
         
