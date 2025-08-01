@@ -889,6 +889,9 @@ const formData = ref<FormData>({
     co_organizers: []          // 协办方
 })
 
+// 项目选择相关数据
+const selectedItems = ref<number[]>([])
+
 // 添加自定义分组
 const handleAddCustomGroup = () => {
     const newGroup: CustomGroup = {
@@ -1071,8 +1074,21 @@ const initFormData = () => {
 
 // 保存表单数据到缓存
 const saveFormDataToCache = () => {
+    // 只有创建模式才保存缓存
+    if (isEditMode.value) {
+        return
+    }
+    
     try {
-        uni.setStorageSync('sport_event_form_data', JSON.stringify(formData.value))
+        const cacheData = {
+            formData: formData.value,
+            selectedItems: selectedItems.value,
+            startDateValue: startDateValue.value,
+            startTimeValue: startTimeValue.value,
+            endDateValue: endDateValue.value,
+            endTimeValue: endTimeValue.value
+        }
+        uni.setStorageSync('sport_event_form_data', JSON.stringify(cacheData))
     } catch (e) {
         console.error('保存表单数据到缓存失败:', e)
     }
@@ -1080,6 +1096,11 @@ const saveFormDataToCache = () => {
 
 // 监听表单数据变化，自动保存到缓存
 watch(formData, () => {
+    saveFormDataToCache()
+}, { deep: true })
+
+// 监听选择项目变化，自动保存到缓存
+watch(selectedItems, () => {
     saveFormDataToCache()
 }, { deep: true })
 
@@ -1172,7 +1193,7 @@ const handleSubmit = async () => {
                 }
             }
             
-            // 提交成功后清除缓存
+            // 创建成功后清除缓存
             uni.removeStorageSync('sport_event_form_data')
             
             uni.showToast({
@@ -1962,6 +1983,23 @@ const validateSubmitForm = () => {
 }
 
 /**
+ * 初始化默认时间值
+ */
+const initDefaultTimeValues = () => {
+    const now = new Date()
+    const today = now.toISOString().slice(0, 10) // YYYY-MM-DD
+    const currentTime = now.toTimeString().slice(0, 5) // HH:MM
+    startDateValue.value = today
+    startTimeValue.value = currentTime
+    endDateValue.value = today
+    endTimeValue.value = currentTime
+    startDateDisplay.value = formatDate(today)
+    startTimeDisplay.value = currentTime
+    endDateDisplay.value = formatDate(today)
+    endTimeDisplay.value = currentTime
+}
+
+/**
  * 加载现有赛事数据（编辑模式）
  */
 const loadEventData = async () => {
@@ -2089,25 +2127,112 @@ onMounted(() => {
         
         // 检查是否为编辑模式
         if (options.id && options.mode === 'edit') {
+            // 编辑模式：清空所有数据，加载现有赛事数据
             isEditMode.value = true
             eventId.value = parseInt(options.id)
+            
+            // 清空表单数据
+            formData.value = {
+                name: '',
+                location: '',
+                lng: '',
+                lat: '',
+                full_address: '',
+                address_detail: '',
+                start_time: 0,
+                end_time: 0,
+                organizer_id: 0,
+                event_type: 1,
+                series_id: 0,
+                year: new Date().getFullYear(),
+                age_groups: ['不限年龄'],
+                items: [],
+                custom_groups: [],
+                co_organizers: []
+            }
+            
+            // 清空选择的数据
+            selectedItems.value = []
+            tempSelectedItems.value = []
+            
+            // 清空时间选择器
+            const now = new Date()
+            const today = now.toISOString().slice(0, 10)
+            const currentTime = now.toTimeString().slice(0, 5)
+            startDateValue.value = today
+            startTimeValue.value = currentTime
+            endDateValue.value = today
+            endTimeValue.value = currentTime
+            startDateDisplay.value = formatDate(today)
+            startTimeDisplay.value = currentTime
+            endDateDisplay.value = formatDate(today)
+            endTimeDisplay.value = currentTime
+            
             // 等待基础数据加载完成后再加载赛事数据
             setTimeout(() => {
                 loadEventData()
             }, 500)
-        } else {
-            // 创建模式：恢复缓存数据
-            initFormData()
             
-            // 如果没有缓存数据，初始化时间选择器的值（设置为当前时间）
-            if (!uni.getStorageSync('sport_event_form_data')) {
-                const now = new Date()
-                const today = now.toISOString().slice(0, 10) // YYYY-MM-DD
-                const currentTime = now.toTimeString().slice(0, 5) // HH:MM
-                startDateValue.value = today
-                startTimeValue.value = currentTime
-                endDateValue.value = today
-                endTimeValue.value = currentTime
+        } else {
+            // 创建模式：先清空数据，然后读取缓存（如果有）
+            isEditMode.value = false
+            eventId.value = 0
+            
+            // 清空表单数据
+            formData.value = {
+                name: '',
+                location: '',
+                lng: '',
+                lat: '',
+                full_address: '',
+                address_detail: '',
+                start_time: 0,
+                end_time: 0,
+                organizer_id: 0,
+                event_type: 1,
+                series_id: 0,
+                year: new Date().getFullYear(),
+                age_groups: ['不限年龄'],
+                items: [],
+                custom_groups: [],
+                co_organizers: []
+            }
+            
+            // 清空选择的数据
+            selectedItems.value = []
+            tempSelectedItems.value = []
+            
+            // 读取缓存数据（如果有）
+            const cachedData = uni.getStorageSync('sport_event_form_data')
+            if (cachedData) {
+                try {
+                    const parsedData = JSON.parse(cachedData)
+                    // 恢复表单数据
+                    formData.value = { ...formData.value, ...parsedData.formData }
+                    selectedItems.value = parsedData.selectedItems || []
+                    tempSelectedItems.value = [...selectedItems.value]
+                    
+                    // 恢复时间选择器
+                    if (parsedData.startDateValue) {
+                        startDateValue.value = parsedData.startDateValue
+                        startTimeValue.value = parsedData.startTimeValue
+                        endDateValue.value = parsedData.endDateValue
+                        endTimeValue.value = parsedData.endTimeValue
+                        startDateDisplay.value = formatDate(parsedData.startDateValue)
+                        startTimeDisplay.value = parsedData.startTimeValue
+                        endDateDisplay.value = formatDate(parsedData.endDateValue)
+                        endTimeDisplay.value = parsedData.endTimeValue
+                    }
+                    
+                    console.log('创建模式：从缓存恢复数据成功')
+                } catch (error) {
+                    console.error('缓存数据解析失败:', error)
+                    // 缓存数据损坏，使用默认值
+                    initDefaultTimeValues()
+                }
+            } else {
+                // 没有缓存，使用默认值
+                initDefaultTimeValues()
             }
         }
         
@@ -2234,7 +2359,6 @@ const validateForm = () => {
 
 // 项目选择相关数据
 const categories = ref<any[]>([])
-const selectedItems = ref<number[]>([])
 const expandedCategories = ref<number[]>([])
 const activeTab = ref<string | number>('all')
 const categoriesLoading = ref(false)
