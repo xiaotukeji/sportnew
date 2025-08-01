@@ -17,6 +17,18 @@
             <view class="section-title">
                 <text class="title-text">比赛项目设置</text>
                 <text class="title-count">({{ eventItems.length }}个项目)</text>
+                <view class="batch-settings">
+                    <text class="batch-label">批量设置</text>
+                    <switch 
+                        :checked="batchMode" 
+                        @change="onBatchModeChange"
+                    />
+                </view>
+            </view>
+            
+            <!-- 批量设置提示 -->
+            <view v-if="batchMode" class="batch-tip">
+                <text class="tip-text">💡 批量设置已开启：修改第一个项目的设置将自动应用到其他项目</text>
             </view>
             
             <view v-if="eventItems.length > 0" class="items-list">
@@ -24,6 +36,7 @@
                     v-for="(item, index) in eventItems" 
                     :key="item.id" 
                     class="item-card"
+                    :class="{ 'batch-item': batchMode && index > 0 }"
                 >
                     <view class="item-header">
                         <view class="item-info">
@@ -32,6 +45,7 @@
                         </view>
                         <view class="item-status" :class="'status-' + (item.is_configured ? 'configured' : 'pending')">
                             {{ item.is_configured ? '已配置' : '待配置' }}
+                            <text v-if="batchMode && index > 0" class="batch-tag">批量</text>
                         </view>
                     </view>
                     
@@ -42,9 +56,11 @@
                             <input 
                                 class="setting-input" 
                                 type="digit" 
-                                v-model="item.registration_fee"
+                                :value="item.registration_fee === 0 ? '' : item.registration_fee"
                                 placeholder="0表示免费"
-                                @input="onItemSettingChange(index, 'registration_fee', $event)"
+                                @input="onRegistrationFeeChange(index, $event)"
+                                @focus="onRegistrationFeeFocus(index, $event)"
+                                @blur="onRegistrationFeeBlur(index, $event)"
                             />
                         </view>
                         
@@ -54,14 +70,15 @@
                             <input 
                                 class="setting-input" 
                                 type="number" 
-                                v-model="item.max_participants"
+                                :value="item.max_participants === 0 ? '' : item.max_participants"
                                 placeholder="0表示不限制"
-                                @input="onItemSettingChange(index, 'max_participants', $event)"
+                                @input="onMaxParticipantsChange(index, $event)"
+                                @blur="onMaxParticipantsBlur(index, $event)"
                             />
                         </view>
                         
-                        <!-- 比赛轮次设置 -->
-                        <view class="setting-item">
+                        <!-- 比赛轮次设置 - 暂时隐藏 -->
+                        <!-- <view class="setting-item">
                             <text class="setting-label">比赛轮次</text>
                             <input 
                                 class="setting-input" 
@@ -70,11 +87,11 @@
                                 placeholder="比赛轮次数量"
                                 @input="onItemSettingChange(index, 'rounds', $event)"
                             />
-                        </view>
+                        </view> -->
                         
                         <!-- 是否允许重复报名 -->
                         <view class="setting-item">
-                            <text class="setting-label">允许重复报名</text>
+                            <text class="setting-label">允许重复\n报名</text>
                             <switch 
                                 :checked="item.allow_duplicate_registration" 
                                 @change="onItemSwitchChange(index, 'allow_duplicate_registration', $event)"
@@ -84,14 +101,16 @@
                         <!-- 项目说明 -->
                         <view class="setting-item">
                             <text class="setting-label">项目说明</text>
-                            <textarea 
-                                class="setting-textarea" 
-                                v-model="item.remark"
-                                placeholder="请输入项目说明..."
-                                maxlength="200"
-                                @input="onItemSettingChange(index, 'remark', $event)"
-                            />
-                            <text class="textarea-count">{{ item.remark.length }}/200</text>
+                            <view class="textarea-container">
+                                <textarea 
+                                    class="setting-textarea" 
+                                    v-model="item.remark"
+                                    placeholder="请输入项目说明..."
+                                    maxlength="200"
+                                    @input="onItemSettingChange(index, 'remark', $event)"
+                                />
+                                <text class="textarea-count">{{ item.remark.length }}/200</text>
+                            </view>
                         </view>
                     </view>
                 </view>
@@ -191,6 +210,7 @@ const eventInfo = ref<any>(null)
 const eventItems = ref<any[]>([])
 const eventId = ref(0)
 const saving = ref(false)
+const batchMode = ref(false) // 批量设置模式
 
 // 赛事级别设置
 const eventSettings = ref({
@@ -220,6 +240,101 @@ const onItemSettingChange = (index: number, field: string, event: any) => {
     const value = event.detail?.value || event.target?.value || event
     eventItems.value[index][field] = value
     eventItems.value[index].is_configured = true
+    
+    // 如果是批量模式且修改的是第一个项目，则同步到其他项目
+    if (batchMode.value && index === 0) {
+        const batchFields = ['registration_fee', 'max_participants', 'allow_duplicate_registration', 'remark']
+        if (batchFields.includes(field)) {
+            for (let i = 1; i < eventItems.value.length; i++) {
+                eventItems.value[i][field] = value
+                eventItems.value[i].is_configured = true
+            }
+        }
+    }
+}
+
+/**
+ * 报名费输入处理
+ */
+const onRegistrationFeeChange = (index: number, event: any) => {
+    let value = event.detail?.value || event.target?.value || event
+    
+    // 只允许非负数
+    if (value < 0) {
+        value = 0
+    }
+    
+    // 转换为数字
+    const numValue = parseFloat(value) || 0
+    eventItems.value[index].registration_fee = numValue
+    eventItems.value[index].is_configured = true
+    
+    // 批量模式同步
+    if (batchMode.value && index === 0) {
+        for (let i = 1; i < eventItems.value.length; i++) {
+            eventItems.value[i].registration_fee = numValue
+            eventItems.value[i].is_configured = true
+        }
+    }
+}
+
+/**
+ * 报名费获得焦点
+ */
+const onRegistrationFeeFocus = (index: number, event: any) => {
+    // 如果当前值为0，清空输入框
+    if (eventItems.value[index].registration_fee === 0) {
+        eventItems.value[index].registration_fee = ''
+    }
+}
+
+/**
+ * 报名费失去焦点
+ */
+const onRegistrationFeeBlur = (index: number, event: any) => {
+    const value = event.detail?.value || event.target?.value || event
+    
+    // 如果为空或无效值，设置为0
+    if (!value || value === '' || isNaN(parseFloat(value))) {
+        eventItems.value[index].registration_fee = 0
+    }
+}
+
+/**
+ * 人数限制输入处理
+ */
+const onMaxParticipantsChange = (index: number, event: any) => {
+    let value = event.detail?.value || event.target?.value || event
+    
+    // 只允许非负整数
+    if (value < 0) {
+        value = 0
+    }
+    
+    // 转换为整数
+    const intValue = parseInt(value) || 0
+    eventItems.value[index].max_participants = intValue
+    eventItems.value[index].is_configured = true
+    
+    // 批量模式同步
+    if (batchMode.value && index === 0) {
+        for (let i = 1; i < eventItems.value.length; i++) {
+            eventItems.value[i].max_participants = intValue
+            eventItems.value[i].is_configured = true
+        }
+    }
+}
+
+/**
+ * 人数限制失去焦点
+ */
+const onMaxParticipantsBlur = (index: number, event: any) => {
+    const value = event.detail?.value || event.target?.value || event
+    
+    // 如果为空或无效值，设置为0
+    if (!value || value === '' || isNaN(parseInt(value))) {
+        eventItems.value[index].max_participants = 0
+    }
 }
 
 /**
@@ -228,6 +343,56 @@ const onItemSettingChange = (index: number, field: string, event: any) => {
 const onItemSwitchChange = (index: number, field: string, event: any) => {
     eventItems.value[index][field] = event.detail.value
     eventItems.value[index].is_configured = true
+    
+    // 如果是批量模式且修改的是第一个项目，则同步到其他项目
+    if (batchMode.value && index === 0) {
+        const batchFields = ['allow_duplicate_registration']
+        if (batchFields.includes(field)) {
+            for (let i = 1; i < eventItems.value.length; i++) {
+                eventItems.value[i][field] = event.detail.value
+                eventItems.value[i].is_configured = true
+            }
+        }
+    }
+}
+
+/**
+ * 批量模式切换
+ */
+const onBatchModeChange = (e: any) => {
+    batchMode.value = e.detail.value
+    
+    if (batchMode.value && eventItems.value.length > 0) {
+        // 开启批量模式时，将第一个项目的设置应用到其他项目
+        applyBatchSettings()
+        uni.showToast({
+            title: '已开启批量设置模式',
+            icon: 'success'
+        })
+    } else if (!batchMode.value) {
+        uni.showToast({
+            title: '已关闭批量设置模式',
+            icon: 'none'
+        })
+    }
+}
+
+/**
+ * 应用批量设置
+ */
+const applyBatchSettings = () => {
+    if (eventItems.value.length <= 1) return
+    
+    const firstItem = eventItems.value[0]
+    const batchFields = ['registration_fee', 'max_participants', 'allow_duplicate_registration', 'remark']
+    
+    // 将第一个项目的设置应用到其他项目
+    for (let i = 1; i < eventItems.value.length; i++) {
+        batchFields.forEach(field => {
+            eventItems.value[i][field] = firstItem[field]
+        })
+        eventItems.value[i].is_configured = true
+    }
 }
 
 /**
@@ -470,6 +635,32 @@ onMounted(() => {
             margin-left: 16rpx;
             font-weight: normal;
         }
+        
+        .batch-settings {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            
+            .batch-label {
+                font-size: 26rpx;
+                color: #666;
+                margin-right: 16rpx;
+            }
+        }
+        
+        .batch-tip {
+            margin-top: 16rpx;
+            padding: 16rpx 20rpx;
+            background-color: #e6f7ff;
+            border: 1rpx solid #91d5ff;
+            border-radius: 8rpx;
+            
+            .tip-text {
+                font-size: 26rpx;
+                color: #1890ff;
+                line-height: 1.4;
+            }
+        }
     }
     
     .items-list {
@@ -482,6 +673,17 @@ onMounted(() => {
             
             &:last-child {
                 margin-bottom: 0;
+            }
+            
+            &.batch-item {
+                border-left: 4rpx solid #007aff;
+                background-color: #f0f8ff;
+                
+                .item-header {
+                    .item-status {
+                        color: #007aff;
+                    }
+                }
             }
             
             .item-header {
@@ -514,6 +716,8 @@ onMounted(() => {
                     font-size: 24rpx;
                     padding: 8rpx 16rpx;
                     border-radius: 20rpx;
+                    display: flex;
+                    align-items: center;
                     
                     &.status-configured {
                         background-color: #e7f5e7;
@@ -523,6 +727,15 @@ onMounted(() => {
                     &.status-pending {
                         background-color: #fff1f0;
                         color: #ff4d4f;
+                    }
+                    
+                    .batch-tag {
+                        margin-left: 8rpx;
+                        font-size: 20rpx;
+                        padding: 2rpx 6rpx;
+                        background-color: #007aff;
+                        color: white;
+                        border-radius: 8rpx;
                     }
                 }
             }
@@ -542,6 +755,8 @@ onMounted(() => {
                         font-size: 28rpx;
                         color: #333;
                         flex-shrink: 0;
+                        white-space: pre-line; /* 支持换行 */
+                        line-height: 1.4;
                     }
                     
                     .setting-input {
@@ -559,17 +774,23 @@ onMounted(() => {
                         }
                     }
                     
-                    .setting-textarea {
+                    .textarea-container {
                         flex: 1;
+                        position: relative;
+                    }
+                    
+                    .setting-textarea {
+                        width: 100%;
                         min-height: 120rpx;
                         padding: 20rpx;
+                        padding-bottom: 60rpx; /* 为字数统计留出空间 */
                         border: 1rpx solid #e0e0e0;
                         border-radius: 8rpx;
                         font-size: 28rpx;
                         color: #333;
                         background-color: white;
                         line-height: 1.5;
-                        position: relative;
+                        box-sizing: border-box;
                         
                         &:focus {
                             border-color: #007aff;
@@ -582,6 +803,7 @@ onMounted(() => {
                         bottom: 20rpx;
                         font-size: 24rpx;
                         color: #999;
+                        pointer-events: none; /* 防止点击字数统计影响textarea */
                     }
                 }
             }
