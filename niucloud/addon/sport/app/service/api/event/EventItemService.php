@@ -14,6 +14,8 @@ namespace addon\sport\app\service\api\event;
 use addon\sport\app\model\sport_category\SportCategory;
 use addon\sport\app\model\sport_base_item\SportBaseItem;
 use addon\sport\app\model\sport_item\SportItem;
+use addon\sport\app\model\sport_event\SportEvent;
+use addon\sport\app\service\api\event\EventService;
 use core\base\BaseApiService;
 
 /**
@@ -577,13 +579,13 @@ class EventItemService extends BaseApiService
     public function updateItemSettings(int $id, array $data)
     {
         // 验证项目是否存在
-        $item = \addon\sport\app\model\item\SportItem::where('id', $id)->find();
+        $item = SportItem::where('id', $id)->find();
         if (!$item) {
             throw new \core\exception\CommonException('项目不存在');
         }
         
         // 验证权限：只能修改自己创建的赛事中的项目
-        $event = \addon\sport\app\model\event\SportEvent::where('id', $item['event_id'])->find();
+        $event = SportEvent::where('id', $item['event_id'])->find();
         if (!$event || $event['member_id'] != $this->member_id) {
             throw new \core\exception\CommonException('无权限操作此项目');
         }
@@ -611,6 +613,6 @@ class EventItemService extends BaseApiService
             'update_time' => time()
         ];
         
-        \addon\sport\app\model\item\SportItem::where('id', $id)->update($update_data);
+        SportItem::where('id', $id)->update($update_data);
     }
 } 
