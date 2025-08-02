@@ -62,12 +62,12 @@
                 
                 <view class="detail-item">
                     <text class="label">举办地点</text>
-                    <text class="value">{{ eventInfo.location || eventInfo.full_address }}</text>
+                    <text class="value">{{ eventInfo.location }}</text>
                 </view>
                 
-                <view v-if="eventInfo.address_detail" class="detail-item">
+                <view v-if="getAddressDetail(eventInfo)" class="detail-item">
                     <text class="label">详细地址</text>
-                    <text class="value">{{ eventInfo.address_detail }}</text>
+                    <text class="value">{{ getAddressDetail(eventInfo) }}</text>
                 </view>
             </view>
             
@@ -108,34 +108,49 @@
             <view class="detail-card">
                 <view class="card-title">
                     <text class="title-text">比赛项目</text>
-                    <text class="item-count">({{ eventItems.length }}个)</text>
+                    <text class="item-count">({{ groupedEventItems.length }}大类 {{ eventItems.length }}项)</text>
                 </view>
                 
                 <view v-if="eventItems.length > 0" class="items-container">
                     <view 
-                        v-for="(item, index) in eventItems" 
-                        :key="item.id" 
-                        class="item-card"
+                        v-for="(group, groupIndex) in groupedEventItems" 
+                        :key="group.categoryName" 
+                        class="category-group"
                     >
-                        <view class="item-header">
-                            <text class="item-name">{{ item.name }}</text>
-                            <text class="item-category">{{ item.category_name }}</text>
+                        <!-- 大类标题 -->
+                        <view class="category-header" :style="{ background: getCategoryColor(group.categoryName) }">
+                            <text class="category-name">{{ group.categoryName }}</text>
+                            <text class="category-count">({{ group.items.length }}项)</text>
                         </view>
                         
-                        <view class="item-details">
-                            <view class="item-detail-row">
-                                <text class="detail-label">比赛类型：</text>
-                                <text class="detail-value">{{ getCompetitionTypeText(item.competition_type) }}</text>
-                            </view>
-                            
-                            <view class="item-detail-row">
-                                <text class="detail-label">性别要求：</text>
-                                <text class="detail-value">{{ getGenderTypeText(item.gender_type) }}</text>
-                            </view>
-                            
-                            <view v-if="item.remark" class="item-detail-row">
-                                <text class="detail-label">项目说明：</text>
-                                <text class="detail-value">{{ item.remark }}</text>
+                        <!-- 该大类下的项目列表 -->
+                        <view class="group-items">
+                            <view 
+                                v-for="(item, index) in group.items" 
+                                :key="item.id" 
+                                class="item-card"
+                                :style="{ borderLeftColor: getCategoryBorderColor(group.categoryName) }"
+                            >
+                                <view class="item-header">
+                                    <text class="item-name">{{ item.name }}</text>
+                                </view>
+                                
+                                <view class="item-details">
+                                    <view class="item-detail-row">
+                                        <text class="detail-label">比赛类型：</text>
+                                        <text class="detail-value">{{ getCompetitionTypeText(item.competition_type) }}</text>
+                                    </view>
+                                    
+                                    <view class="item-detail-row">
+                                        <text class="detail-label">性别要求：</text>
+                                        <text class="detail-value">{{ getGenderTypeText(item.gender_type) }}</text>
+                                    </view>
+                                    
+                                    <view v-if="item.remark" class="item-detail-row">
+                                        <text class="detail-label">项目说明：</text>
+                                        <text class="detail-value">{{ item.remark }}</text>
+                                    </view>
+                                </view>
                             </view>
                         </view>
                     </view>
@@ -186,7 +201,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useLoginCheck } from '@/addon/sport/hooks/useLoginCheck'
 import { getEventInfo, getEventItems } from '@/addon/sport/api/event'
 
@@ -198,6 +213,90 @@ const loading = ref(true)
 const eventInfo = ref<any>(null)
 const eventItems = ref<any[]>([])
 const eventId = ref(0)
+
+// 按大类分组的比赛项目
+const groupedEventItems = computed(() => {
+    const groups: Record<string, any[]> = {}
+    
+    eventItems.value.forEach(item => {
+        // 使用大类名称作为分组键
+        const categoryName = item.category_name || '其他'
+        if (!groups[categoryName]) {
+            groups[categoryName] = []
+        }
+        groups[categoryName].push(item)
+    })
+    
+    // 转换为数组格式，便于模板渲染，并按大类名称排序
+    return Object.keys(groups)
+        .sort()
+        .map(categoryName => ({
+            categoryName,
+            items: groups[categoryName].sort((a, b) => a.name.localeCompare(b.name)) // 项目名称也排序
+        }))
+})
+
+// 获取大类颜色
+const getCategoryColor = (categoryName: string) => {
+    const colorMap: Record<string, string> = {
+        '乒乓球': 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+        '羽毛球': 'linear-gradient(135deg, #4834d4 0%, #686de0 100%)',
+        '篮球': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        '足球': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        '网球': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+        '排球': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+        '田径': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+        '游泳': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        '其他': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    }
+    
+    return colorMap[categoryName] || colorMap['其他']
+}
+
+// 获取大类边框颜色
+const getCategoryBorderColor = (categoryName: string) => {
+    const colorMap: Record<string, string> = {
+        '乒乓球': '#ff6b6b',
+        '羽毛球': '#4834d4',
+        '篮球': '#f093fb',
+        '足球': '#4facfe',
+        '网球': '#43e97b',
+        '排球': '#fa709a',
+        '田径': '#a8edea',
+        '游泳': '#667eea',
+        '其他': '#667eea'
+    }
+    
+    return colorMap[categoryName] || colorMap['其他']
+}
+
+// 获取详细地址
+const getAddressDetail = (eventInfo: any) => {
+    if (!eventInfo) {
+        return ''
+    }
+    
+    // 优先使用address_detail字段
+    if (eventInfo.address_detail) {
+        return eventInfo.address_detail
+    }
+    
+    // 如果没有address_detail字段，尝试从location_detail中分离
+    if (eventInfo.location_detail) {
+        const locationDetail = eventInfo.location_detail
+        const location = eventInfo.location || ''
+        
+        // 如果location_detail包含location，则分离出详细地址
+        if (location && locationDetail.startsWith(location)) {
+            return locationDetail.substring(location.length).trim()
+        } else {
+            // 如果location_detail不包含location，则整个作为详细地址
+            return locationDetail
+        }
+    }
+    
+    return ''
+}
 
 /**
  * 格式化日期时间
@@ -444,60 +543,100 @@ onMounted(() => {
     }
     
     .items-container {
-        .item-card {
-            background-color: #f8f9fa;
-            border-radius: 12rpx;
-            padding: 24rpx;
-            margin-bottom: 20rpx;
-            border: 1rpx solid #e9ecef;
+        .category-group {
+            margin-bottom: 32rpx;
+            background-color: white;
+            border-radius: 16rpx;
+            padding: 20rpx;
+            box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
             
             &:last-child {
                 margin-bottom: 0;
             }
             
-            .item-header {
+            .category-header {
                 display: flex;
-                justify-content: space-between;
                 align-items: center;
-                margin-bottom: 16rpx;
+                margin-bottom: 20rpx;
+                padding: 20rpx 24rpx;
+                border-radius: 12rpx;
+                box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
                 
-                .item-name {
-                    font-size: 30rpx;
+                .category-name {
+                    font-size: 34rpx;
                     font-weight: bold;
-                    color: #333;
+                    color: white;
                     flex: 1;
+                    text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.3);
                 }
                 
-                .item-category {
+                .category-count {
                     font-size: 24rpx;
-                    color: #007aff;
-                    background-color: #e3f2fd;
+                    color: rgba(255, 255, 255, 0.9);
+                    background-color: rgba(255, 255, 255, 0.25);
                     padding: 8rpx 16rpx;
                     border-radius: 20rpx;
+                    font-weight: 500;
+                    backdrop-filter: blur(10rpx);
                 }
             }
             
-            .item-details {
-                .item-detail-row {
-                    display: flex;
-                    margin-bottom: 12rpx;
+            .group-items {
+                .item-card {
+                    background-color: #f8f9fa;
+                    border-radius: 12rpx;
+                    padding: 20rpx;
+                    margin-bottom: 16rpx;
+                    border: 1rpx solid #e9ecef;
+                    border-left: 4rpx solid;
+                    transition: all 0.3s ease;
+                    
+                    &:hover {
+                        transform: translateY(-2rpx);
+                        box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
+                    }
                     
                     &:last-child {
                         margin-bottom: 0;
                     }
                     
-                    .detail-label {
-                        width: 140rpx;
-                        font-size: 26rpx;
-                        color: #666;
-                        flex-shrink: 0;
+                    .item-header {
+                        margin-bottom: 12rpx;
+                        
+                        .item-name {
+                            font-size: 30rpx;
+                            font-weight: bold;
+                            color: #333;
+                            padding: 8rpx 0;
+                        }
                     }
                     
-                    .detail-value {
-                        flex: 1;
-                        font-size: 26rpx;
-                        color: #333;
-                        word-break: break-all;
+                    .item-details {
+                                                    .item-detail-row {
+                                display: flex;
+                                margin-bottom: 10rpx;
+                                padding: 6rpx 0;
+                                
+                                &:last-child {
+                                    margin-bottom: 0;
+                                }
+                                
+                                .detail-label {
+                                    width: 140rpx;
+                                    font-size: 24rpx;
+                                    color: #666;
+                                    flex-shrink: 0;
+                                    font-weight: 500;
+                                }
+                                
+                                .detail-value {
+                                    flex: 1;
+                                    font-size: 24rpx;
+                                    color: #333;
+                                    word-break: break-all;
+                                    font-weight: 400;
+                                }
+                            }
                     }
                 }
             }

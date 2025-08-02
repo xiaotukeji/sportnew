@@ -1115,16 +1115,17 @@ const handleSubmit = async () => {
         submitLoading.value = true
         
         // 组合完整地址信息
-        let finalFullAddress = formData.value.full_address
+        let finalLocationDetail = formData.value.location
         if (formData.value.address_detail) {
-            finalFullAddress += (finalFullAddress ? ' ' : '') + formData.value.address_detail
+            finalLocationDetail += (finalLocationDetail ? ' ' : '') + formData.value.address_detail
         }
         
         // 提交数据
         const submitData: any = {
             name: formData.value.name,
             location: formData.value.location,
-            location_detail: finalFullAddress,
+            location_detail: finalLocationDetail,
+            address_detail: formData.value.address_detail || '',
             latitude: formData.value.lat ? parseFloat(formData.value.lat) : null,
             longitude: formData.value.lng ? parseFloat(formData.value.lng) : null,
             start_time: formData.value.start_time,
@@ -1239,7 +1240,7 @@ const canProceedToNext = computed(() => {
             return formData.value.location && formData.value.address_detail
         case 3:
             // 第3步：要求时间信息，且结束时间必须大于开始时间
-            return formData.value.start_time > 0 && formData.value.end_time > 0 && validateTime()
+            return formData.value.start_time > 0 && formData.value.end_time > 0 && formData.value.start_time < formData.value.end_time
         case 4:
             // 第4步：要求选择项目
             return selectedItems.value.length > 0
@@ -1256,6 +1257,24 @@ const goToStep = (step: number) => {
 }
 
 const nextStep = () => {
+    if (currentStep.value === 3) {
+        // 第3步特殊处理：检查时间有效性
+        if (!formData.value.start_time || !formData.value.end_time) {
+            uni.showToast({
+                title: '请选择开始时间和结束时间',
+                icon: 'none'
+            })
+            return
+        }
+        if (formData.value.start_time >= formData.value.end_time) {
+            uni.showToast({
+                title: '结束时间必须大于开始时间',
+                icon: 'none'
+            })
+            return
+        }
+    }
+    
     if (canProceedToNext.value && currentStep.value < 4) {
         currentStep.value++
         if (currentStep.value > maxReachedStep.value) {
@@ -1988,15 +2007,18 @@ const validateSubmitForm = () => {
 const initDefaultTimeValues = () => {
     const now = new Date()
     const today = now.toISOString().slice(0, 10) // YYYY-MM-DD
-    const currentTime = now.toTimeString().slice(0, 5) // HH:MM
     startDateValue.value = today
-    startTimeValue.value = currentTime
+    startTimeValue.value = '00:00'
     endDateValue.value = today
-    endTimeValue.value = currentTime
+    endTimeValue.value = '23:59'
     startDateDisplay.value = formatDate(today)
-    startTimeDisplay.value = currentTime
+    startTimeDisplay.value = '00:00'
     endDateDisplay.value = formatDate(today)
-    endTimeDisplay.value = currentTime
+    endTimeDisplay.value = '23:59'
+    
+    // 更新时间戳
+    updateStartTimestamp()
+    updateEndTimestamp()
 }
 
 /**
@@ -2015,15 +2037,18 @@ const loadEventData = async () => {
         const eventData = eventResponse.data
         
         // 处理地址字段
-        let fullAddress = eventData.full_address || eventData.location_detail || ''
+        let fullAddress = eventData.location || ''
         let addressDetail = eventData.address_detail || ''
         
-        // 如果没有详细地址，尝试从完整地址中分离
-        if (!addressDetail && fullAddress) {
-            const addressParts = fullAddress.split(' ')
-            if (addressParts.length > 1) {
-                fullAddress = addressParts[0]
-                addressDetail = addressParts.slice(1).join(' ')
+        // 如果没有address_detail字段，尝试从location_detail中分离
+        if (!addressDetail && eventData.location_detail) {
+            const locationDetail = eventData.location_detail
+            // 如果location_detail包含location，则分离出详细地址
+            if (locationDetail.startsWith(fullAddress)) {
+                addressDetail = locationDetail.substring(fullAddress.length).trim()
+            } else {
+                // 如果location_detail不包含location，则整个作为详细地址
+                addressDetail = locationDetail
             }
         }
         
@@ -2155,18 +2180,21 @@ onMounted(() => {
             selectedItems.value = []
             tempSelectedItems.value = []
             
-            // 清空时间选择器
+            // 清空时间选择器（使用默认时间）
             const now = new Date()
             const today = now.toISOString().slice(0, 10)
-            const currentTime = now.toTimeString().slice(0, 5)
             startDateValue.value = today
-            startTimeValue.value = currentTime
+            startTimeValue.value = '00:00'
             endDateValue.value = today
-            endTimeValue.value = currentTime
+            endTimeValue.value = '23:59'
             startDateDisplay.value = formatDate(today)
-            startTimeDisplay.value = currentTime
+            startTimeDisplay.value = '00:00'
             endDateDisplay.value = formatDate(today)
-            endTimeDisplay.value = currentTime
+            endTimeDisplay.value = '23:59'
+            
+            // 更新时间戳
+            updateStartTimestamp()
+            updateEndTimestamp()
             
             // 等待基础数据加载完成后再加载赛事数据
             setTimeout(() => {
@@ -2222,6 +2250,10 @@ onMounted(() => {
                         startTimeDisplay.value = parsedData.startTimeValue
                         endDateDisplay.value = formatDate(parsedData.endDateValue)
                         endTimeDisplay.value = parsedData.endTimeValue
+                        
+                        // 更新时间戳
+                        updateStartTimestamp()
+                        updateEndTimestamp()
                     }
                     
                     console.log('创建模式：从缓存恢复数据成功')
