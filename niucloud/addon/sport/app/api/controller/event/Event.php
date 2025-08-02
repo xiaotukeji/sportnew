@@ -57,6 +57,10 @@ class Event extends BaseApiController
         $data = $this->request->params([
             ['name', ''],              // 赛事名称
             ['location', ''],          // 举办地点
+            ['location_detail', ''],   // 完整地址
+            ['address_detail', ''],    // 详细地址
+            ['latitude', null],        // 纬度
+            ['longitude', null],       // 经度
             ['start_time', 0],         // 开始时间
             ['end_time', 0],           // 结束时间
             ['organizer_type', 1],     // 举办者类型：1个人 2单位
@@ -85,6 +89,10 @@ class Event extends BaseApiController
         $data = $this->request->params([
             ['name', ''],              // 赛事名称
             ['location', ''],          // 举办地点
+            ['location_detail', ''],   // 完整地址
+            ['address_detail', ''],    // 详细地址
+            ['latitude', null],        // 纬度
+            ['longitude', null],       // 经度
             ['start_time', 0],         // 开始时间
             ['end_time', 0],           // 结束时间
             ['organizer_type', 1],     // 举办者类型：1个人 2单位

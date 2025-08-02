@@ -87,7 +87,7 @@ class EventService extends BaseApiService
      */
     public function getInfo(int $id)
     {
-        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.registration_start_time, se.registration_end_time, se.registration_fee, se.max_participants, se.group_size, se.rounds, se.allow_duplicate_registration, se.show_participant_count, se.show_progress, se.create_time, se.update_time';
+        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.address_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.registration_start_time, se.registration_end_time, se.registration_fee, se.max_participants, se.group_size, se.rounds, se.allow_duplicate_registration, se.show_participant_count, se.show_progress, se.create_time, se.update_time';
         
         $info = $this->model
             ->alias('se')
@@ -287,7 +287,7 @@ class EventService extends BaseApiService
         // 调试：记录服务层接收的参数
         \think\facade\Log::info('EventService MyList Debug: input_data=' . json_encode($data) . ', member_id=' . $this->member_id);
         
-        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.status, se.remark, se.create_time, se.update_time';
+        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.address_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.status, se.remark, se.create_time, se.update_time';
         $order = 'se.id desc';
 
         $where = [
