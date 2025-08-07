@@ -148,7 +148,7 @@
             <!-- 第3步：时间安排 -->
             <view v-if="currentStep === 3" class="form-wrapper">
                 <view class="form-section">
-                    <view class="section-title">时间安排</view>
+                    <view class="section-title">比赛时间</view>
                     
                     <!-- 开始时间 -->
                     <view class="form-item">
@@ -225,6 +225,88 @@
                     </view>
                 </view>
                 
+                <!-- 报名时间设置 -->
+                <view class="form-section">
+                    <view class="section-title">报名时间</view>
+                    <view class="form-tip" style="margin: 0 32rpx 16rpx;">
+                        <text class="tip-text">设置报名开始和结束时间，默认与比赛时间相同</text>
+                    </view>
+                    
+                    <!-- 报名开始时间 -->
+                    <view class="form-item">
+                        <view class="form-label">报名开始时间</view>
+                        <view class="time-picker-container">
+                            <picker
+                                mode="date"
+                                :value="registrationStartDateValue"
+                                @change="onRegistrationStartDateChange"
+                            >
+                                <view class="time-picker-item">
+                                    <input 
+                                        class="form-input readonly" 
+                                        :value="registrationStartDateDisplay" 
+                                        placeholder="选择日期"
+                                        disabled
+                                    />
+                                    <text class="picker-arrow">📅</text>
+                                </view>
+                            </picker>
+                            <picker
+                                mode="time"
+                                :value="registrationStartTimeValue"
+                                @change="onRegistrationStartTimeChange"
+                            >
+                                <view class="time-picker-item">
+                                    <input 
+                                        class="form-input readonly" 
+                                        :value="registrationStartTimeDisplay" 
+                                        placeholder="选择时间"
+                                        disabled
+                                    />
+                                    <text class="picker-arrow">🕐</text>
+                                </view>
+                            </picker>
+                        </view>
+                    </view>
+                    
+                    <!-- 报名结束时间 -->
+                    <view class="form-item">
+                        <view class="form-label">报名结束时间</view>
+                        <view class="time-picker-container">
+                            <picker
+                                mode="date"
+                                :value="registrationEndDateValue"
+                                @change="onRegistrationEndDateChange"
+                            >
+                                <view class="time-picker-item">
+                                    <input 
+                                        class="form-input readonly" 
+                                        :value="registrationEndDateDisplay" 
+                                        placeholder="选择日期"
+                                        disabled
+                                    />
+                                    <text class="picker-arrow">📅</text>
+                                </view>
+                            </picker>
+                            <picker
+                                mode="time"
+                                :value="registrationEndTimeValue"
+                                @change="onRegistrationEndTimeChange"
+                            >
+                                <view class="time-picker-item">
+                                    <input 
+                                        class="form-input readonly" 
+                                        :value="registrationEndTimeDisplay" 
+                                        placeholder="选择时间"
+                                        disabled
+                                    />
+                                    <text class="picker-arrow">🕐</text>
+                                </view>
+                            </picker>
+                        </view>
+                    </view>
+                </view>
+                
                 <!-- 自定义分组 -->
                 <view class="form-section">
                     <view class="section-title">自定义分组</view>
@@ -285,29 +367,7 @@
                     
                     <!-- 正常内容 -->
                     <view v-else>
-                        <!-- 分类标签切换 -->
-                        <view class="category-tabs">
-                            <scroll-view class="tabs-scroll" scroll-x show-scrollbar="false">
-                                <view class="tabs-content">
-                                    <view 
-                                        class="tab-item" 
-                                        :class="{ active: activeTab === 'all' }"
-                                        @tap="switchTab('all')"
-                                    >
-                                        <text class="tab-text">全部</text>
-                                    </view>
-                                    <view 
-                                        v-for="category in categories" 
-                                        :key="category.id"
-                                        class="tab-item" 
-                                        :class="{ active: activeTab === category.id }"
-                                        @tap="switchTab(category.id)"
-                                    >
-                                        <text class="tab-text">{{ category.name.replace('运动', '') }}</text>
-                                    </view>
-                                </view>
-                            </scroll-view>
-                        </view>
+
                         
                         <!-- 分类列表 -->
                         <view class="categories-list">
@@ -320,7 +380,10 @@
                                 <view class="category-header" @tap="toggleCategory(category.id)">
                                     <view class="category-info">
                                         <text class="category-name">{{ category.name }}</text>
-                                        <text class="category-count">({{ getTotalItemCount(category) }}项)</text>
+                                        <text class="category-count">(总{{ getTotalItemCount(category) }}项，已选{{ getSelectedItemCount(category) }}项)</text>
+                                        <view v-if="getSelectedItemCount(category) > 0" class="selected-badge">
+                                            <text class="badge-text">{{ getSelectedItemCount(category) }}</text>
+                                        </view>
                                     </view>
                                     <view 
                                         v-if="category.has_children || category.base_items?.length > 0"
@@ -347,7 +410,10 @@
                                             <view class="sub-category-header" @tap="toggleCategory(subCategory.id)">
                                                 <view class="sub-category-info">
                                                     <text class="sub-category-name">{{ subCategory.name }}</text>
-                                                    <text class="sub-category-count">({{ getTotalItemCount(subCategory) }}项)</text>
+                                                    <text class="sub-category-count">(总{{ getTotalItemCount(subCategory) }}项，已选{{ getSelectedItemCount(subCategory) }}项)</text>
+                                                    <view v-if="getSelectedItemCount(subCategory) > 0" class="selected-badge sub-badge">
+                                                        <text class="badge-text">{{ getSelectedItemCount(subCategory) }}</text>
+                                                    </view>
                                                 </view>
                                                 <view 
                                                     v-if="subCategory.has_children || subCategory.base_items?.length > 0"
@@ -374,7 +440,10 @@
                                                         <view class="third-category-header" @tap="toggleCategory(thirdCategory.id)">
                                                             <view class="third-category-info">
                                                                 <text class="third-category-name">{{ thirdCategory.name }}</text>
-                                                                <text class="third-category-count">({{ thirdCategory.base_items?.length || 0 }}项)</text>
+                                                                <text class="third-category-count">(总{{ thirdCategory.base_items?.length || 0 }}项，已选{{ getSelectedItemCount(thirdCategory) }}项)</text>
+                                                                <view v-if="getSelectedItemCount(thirdCategory) > 0" class="selected-badge third-badge">
+                                                                    <text class="badge-text">{{ getSelectedItemCount(thirdCategory) }}</text>
+                                                                </view>
                                                             </view>
                                                             <view 
                                                                 v-if="thirdCategory.base_items?.length > 0"
@@ -824,6 +893,8 @@ interface FormData {
     address_detail: string
     start_time: number
     end_time: number
+    registration_start_time: string
+    registration_end_time: string
     organizer_id: number
     event_type: number
     series_id: number
@@ -879,6 +950,8 @@ const formData = ref<FormData>({
     address_detail: '',        // 地址补充
     start_time: 0,             // 开始时间
     end_time: 0,               // 结束时间
+    registration_start_time: '', // 报名开始时间
+    registration_end_time: '',   // 报名结束时间
     organizer_id: 0,           // 主办方ID
     event_type: 1,             // 赛事类型：1独立赛事 2系列赛事
     series_id: 0,              // 系列赛ID
@@ -990,6 +1063,16 @@ const startTimeDisplay = ref('')
 const endDateDisplay = ref('')
 const endTimeDisplay = ref('')
 
+// 报名时间相关
+const registrationStartDateValue = ref('')
+const registrationStartTimeValue = ref('')
+const registrationEndDateValue = ref('')
+const registrationEndTimeValue = ref('')
+const registrationStartDateDisplay = ref('')
+const registrationStartTimeDisplay = ref('')
+const registrationEndDateDisplay = ref('')
+const registrationEndTimeDisplay = ref('')
+
 // 格式化日期显示
 const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
@@ -1029,6 +1112,33 @@ const initFormData = () => {
                 endTimeDisplay.value = endTimeValue.value
             }
             
+            // 恢复报名时间显示
+            if (parsedData.registration_start_time) {
+                const [date, time] = parsedData.registration_start_time.split(' ')
+                registrationStartDateValue.value = date
+                registrationStartTimeValue.value = time || '00:00'
+                registrationStartDateDisplay.value = formatDate(date)
+                registrationStartTimeDisplay.value = time || '00:00'
+            } else if (parsedData.registrationStartDateValue) {
+                registrationStartDateValue.value = parsedData.registrationStartDateValue
+                registrationStartTimeValue.value = parsedData.registrationStartTimeValue || '00:00'
+                registrationStartDateDisplay.value = formatDate(parsedData.registrationStartDateValue)
+                registrationStartTimeDisplay.value = parsedData.registrationStartTimeValue || '00:00'
+            }
+            
+            if (parsedData.registration_end_time) {
+                const [date, time] = parsedData.registration_end_time.split(' ')
+                registrationEndDateValue.value = date
+                registrationEndTimeValue.value = time || '23:59'
+                registrationEndDateDisplay.value = formatDate(date)
+                registrationEndTimeDisplay.value = time || '23:59'
+            } else if (parsedData.registrationEndDateValue) {
+                registrationEndDateValue.value = parsedData.registrationEndDateValue
+                registrationEndTimeValue.value = parsedData.registrationEndTimeValue || '23:59'
+                registrationEndDateDisplay.value = formatDate(parsedData.registrationEndDateValue)
+                registrationEndTimeDisplay.value = parsedData.registrationEndTimeValue || '23:59'
+            }
+            
             return
         } catch (e) {
             console.error('解析缓存数据失败:', e)
@@ -1046,6 +1156,8 @@ const initFormData = () => {
         address_detail: '',
         start_time: 0,
         end_time: 0,
+        registration_start_time: '',
+        registration_end_time: '',
         custom_groups: [],
         event_type: 1,
         series_id: 0,
@@ -1061,11 +1173,23 @@ const initFormData = () => {
     endDateValue.value = today
     endTimeValue.value = '23:59'
     
+    // 设置默认报名时间（与比赛时间相同）
+    registrationStartDateValue.value = today
+    registrationStartTimeValue.value = '00:00'
+    registrationEndDateValue.value = today
+    registrationEndTimeValue.value = '23:59'
+    formData.value.registration_start_time = `${today} 00:00`
+    formData.value.registration_end_time = `${today} 23:59`
+    
     // 更新显示值
     startDateDisplay.value = formatDate(today)
     startTimeDisplay.value = '00:00'
     endDateDisplay.value = formatDate(today)
     endTimeDisplay.value = '23:59'
+    registrationStartDateDisplay.value = formatDate(today)
+    registrationStartTimeDisplay.value = '00:00'
+    registrationEndDateDisplay.value = formatDate(today)
+    registrationEndTimeDisplay.value = '23:59'
     
     // 更新时间戳
     updateStartTimestamp()
@@ -1086,7 +1210,11 @@ const saveFormDataToCache = () => {
             startDateValue: startDateValue.value,
             startTimeValue: startTimeValue.value,
             endDateValue: endDateValue.value,
-            endTimeValue: endTimeValue.value
+            endTimeValue: endTimeValue.value,
+            registrationStartDateValue: registrationStartDateValue.value,
+            registrationStartTimeValue: registrationStartTimeValue.value,
+            registrationEndDateValue: registrationEndDateValue.value,
+            registrationEndTimeValue: registrationEndTimeValue.value
         }
         uni.setStorageSync('sport_event_form_data', JSON.stringify(cacheData))
     } catch (e) {
@@ -1130,6 +1258,8 @@ const handleSubmit = async () => {
             longitude: formData.value.lng ? parseFloat(formData.value.lng) : null,
             start_time: formData.value.start_time,
             end_time: formData.value.end_time,
+            registration_start_time: formData.value.registration_start_time || '',
+            registration_end_time: formData.value.registration_end_time || '',
             organizer_id: formData.value.organizer_id,
             event_type: formData.value.event_type,
             series_id: formData.value.series_id,
@@ -1253,6 +1383,21 @@ const canProceedToNext = computed(() => {
 const goToStep = (step: number) => {
     if (step <= maxReachedStep.value) {
         currentStep.value = step
+        
+        // 如果跳转到第4步，确保加载分类数据
+        if (step === 4) {
+            // 如果是编辑模式且还没有加载赛事数据，先加载赛事数据
+            if (isEditMode.value && eventId.value && selectedItems.value.length === 0) {
+                loadEventData().then(() => {
+                    // 赛事数据加载完成后，再加载分类数据
+                    if (categories.value.length === 0) {
+                        loadCategories()
+                    }
+                })
+            } else if (categories.value.length === 0) {
+                loadCategories()
+            }
+        }
     }
 }
 
@@ -1332,6 +1477,8 @@ const onEndDateChange = (e: any) => {
     updateEndTimestamp()
     // 验证时间
     validateTime()
+    // 验证报名时间
+    validateRegistrationTime()
 }
 
 const onEndTimeChange = (e: any) => {
@@ -1340,6 +1487,87 @@ const onEndTimeChange = (e: any) => {
     updateEndTimestamp()
     // 验证时间
     validateTime()
+}
+
+/**
+ * 报名时间选择
+ */
+const onRegistrationStartDateChange = (e: any) => {
+    registrationStartDateValue.value = e.detail.value
+    registrationStartDateDisplay.value = formatDate(e.detail.value)
+    formData.value.registration_start_time = e.detail.value
+    
+    // 验证报名时间
+    validateRegistrationTime()
+}
+
+const onRegistrationEndDateChange = (e: any) => {
+    registrationEndDateValue.value = e.detail.value
+    registrationEndDateDisplay.value = formatDate(e.detail.value)
+    formData.value.registration_end_time = e.detail.value
+    
+    // 验证报名时间
+    validateRegistrationTime()
+}
+
+/**
+ * 报名时间选择
+ */
+const onRegistrationStartTimeChange = (e: any) => {
+    registrationStartTimeValue.value = e.detail.value
+    registrationStartTimeDisplay.value = e.detail.value
+    formData.value.registration_start_time = `${registrationStartDateValue.value} ${e.detail.value}`
+    
+    // 验证报名时间
+    validateRegistrationTime()
+}
+
+const onRegistrationEndTimeChange = (e: any) => {
+    registrationEndTimeValue.value = e.detail.value
+    registrationEndTimeDisplay.value = e.detail.value
+    formData.value.registration_end_time = `${registrationEndDateValue.value} ${e.detail.value}`
+    
+    // 验证报名时间
+    validateRegistrationTime()
+}
+
+/**
+ * 验证报名时间
+ */
+const validateRegistrationTime = () => {
+    // 如果报名结束时间大于比赛结束时间，自动调整为比赛结束时间
+    if (registrationEndDateValue.value && endDateValue.value) {
+        const registrationEndDate = new Date(registrationEndDateValue.value)
+        const eventEndDate = new Date(endDateValue.value)
+        
+        if (registrationEndDate > eventEndDate) {
+            registrationEndDateValue.value = endDateValue.value
+            registrationEndDateDisplay.value = formatDate(endDateValue.value)
+            formData.value.registration_end_time = endDateValue.value
+            
+            uni.showToast({
+                title: '报名结束时间已调整为比赛结束时间',
+                icon: 'none'
+            })
+        }
+    }
+    
+    // 如果报名开始时间大于报名结束时间，自动调整
+    if (registrationStartDateValue.value && registrationEndDateValue.value) {
+        const registrationStartDate = new Date(registrationStartDateValue.value)
+        const registrationEndDate = new Date(registrationEndDateValue.value)
+        
+        if (registrationStartDate > registrationEndDate) {
+            registrationEndDateValue.value = registrationStartDateValue.value
+            registrationEndDateDisplay.value = formatDate(registrationStartDateValue.value)
+            formData.value.registration_end_time = registrationStartDateValue.value
+            
+            uni.showToast({
+                title: '报名结束时间已调整为报名开始时间',
+                icon: 'none'
+            })
+        }
+    }
 }
 
 /**
@@ -2062,6 +2290,8 @@ const loadEventData = async () => {
             address_detail: addressDetail,
             start_time: eventData.start_time || 0,
             end_time: eventData.end_time || 0,
+            registration_start_time: eventData.registration_start_time || '',
+            registration_end_time: eventData.registration_end_time || '',
             organizer_id: eventData.organizer_id || 0,
             event_type: eventData.event_type || 1,
             series_id: eventData.series_id || 0,
@@ -2087,6 +2317,37 @@ const loadEventData = async () => {
             endTimeValue.value = endDate.toTimeString().slice(0, 5)
             endDateDisplay.value = formatDate(endDateValue.value)
             endTimeDisplay.value = endTimeValue.value
+        }
+        
+        // 设置报名时间选择器的值
+        if (eventData.registration_start_time) {
+            const [date, time] = eventData.registration_start_time.split(' ')
+            registrationStartDateValue.value = date
+            registrationStartTimeValue.value = time || '00:00'
+            registrationStartDateDisplay.value = formatDate(date)
+            registrationStartTimeDisplay.value = time || '00:00'
+        } else {
+            // 如果报名时间为空，默认与比赛时间相同
+            registrationStartDateValue.value = startDateValue.value
+            registrationStartTimeValue.value = startTimeValue.value
+            registrationStartDateDisplay.value = startDateDisplay.value
+            registrationStartTimeDisplay.value = startTimeDisplay.value
+            formData.value.registration_start_time = `${startDateValue.value} ${startTimeValue.value}`
+        }
+        
+        if (eventData.registration_end_time) {
+            const [date, time] = eventData.registration_end_time.split(' ')
+            registrationEndDateValue.value = date
+            registrationEndTimeValue.value = time || '23:59'
+            registrationEndDateDisplay.value = formatDate(date)
+            registrationEndTimeDisplay.value = time || '23:59'
+        } else {
+            // 如果报名时间为空，默认与比赛时间相同
+            registrationEndDateValue.value = endDateValue.value
+            registrationEndTimeValue.value = endTimeValue.value
+            registrationEndDateDisplay.value = endDateDisplay.value
+            registrationEndTimeDisplay.value = endTimeDisplay.value
+            formData.value.registration_end_time = `${endDateValue.value} ${endTimeValue.value}`
         }
         
         // 加载赛事项目
@@ -2166,6 +2427,8 @@ onMounted(() => {
                 address_detail: '',
                 start_time: 0,
                 end_time: 0,
+                registration_start_time: '',
+                registration_end_time: '',
                 organizer_id: 0,
                 event_type: 1,
                 series_id: 0,
@@ -2216,6 +2479,8 @@ onMounted(() => {
                 address_detail: '',
                 start_time: 0,
                 end_time: 0,
+                registration_start_time: '',
+                registration_end_time: '',
                 organizer_id: 0,
                 event_type: 1,
                 series_id: 0,
@@ -2392,15 +2657,11 @@ const validateForm = () => {
 // 项目选择相关数据
 const categories = ref<any[]>([])
 const expandedCategories = ref<number[]>([])
-const activeTab = ref<string | number>('all')
 const categoriesLoading = ref(false)
 const categoriesError = ref('')
 
 const filteredCategories = computed(() => {
-    if (activeTab.value === 'all') {
-        return categories.value
-    }
-    return categories.value.filter(cat => cat.id === activeTab.value)
+    return categories.value
 })
 
 // 获取项目名称
@@ -2435,10 +2696,26 @@ const getTotalItemCount = (category: any) => {
     return category.total_item_count || category.base_items?.length || 0
 }
 
-// 切换标签
-const switchTab = (tabId: string | number) => {
-    activeTab.value = tabId
+// 获取分类已选项目数
+const getSelectedItemCount = (category: any) => {
+    let count = 0
+    
+    // 检查当前分类的基础项目
+    if (category.base_items) {
+        count += category.base_items.filter((item: any) => selectedItems.value.includes(item.id)).length
+    }
+    
+    // 递归检查子分类
+    if (category.children) {
+        for (const child of category.children) {
+            count += getSelectedItemCount(child)
+        }
+    }
+    
+    return count
 }
+
+
 
 // 切换分类展开/收起
 const toggleCategory = (categoryId: number) => {
@@ -2492,7 +2769,13 @@ const loadCategories = async () => {
             }
         })
         
-        expandedCategories.value = defaultExpandCategories
+        // 如果是编辑模式且有选中的项目，展开包含这些项目的分类
+        if (isEditMode.value && selectedItems.value.length > 0) {
+            const categoriesWithSelectedItems = findCategoriesWithSelectedItems(categories.value)
+            defaultExpandCategories.push(...categoriesWithSelectedItems)
+        }
+        
+        expandedCategories.value = [...new Set(defaultExpandCategories)] // 去重
         
     } catch (err: any) {
         console.error('加载分类失败:', err)
@@ -2500,6 +2783,33 @@ const loadCategories = async () => {
     } finally {
         categoriesLoading.value = false
     }
+}
+
+// 查找包含选中项目的分类
+const findCategoriesWithSelectedItems = (categories: any[]): number[] => {
+    const result: number[] = []
+    
+    const checkCategory = (category: any) => {
+        // 检查当前分类是否有选中的项目
+        if (category.base_items) {
+            const hasSelectedItems = category.base_items.some((item: any) => 
+                selectedItems.value.includes(item.id)
+            )
+            if (hasSelectedItems) {
+                result.push(category.id)
+            }
+        }
+        
+        // 递归检查子分类
+        if (category.children) {
+            category.children.forEach((child: any) => {
+                checkCategory(child)
+            })
+        }
+    }
+    
+    categories.forEach(checkCategory)
+    return result
 }
 
 // 实时同步到formData.items
@@ -2899,12 +3209,15 @@ watch(selectedItems, (val) => {
 .time-picker-container {
     display: flex;
     gap: 16rpx;
+    position: relative;
+    z-index: 1;
     
     .time-picker-item {
         flex: 1;
         position: relative;
         display: flex;
         align-items: center;
+        z-index: 1;
         
         .form-input {
             flex: 1;
@@ -2918,6 +3231,11 @@ watch(selectedItems, (val) => {
             color: #999;
         }
     }
+}
+
+// 确保picker组件的z-index不会过高
+picker {
+    z-index: 10 !important;
 }
 
 .form-tip {
@@ -3090,6 +3408,7 @@ watch(selectedItems, (val) => {
     border-top: 1px solid #f0f0f0;
     display: flex;
     gap: 24rpx;
+    z-index: 1000;
     
     .action-btn {
         flex: 1;
@@ -3625,6 +3944,32 @@ watch(selectedItems, (val) => {
 .category-count {
     font-size: 24rpx;
     color: #999;
+}
+
+.selected-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32rpx;
+    height: 32rpx;
+    padding: 0 8rpx;
+    background-color: #007aff;
+    border-radius: 16rpx;
+    margin-left: 12rpx;
+    
+    &.sub-badge {
+        background-color: #ff6b35;
+    }
+    
+    &.third-badge {
+        background-color: #4caf50;
+    }
+}
+
+.badge-text {
+    font-size: 20rpx;
+    color: white;
+    font-weight: 500;
 }
 
 .category-arrow {

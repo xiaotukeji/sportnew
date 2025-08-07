@@ -91,8 +91,9 @@ class SportEvent extends BaseModel
      */
     protected $field = [
         'id', 'series_id', 'name', 'event_type', 'year', 'season', 'start_time', 
-        'end_time', 'location', 'location_detail', 'latitude', 'longitude', 'organizer_id', 
-        'organizer_type', 'member_id', 'sort', 'status', 'remark', 'create_time', 'update_time', 'delete_time'
+        'end_time', 'registration_start_time', 'registration_end_time', 'location', 'location_detail', 
+        'latitude', 'longitude', 'organizer_id', 'organizer_type', 'member_id', 'sort', 'status', 
+        'remark', 'create_time', 'update_time', 'delete_time'
     ];
 
     /**

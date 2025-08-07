@@ -63,6 +63,8 @@ class Event extends BaseApiController
             ['longitude', null],       // 经度
             ['start_time', 0],         // 开始时间
             ['end_time', 0],           // 结束时间
+            ['registration_start_time', ''], // 报名开始时间
+            ['registration_end_time', ''],   // 报名结束时间
             ['organizer_type', 1],     // 举办者类型：1个人 2单位
             ['organizer_id', 0],       // 主办方ID
             ['event_type', 1],         // 赛事类型：1独立赛事 2系列赛事
@@ -95,6 +97,8 @@ class Event extends BaseApiController
             ['longitude', null],       // 经度
             ['start_time', 0],         // 开始时间
             ['end_time', 0],           // 结束时间
+            ['registration_start_time', ''], // 报名开始时间
+            ['registration_end_time', ''],   // 报名结束时间
             ['organizer_type', 1],     // 举办者类型：1个人 2单位
             ['organizer_id', 0],       // 主办方ID
             ['event_type', 1],         // 赛事类型：1独立赛事 2系列赛事

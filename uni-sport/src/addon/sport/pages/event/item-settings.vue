@@ -16,27 +16,43 @@
         <view class="items-settings">
             <view class="section-title">
                 <text class="title-text">比赛项目设置</text>
-                <text class="title-count">({{ eventItems.length }}个项目)</text>
-                <view class="batch-settings">
+                <text class="title-count">({{ groupedEventItems.length }}大类 {{ eventItems.length }}项)</text>
+            </view>
+            
+            <view v-if="eventItems.length > 0" class="items-container">
+                <view 
+                    v-for="(group, groupIndex) in groupedEventItems" 
+                    :key="group.categoryName" 
+                    class="category-group"
+                >
+                    <!-- 大类标题 -->
+                    <view class="category-header" :style="{ background: getCategoryColor(group.categoryName) }">
+                        <view class="category-info">
+                            <text class="category-name">{{ group.categoryName }}</text>
+                            <text class="category-count">({{ group.items.length }}项)</text>
+                        </view>
+                        <view class="category-batch" v-if="group.items.length > 1">
                     <text class="batch-label">批量设置</text>
                     <switch 
-                        :checked="batchMode" 
-                        @change="onBatchModeChange"
+                                :checked="getCategoryBatchMode(group.categoryName)" 
+                                @change="onCategoryBatchModeChange(group.categoryName, $event)"
                     />
                 </view>
             </view>
             
             <!-- 批量设置提示 -->
-            <view v-if="batchMode" class="batch-tip">
-                <text class="tip-text">💡 批量设置已开启：修改第一个项目的设置将自动应用到其他项目</text>
+                    <view v-if="getCategoryBatchMode(group.categoryName) && group.items.length > 1" class="batch-tip">
+                        <text class="tip-text">💡 已开启批量设置：修改第一个项目的设置将自动应用到该分类下的其他项目</text>
             </view>
             
-            <view v-if="eventItems.length > 0" class="items-list">
+                    <!-- 该大类下的项目列表 -->
+                    <view class="group-items">
                 <view 
-                    v-for="(item, index) in eventItems" 
+                            v-for="(item, index) in group.items" 
                     :key="item.id" 
                     class="item-card"
-                    :class="{ 'batch-item': batchMode && index > 0 }"
+                            :class="{ 'batch-item': getCategoryBatchMode(group.categoryName) && index > 0 }"
+                            :style="{ borderLeftColor: getCategoryBorderColor(group.categoryName) }"
                 >
                     <view class="item-header">
                         <view class="item-info">
@@ -45,7 +61,7 @@
                         </view>
                         <view class="item-status" :class="'status-' + (item.is_configured ? 'configured' : 'pending')">
                             {{ item.is_configured ? '已配置' : '待配置' }}
-                            <text v-if="batchMode && index > 0" class="batch-tag">批量</text>
+                                    <text v-if="getCategoryBatchMode(group.categoryName) && index > 0" class="batch-tag">批量</text>
                         </view>
                     </view>
                     
@@ -58,9 +74,9 @@
                                 type="digit" 
                                 :value="getRegistrationFeeDisplayValue(item.registration_fee)"
                                 placeholder="0表示免费"
-                                @input="onRegistrationFeeChange(index, $event)"
-                                @focus="onRegistrationFeeFocus(index, $event)"
-                                @blur="onRegistrationFeeBlur(index, $event)"
+                                        @input="onRegistrationFeeChange(getItemGlobalIndex(groupIndex, index), $event)"
+                                        @focus="onRegistrationFeeFocus(getItemGlobalIndex(groupIndex, index), $event)"
+                                        @blur="onRegistrationFeeBlur(getItemGlobalIndex(groupIndex, index), $event)"
                             />
                         </view>
                         
@@ -72,29 +88,17 @@
                                 type="number" 
                                 :value="getMaxParticipantsDisplayValue(item.max_participants)"
                                 placeholder="0表示不限制"
-                                @input="onMaxParticipantsChange(index, $event)"
-                                @blur="onMaxParticipantsBlur(index, $event)"
+                                        @input="onMaxParticipantsChange(getItemGlobalIndex(groupIndex, index), $event)"
+                                        @blur="onMaxParticipantsBlur(getItemGlobalIndex(groupIndex, index), $event)"
                             />
                         </view>
-                        
-                        <!-- 比赛轮次设置 - 暂时隐藏 -->
-                        <!-- <view class="setting-item">
-                            <text class="setting-label">比赛轮次</text>
-                            <input 
-                                class="setting-input" 
-                                type="number" 
-                                v-model="item.rounds"
-                                placeholder="比赛轮次数量"
-                                @input="onItemSettingChange(index, 'rounds', $event)"
-                            />
-                        </view> -->
                         
                         <!-- 是否允许重复报名 -->
                         <view class="setting-item">
                             <text class="setting-label">允许重复\n报名</text>
                             <switch 
                                 :checked="item.allow_duplicate_registration" 
-                                @change="onItemSwitchChange(index, 'allow_duplicate_registration', $event)"
+                                        @change="onItemSwitchChange(getItemGlobalIndex(groupIndex, index), 'allow_duplicate_registration', $event)"
                             />
                         </view>
                         
@@ -107,9 +111,11 @@
                                     v-model="item.remark"
                                     placeholder="请输入项目说明..."
                                     maxlength="200"
-                                    @input="onRemarkChange(index, $event)"
+                                            @input="onRemarkChange(getItemGlobalIndex(groupIndex, index), $event)"
                                 />
                                 <text class="textarea-count">{{ item.remark.length }}/200</text>
+                                    </view>
+                                </view>
                             </view>
                         </view>
                     </view>
@@ -129,35 +135,6 @@
             </view>
             
             <view class="settings-form">
-                <!-- 报名时间设置 -->
-                <view class="form-item">
-                    <text class="item-label">报名开始时间</text>
-                    <picker 
-                        mode="date" 
-                        :value="eventSettings.registration_start_time" 
-                        @change="onRegistrationStartChange"
-                    >
-                        <view class="picker-value">
-                            {{ eventSettings.registration_start_time || '请选择' }}
-                            <text class="picker-arrow">></text>
-                        </view>
-                    </picker>
-                </view>
-                
-                <view class="form-item">
-                    <text class="item-label">报名结束时间</text>
-                    <picker 
-                        mode="date" 
-                        :value="eventSettings.registration_end_time" 
-                        @change="onRegistrationEndChange"
-                    >
-                        <view class="picker-value">
-                            {{ eventSettings.registration_end_time || '请选择' }}
-                            <text class="picker-arrow">></text>
-                        </view>
-                    </picker>
-                </view>
-                
                 <!-- 显示设置 -->
                 <view class="form-item">
                     <text class="item-label">显示年龄组</text>
@@ -198,7 +175,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useLoginCheck } from '@/addon/sport/hooks/useLoginCheck'
 import { getEventInfo, getEventItems, updateEventSettings, updateItemSettings } from '@/addon/sport/api/event'
 
@@ -210,12 +187,12 @@ const eventInfo = ref<any>(null)
 const eventItems = ref<any[]>([])
 const eventId = ref(0)
 const saving = ref(false)
-const batchMode = ref(false) // 批量设置模式
+
+// 批量设置状态，存储每个分类的批量模式
+const categoryBatchModes = ref<Record<string, boolean>>({})
 
 // 赛事级别设置
 const eventSettings = ref({
-    registration_start_time: '',
-    registration_end_time: '',
     age_group_display: false,
     show_participant_count: true,
     show_progress: true
@@ -242,7 +219,7 @@ const onItemSettingChange = (index: number, field: string, event: any) => {
     eventItems.value[index].is_configured = true
     
     // 如果是批量模式且修改的是第一个项目，则同步到其他项目
-    if (batchMode.value && index === 0) {
+    if (getCategoryBatchMode(eventItems.value[index].category_name || '其他') && index === 0) {
         const batchFields = ['registration_fee', 'max_participants', 'allow_duplicate_registration', 'remark']
         if (batchFields.includes(field)) {
             for (let i = 1; i < eventItems.value.length; i++) {
@@ -269,11 +246,24 @@ const onRegistrationFeeChange = (index: number, event: any) => {
     eventItems.value[index].registration_fee = numValue
     eventItems.value[index].is_configured = true
     
-    // 批量模式同步
-    if (batchMode.value && index === 0) {
-        for (let i = 1; i < eventItems.value.length; i++) {
-            eventItems.value[i].registration_fee = numValue
-            eventItems.value[i].is_configured = true
+    // 批量模式同步 - 只在同一分类内同步，且只同步第一个项目
+    const currentItem = eventItems.value[index]
+    const categoryName = currentItem.category_name || '其他'
+    const group = groupedEventItems.value.find(g => g.categoryName === categoryName)
+    
+    if (getCategoryBatchMode(categoryName) && group && group.items.length > 1) {
+        // 检查是否是该分类下的第一个项目
+        const isFirstItem = group.items[0].id === currentItem.id
+        if (isFirstItem) {
+            // 找到同一分类下的其他项目并同步设置
+            for (let i = 1; i < group.items.length; i++) {
+                const otherItem = group.items[i]
+                const otherIndex = eventItems.value.findIndex(item => item.id === otherItem.id)
+                if (otherIndex !== -1) {
+                    eventItems.value[otherIndex].registration_fee = numValue
+                    eventItems.value[otherIndex].is_configured = true
+                }
+            }
         }
     }
 }
@@ -328,11 +318,24 @@ const onMaxParticipantsChange = (index: number, event: any) => {
     eventItems.value[index].max_participants = intValue
     eventItems.value[index].is_configured = true
     
-    // 批量模式同步
-    if (batchMode.value && index === 0) {
-        for (let i = 1; i < eventItems.value.length; i++) {
-            eventItems.value[i].max_participants = intValue
-            eventItems.value[i].is_configured = true
+    // 批量模式同步 - 只在同一分类内同步，且只同步第一个项目
+    const currentItem = eventItems.value[index]
+    const categoryName = currentItem.category_name || '其他'
+    const group = groupedEventItems.value.find(g => g.categoryName === categoryName)
+    
+    if (getCategoryBatchMode(categoryName) && group && group.items.length > 1) {
+        // 检查是否是该分类下的第一个项目
+        const isFirstItem = group.items[0].id === currentItem.id
+        if (isFirstItem) {
+            // 找到同一分类下的其他项目并同步设置
+            for (let i = 1; i < group.items.length; i++) {
+                const otherItem = group.items[i]
+                const otherIndex = eventItems.value.findIndex(item => item.id === otherItem.id)
+                if (otherIndex !== -1) {
+                    eventItems.value[otherIndex].max_participants = intValue
+                    eventItems.value[otherIndex].is_configured = true
+                }
+            }
         }
     }
 }
@@ -357,11 +360,24 @@ const onRemarkChange = (index: number, event: any) => {
     eventItems.value[index].remark = value
     eventItems.value[index].is_configured = true
     
-    // 批量模式同步
-    if (batchMode.value && index === 0) {
-        for (let i = 1; i < eventItems.value.length; i++) {
-            eventItems.value[i].remark = value
-            eventItems.value[i].is_configured = true
+    // 批量模式同步 - 只在同一分类内同步，且只同步第一个项目
+    const currentItem = eventItems.value[index]
+    const categoryName = currentItem.category_name || '其他'
+    const group = groupedEventItems.value.find(g => g.categoryName === categoryName)
+    
+    if (getCategoryBatchMode(categoryName) && group && group.items.length > 1) {
+        // 检查是否是该分类下的第一个项目
+        const isFirstItem = group.items[0].id === currentItem.id
+        if (isFirstItem) {
+            // 找到同一分类下的其他项目并同步设置
+            for (let i = 1; i < group.items.length; i++) {
+                const otherItem = group.items[i]
+                const otherIndex = eventItems.value.findIndex(item => item.id === otherItem.id)
+                if (otherIndex !== -1) {
+                    eventItems.value[otherIndex].remark = value
+                    eventItems.value[otherIndex].is_configured = true
+                }
+            }
         }
     }
 }
@@ -373,70 +389,183 @@ const onItemSwitchChange = (index: number, field: string, event: any) => {
     eventItems.value[index][field] = event.detail.value
     eventItems.value[index].is_configured = true
     
-    // 如果是批量模式且修改的是第一个项目，则同步到其他项目
-    if (batchMode.value && index === 0) {
-        const batchFields = ['allow_duplicate_registration']
-        if (batchFields.includes(field)) {
-            for (let i = 1; i < eventItems.value.length; i++) {
-                eventItems.value[i][field] = event.detail.value
-                eventItems.value[i].is_configured = true
+    // 批量模式同步 - 只在同一分类内同步，且只同步第一个项目
+    const currentItem = eventItems.value[index]
+    const categoryName = currentItem.category_name || '其他'
+    const group = groupedEventItems.value.find(g => g.categoryName === categoryName)
+    
+    if (getCategoryBatchMode(categoryName) && group && group.items.length > 1) {
+        // 检查是否是该分类下的第一个项目
+        const isFirstItem = group.items[0].id === currentItem.id
+        if (isFirstItem) {
+            // 找到同一分类下的其他项目并同步设置
+            for (let i = 1; i < group.items.length; i++) {
+                const otherItem = group.items[i]
+                const otherIndex = eventItems.value.findIndex(item => item.id === otherItem.id)
+                if (otherIndex !== -1) {
+                    eventItems.value[otherIndex][field] = event.detail.value
+                    eventItems.value[otherIndex].is_configured = true
+                }
             }
         }
     }
 }
 
 /**
- * 批量模式切换
+ * 应用分类批量设置
  */
-const onBatchModeChange = (e: any) => {
-    batchMode.value = e.detail.value
+const applyCategoryBatchSettings = (categoryName: string) => {
+    const group = groupedEventItems.value.find(g => g.categoryName === categoryName)
+    if (!group || group.items.length <= 1) return
     
-    if (batchMode.value && eventItems.value.length > 0) {
-        // 开启批量模式时，将第一个项目的设置应用到其他项目
-        applyBatchSettings()
+    const firstItem = group.items[0]
+    const batchFields = ['registration_fee', 'max_participants', 'allow_duplicate_registration', 'remark']
+    
+    // 将第一个项目的设置应用到该分类下的其他项目
+    for (let i = 1; i < group.items.length; i++) {
+        const currentItem = group.items[i]
+        // 找到该item在eventItems中的索引
+        const itemIndex = eventItems.value.findIndex(item => item.id === currentItem.id)
+        if (itemIndex !== -1) {
+            batchFields.forEach(field => {
+                eventItems.value[itemIndex][field] = firstItem[field]
+            })
+            eventItems.value[itemIndex].is_configured = true
+        }
+    }
+}
+
+/**
+ * 获取项目在eventItems中的全局索引
+ */
+const getItemGlobalIndex = (groupIndex: number, itemIndex: number) => {
+    let globalIndex = 0
+    for (let i = 0; i < groupIndex; i++) {
+        globalIndex += groupedEventItems.value[i].items.length
+    }
+    globalIndex += itemIndex
+    return globalIndex
+}
+
+/**
+ * 获取分类颜色
+ */
+const getCategoryColor = (categoryName: string) => {
+    const colorMap: Record<string, string> = {
+        '乒乓球': 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+        '羽毛球': 'linear-gradient(135deg, #4834d4 0%, #686de0 100%)',
+        '篮球': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        '足球': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        '网球': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+        '排球': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+        '田径': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+        '游泳': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        '其他': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    }
+    
+    return colorMap[categoryName] || colorMap['其他']
+}
+
+/**
+ * 获取分类边框颜色
+ */
+const getCategoryBorderColor = (categoryName: string) => {
+    const colorMap: Record<string, string> = {
+        '乒乓球': '#ff6b6b',
+        '羽毛球': '#4834d4',
+        '篮球': '#f093fb',
+        '足球': '#4facfe',
+        '网球': '#43e97b',
+        '排球': '#fa709a',
+        '田径': '#a8edea',
+        '游泳': '#667eea',
+        '其他': '#667eea'
+    }
+    
+    return colorMap[categoryName] || colorMap['其他']
+}
+
+/**
+ * 获取分组后的项目列表
+ */
+const groupedEventItems = computed(() => {
+    const groups: Record<string, any[]> = {}
+    
+    eventItems.value.forEach((item: any) => {
+        // 使用大类名称作为分组键
+        const categoryName = item.category_name || '其他'
+        if (!groups[categoryName]) {
+            groups[categoryName] = []
+        }
+        groups[categoryName].push(item)
+    })
+    
+    // 转换为数组格式，便于模板渲染，并按大类名称排序
+    return Object.keys(groups)
+        .sort()
+        .map(categoryName => ({
+            categoryName,
+            items: groups[categoryName].sort((a: any, b: any) => a.name.localeCompare(b.name)) // 项目名称也排序
+        }))
+})
+
+/**
+ * 获取分类的批量设置状态
+ */
+const getCategoryBatchMode = (categoryName: string) => {
+    return categoryBatchModes.value[categoryName] || false
+}
+
+/**
+ * 分类批量模式切换
+ */
+const onCategoryBatchModeChange = (categoryName: string, e: any) => {
+    categoryBatchModes.value[categoryName] = e.detail.value
+    
+    if (e.detail.value) {
+        // 开启批量模式时，将该分类下第一个项目的设置应用到该分类下的其他项目
+        applyCategoryBatchSettings(categoryName)
         uni.showToast({
-            title: '已开启批量设置模式',
+            title: `${categoryName}批量设置已开启`,
             icon: 'success'
         })
-    } else if (!batchMode.value) {
+    } else {
         uni.showToast({
-            title: '已关闭批量设置模式',
+            title: `${categoryName}批量设置已关闭`,
             icon: 'none'
         })
     }
 }
 
 /**
- * 应用批量设置
+ * 加载赛事项目列表并分组
  */
-const applyBatchSettings = () => {
-    if (eventItems.value.length <= 1) return
+const loadEventItems = async () => {
+    if (!eventId.value) return
     
-    const firstItem = eventItems.value[0]
-    const batchFields = ['registration_fee', 'max_participants', 'allow_duplicate_registration', 'remark']
-    
-    // 将第一个项目的设置应用到其他项目
-    for (let i = 1; i < eventItems.value.length; i++) {
-        batchFields.forEach(field => {
-            eventItems.value[i][field] = firstItem[field]
-        })
-        eventItems.value[i].is_configured = true
+    try {
+        const response: any = await getEventItems(eventId.value)
+        const items = response.data || []
+        
+        // 为每个项目添加默认设置
+        eventItems.value = items.map((item: any) => ({
+            ...item,
+            registration_fee: item.registration_fee ?? 0, // 使用 ?? 确保 0 值不被覆盖
+            max_participants: item.max_participants ?? 0, // 使用 ?? 确保 0 值不被覆盖
+            rounds: item.rounds ?? 0,
+            allow_duplicate_registration: item.allow_duplicate_registration ?? false,
+            remark: item.remark ?? '',
+            is_configured: !!(item.registration_fee || item.max_participants || item.rounds || item.remark)
+        }))
+        
+        console.log('赛事项目列表:', eventItems.value)
+    } catch (error) {
+        console.error('加载赛事项目失败:', error)
+        eventItems.value = []
     }
 }
 
-/**
- * 报名开始时间选择
- */
-const onRegistrationStartChange = (e: any) => {
-    eventSettings.value.registration_start_time = e.detail.value
-}
 
-/**
- * 报名结束时间选择
- */
-const onRegistrationEndChange = (e: any) => {
-    eventSettings.value.registration_end_time = e.detail.value
-}
 
 /**
  * 年龄组显示开关
@@ -471,8 +600,6 @@ const loadEventInfo = async () => {
         
         // 填充赛事设置
         eventSettings.value = {
-            registration_start_time: eventInfo.value.registration_start_time || '',
-            registration_end_time: eventInfo.value.registration_end_time || '',
             age_group_display: eventInfo.value.age_group_display || false,
             show_participant_count: eventInfo.value.show_participant_count !== false,
             show_progress: eventInfo.value.show_progress !== false
@@ -489,34 +616,6 @@ const loadEventInfo = async () => {
 }
 
 /**
- * 加载赛事项目列表
- */
-const loadEventItems = async () => {
-    if (!eventId.value) return
-    
-    try {
-        const response: any = await getEventItems(eventId.value)
-        const items = response.data || []
-        
-        // 为每个项目添加默认设置
-        eventItems.value = items.map((item: any) => ({
-            ...item,
-            registration_fee: item.registration_fee ?? 0, // 使用 ?? 确保 0 值不被覆盖
-            max_participants: item.max_participants ?? 0, // 使用 ?? 确保 0 值不被覆盖
-            rounds: item.rounds ?? 0,
-            allow_duplicate_registration: item.allow_duplicate_registration ?? false,
-            remark: item.remark ?? '',
-            is_configured: !!(item.registration_fee || item.max_participants || item.rounds || item.remark)
-        }))
-        
-        console.log('赛事项目列表:', eventItems.value)
-    } catch (error) {
-        console.error('加载赛事项目失败:', error)
-        eventItems.value = []
-    }
-}
-
-/**
  * 保存所有设置
  */
 const saveAllSettings = async () => {
@@ -527,7 +626,9 @@ const saveAllSettings = async () => {
             // 保存赛事级别设置
             await updateEventSettings({
                 event_id: eventId.value,
-                ...eventSettings.value
+                age_group_display: eventSettings.value.age_group_display,
+                show_participant_count: eventSettings.value.show_participant_count,
+                show_progress: eventSettings.value.show_progress
             })
             
             // 保存项目级别设置
@@ -664,41 +765,95 @@ onMounted(() => {
             margin-left: 16rpx;
             font-weight: normal;
         }
-        
-        .batch-settings {
-            margin-left: auto;
+    }
+    
+    .items-container {
+        .category-group {
+            margin-bottom: 32rpx;
+            background-color: white;
+            border-radius: 16rpx;
+            padding: 20rpx;
+            box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+            
+            &:last-child {
+                margin-bottom: 0;
+            }
+            
+            .category-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 20rpx;
+                padding: 20rpx 24rpx;
+                border-radius: 12rpx;
+                box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+                
+                .category-info {
+                    display: flex;
+                    align-items: center;
+                    flex: 1;
+                    
+                    .category-name {
+                        font-size: 34rpx;
+                        font-weight: bold;
+                        color: white;
+                        text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.3);
+                    }
+                    
+                    .category-count {
+                        font-size: 24rpx;
+                        color: rgba(255, 255, 255, 0.9);
+                        background-color: rgba(255, 255, 255, 0.25);
+                        padding: 8rpx 16rpx;
+                        border-radius: 20rpx;
+                        font-weight: 500;
+                        backdrop-filter: blur(10rpx);
+                        margin-left: 16rpx;
+                    }
+                }
+                
+                .category-batch {
             display: flex;
             align-items: center;
             
             .batch-label {
-                font-size: 26rpx;
-                color: #666;
+                        font-size: 24rpx;
+                        color: rgba(255, 255, 255, 0.9);
                 margin-right: 16rpx;
+                        font-weight: 500;
+                    }
             }
         }
         
         .batch-tip {
-            margin-top: 16rpx;
+                margin: 16rpx 0;
             padding: 16rpx 20rpx;
-            background-color: #e6f7ff;
-            border: 1rpx solid #91d5ff;
+                background-color: rgba(255, 255, 255, 0.9);
+                border: 1rpx solid rgba(255, 255, 255, 0.3);
             border-radius: 8rpx;
+                backdrop-filter: blur(10rpx);
             
             .tip-text {
-                font-size: 26rpx;
-                color: #1890ff;
+                    font-size: 24rpx;
+                    color: #333;
                 line-height: 1.4;
-            }
         }
     }
     
-    .items-list {
+            .group-items {
         .item-card {
             background-color: #f8f9fa;
             border-radius: 12rpx;
-            padding: 24rpx;
-            margin-bottom: 20rpx;
+                    padding: 20rpx;
+                    margin-bottom: 16rpx;
             border: 1rpx solid #e9ecef;
+                    border-left: 4rpx solid;
+                    transition: all 0.3s ease;
+                    
+                    &:hover {
+                        transform: translateY(-2rpx);
+                        box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
+                    }
             
             &:last-child {
                 margin-bottom: 0;
@@ -707,6 +862,17 @@ onMounted(() => {
             &.batch-item {
                 border-left: 4rpx solid #007aff;
                 background-color: #f0f8ff;
+                        position: relative;
+                        
+                        &::before {
+                            content: '';
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            height: 2rpx;
+                            background: linear-gradient(90deg, #007aff, #00d4ff);
+                        }
                 
                 .item-header {
                     .item-status {
@@ -719,7 +885,7 @@ onMounted(() => {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 24rpx;
+                        margin-bottom: 20rpx;
                 
                 .item-info {
                     flex: 1;
@@ -773,7 +939,7 @@ onMounted(() => {
                 .setting-item {
                     display: flex;
                     align-items: center;
-                    margin-bottom: 24rpx;
+                            margin-bottom: 20rpx;
                     
                     &:last-child {
                         margin-bottom: 0;
@@ -837,6 +1003,8 @@ onMounted(() => {
                         font-size: 24rpx;
                         color: #999;
                         pointer-events: none; /* 防止点击字数统计影响textarea */
+                            }
+                        }
                     }
                 }
             }

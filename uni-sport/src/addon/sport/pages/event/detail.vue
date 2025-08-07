@@ -60,6 +60,16 @@
                     <text class="value">{{ formatDateTime(eventInfo.end_time) }}</text>
                 </view>
                 
+                <view v-if="eventInfo.registration_start_time" class="detail-item">
+                    <text class="label">开始报名</text>
+                    <text class="value">{{ formatRegistrationTime(eventInfo.registration_start_time) }}</text>
+                </view>
+                
+                <view v-if="eventInfo.registration_end_time" class="detail-item">
+                    <text class="label">截至报名</text>
+                    <text class="value">{{ formatRegistrationTime(eventInfo.registration_end_time) }}</text>
+                </view>
+                
                 <view class="detail-item">
                     <text class="label">举办地点</text>
                     <text class="value">{{ eventInfo.location }}</text>
@@ -171,7 +181,7 @@
                 <view class="detail-item">
                     <text class="label">当前状态</text>
                     <text class="value status" :class="'status-' + eventInfo.status">
-                        {{ eventInfo.status === 1 ? '启用' : '禁用' }}
+                        {{ getStatusText(eventInfo.status) }}
                     </text>
                 </view>
                 
@@ -270,6 +280,17 @@ const getCategoryBorderColor = (categoryName: string) => {
     return colorMap[categoryName] || colorMap['其他']
 }
 
+// 获取状态文本
+const getStatusText = (status: number) => {
+    const statusMap: Record<number, string> = {
+        0: '待发布',
+        1: '进行中', 
+        2: '已结束',
+        3: '已作废'
+    }
+    return statusMap[status] || '未知状态'
+}
+
 // 获取详细地址
 const getAddressDetail = (eventInfo: any) => {
     if (!eventInfo) {
@@ -310,6 +331,15 @@ const formatDateTime = (timestamp: number | string) => {
     const hours = String(date.getHours()).padStart(2, '0')
     const minutes = String(date.getMinutes()).padStart(2, '0')
     return `${year}-${month}-${day} ${hours}:${minutes}`
+}
+
+/**
+ * 格式化报名时间
+ */
+const formatRegistrationTime = (timeString: string) => {
+    if (!timeString) return '--'
+    // 报名时间格式为 YYYY-MM-DD HH:mm
+    return timeString
 }
 
 /**
@@ -515,12 +545,22 @@ onMounted(() => {
                 border-radius: 8rpx;
                 font-size: 24rpx;
                 
+                &.status-0 {
+                    background-color: #fff7e6;
+                    color: #fa8c16;
+                }
+                
                 &.status-1 {
                     background-color: #e7f5e7;
                     color: #52c41a;
                 }
                 
-                &.status-0 {
+                &.status-2 {
+                    background-color: #f6ffed;
+                    color: #389e0d;
+                }
+                
+                &.status-3 {
                     background-color: #fff1f0;
                     color: #ff4d4f;
                 }
