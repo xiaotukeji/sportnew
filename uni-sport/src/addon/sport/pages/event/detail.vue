@@ -51,12 +51,12 @@
                 </view>
                 
                 <view class="detail-item">
-                    <text class="label">开始时间</text>
+                    <text class="label">开始比赛</text>
                     <text class="value">{{ formatDateTime(eventInfo.start_time) }}</text>
                 </view>
                 
                 <view class="detail-item">
-                    <text class="label">结束时间</text>
+                    <text class="label">结束比赛</text>
                     <text class="value">{{ formatDateTime(eventInfo.end_time) }}</text>
                 </view>
                 
@@ -204,7 +204,7 @@
                 <text class="btn-text">编辑比赛</text>
             </button>
             <button class="action-btn next-btn" @tap="nextStep">
-                <text class="btn-text">下一步</text>
+                <text class="btn-text">项目设置</text>
             </button>
         </view>
     </view>

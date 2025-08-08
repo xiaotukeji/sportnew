@@ -81,6 +81,7 @@ CREATE TABLE `sport_event` (
     `remark` varchar(255) DEFAULT NULL COMMENT '备注',
     `age_groups` text COMMENT '年龄组设置，JSON格式，如：["不限年龄","U8","U10","U12"]',
     `age_group_display` tinyint(4) NOT NULL DEFAULT '0' COMMENT '年龄组显示方式：0不显示 1显示',
+    `signup_fields` json DEFAULT NULL COMMENT '报名字段配置(JSON: [{key,label,required}])',
     `registration_start_time` varchar(20) DEFAULT NULL COMMENT '报名开始时间，格式：YYYY-MM-DD',
     `registration_end_time` varchar(20) DEFAULT NULL COMMENT '报名结束时间，格式：YYYY-MM-DD',
     `registration_fee` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '报名费（元）',

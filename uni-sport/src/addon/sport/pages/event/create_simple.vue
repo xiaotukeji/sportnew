@@ -349,8 +349,69 @@
                 </view>
             </view>
 
-            <!-- 第4步：选择项目 -->
+            <!-- 第4步：报名参数 -->
             <view v-if="currentStep === 4" class="form-wrapper">
+                <view class="form-section">
+                    <view class="section-title">报名参数</view>
+                    <view class="form-item">
+                        <view class="form-label flex-between">
+                            <text>选择需要收集的报名字段</text>
+                            <text class="selected-count" v-if="formData.signup_fields.length">已选 {{ formData.signup_fields.length }} 项</text>
+                        </view>
+                        <view class="signup-groups">
+                            <view class="signup-group" v-for="group in signupFieldGroups" :key="group.key">
+                                <view class="signup-group-title">{{ group.title }}</view>
+                                <view class="signup-chip-grid">
+                                    <view 
+                                        class="signup-chip" 
+                                        v-for="field in group.options" 
+                                        :key="field.key"
+                                        :class="{ active: isSignupFieldChecked(field.key) }"
+                                        @tap="toggleSignupField(field.key)"
+                                    >
+                                        <text class="chip-label">{{ field.label }}</text>
+                                    </view>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+
+                    <view v-if="formData.signup_fields.length" class="form-item">
+                        <view class="form-label flex-between">
+                            <text>必填设置</text>
+                            <text class="required-tip">至少设置三个必填选项</text>
+                        </view>
+                        <view class="signup-selected-list">
+                            <view class="signup-selected-item" v-for="sf in formData.signup_fields" :key="sf.key">
+                                <text class="field-name">{{ sf.label }}</text>
+                                <view class="required-toggle">
+                                    <text class="toggle-text">必填</text>
+                                    <switch :checked="sf.required" @change="(e:any)=>setSignupFieldRequired(sf.key,e.detail.value)" />
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+
+                    <view class="form-item">
+                        <view class="form-label flex-between">
+                            <text>自定义字段</text>
+                        </view>
+                        <view class="custom-field-row">
+                            <input class="form-input" v-model="customFieldName" placeholder="请输入自定义字段名称，如：工号/队服号码" />
+                            <button class="btn-secondary" @tap="addCustomField">添加</button>
+                        </view>
+                                        <view v-if="customFields.length" class="signup-chip-grid" style="margin-top: 8rpx;">
+                    <view class="signup-chip active" v-for="cf in customFields" :key="cf.key">
+                        <text class="chip-label">{{ cf.label }}</text>
+                        <text class="chip-delete" @tap.stop="removeCustomField(cf.key)">×</text>
+                    </view>
+                </view>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 第5步：选择项目 -->
+            <view v-if="currentStep === 5" class="form-wrapper">
                 <view class="form-section">
                     <view class="section-title">比赛项目</view>
                     
@@ -525,25 +586,21 @@
                             </view>
                         </view>
                         
-                        <!-- 已选项目预览 -->
+                        <!-- 已选项目预览（仅显示已选条目，不再显示标题） -->
                         <view v-if="selectedItems.length > 0" class="selected-preview">
-                            <view class="preview-title">已选项目：</view>
                             <view class="preview-items">
-                                <text 
-                                    v-for="(itemId, index) in selectedItems.slice(0, 3)" 
+                                <view 
+                                    v-for="itemId in selectedItems"
                                     :key="itemId"
                                     class="preview-item"
                                 >
-                                    {{ getItemNameById(itemId) }}
-                                </text>
-                                <text v-if="selectedItems.length > 3" class="preview-more">
-                                    等{{ selectedItems.length }}项
-                                </text>
+                                    {{ getItemNameById(itemId) || ('#' + itemId) }}
+                                </view>
                             </view>
                         </view>
                         
-                        <!-- 底部操作栏 -->
-                        <view class="bottom-actions">
+                        <!-- 项目选择内的操作栏 -->
+                        <view class="items-actions">
                             <view class="selected-info">
                                 <text class="selected-text">已选 {{ selectedItems.length }} 项</text>
                             </view>
@@ -551,6 +608,7 @@
                                 <button class="btn-secondary" @tap="clearAllItems">清空</button>
                             </view>
                         </view>
+                        <view style="height: 16rpx;"></view>
                     </view>
                 </view>
             </view>
@@ -566,7 +624,7 @@
                 上一步
             </button>
             <button 
-                v-if="currentStep < 4" 
+                v-if="currentStep < 5" 
                 class="action-btn next-btn" 
                 :class="{ 'disabled': !canProceedToNext }"
                 :disabled="!canProceedToNext"
@@ -575,7 +633,7 @@
                 下一步
             </button>
             <button 
-                v-if="currentStep === 4" 
+                v-if="currentStep === 5" 
                 class="action-btn submit-btn" 
                 :class="{ 'loading': submitLoading }"
                 :disabled="submitLoading || !canProceedToNext"
@@ -867,6 +925,7 @@ const steps = [
     { title: '基本信息' },
     { title: '地点信息' },
     { title: '时间安排' },
+    { title: '报名参数' },
     { title: '选择项目' }
 ]
 
@@ -903,6 +962,13 @@ interface FormData {
     items: Item[]
     custom_groups: CustomGroup[]
     co_organizers: CoOrganizer[]
+    signup_fields: SignupField[]
+}
+
+interface SignupField {
+    key: string
+    label: string
+    required: boolean
 }
 
 interface Organizer {
@@ -959,7 +1025,8 @@ const formData = ref<FormData>({
     age_groups: ['不限年龄'],    // 年龄组设置，默认不限年龄
     items: [],                 // 比赛项目
     custom_groups: [],         // 自定义分组
-    co_organizers: []          // 协办方
+    co_organizers: [],          // 协办方
+    signup_fields: []
 })
 
 // 项目选择相关数据
@@ -1164,7 +1231,8 @@ const initFormData = () => {
         year: now.getFullYear(),
         age_groups: ['不限年龄'],
         items: [],
-        co_organizers: []
+        co_organizers: [],
+        signup_fields: []
     }
     
     // 设置默认时间
@@ -1265,7 +1333,8 @@ const handleSubmit = async () => {
             series_id: formData.value.series_id,
             year: formData.value.year,
             age_groups: JSON.stringify(formData.value.age_groups),
-            age_group_display: formData.value.age_groups.length > 1 && !formData.value.age_groups.includes('不限年龄') ? 1 : 0
+            age_group_display: formData.value.age_groups.length > 1 && !formData.value.age_groups.includes('不限年龄') ? 1 : 0,
+            signup_fields: formData.value.signup_fields
         }
         
         let result: any
@@ -1372,7 +1441,11 @@ const canProceedToNext = computed(() => {
             // 第3步：要求时间信息，且结束时间必须大于开始时间
             return formData.value.start_time > 0 && formData.value.end_time > 0 && formData.value.start_time < formData.value.end_time
         case 4:
-            // 第4步：要求选择项目
+            // 第4步：报名参数，必须至少有三个必填字段
+            const requiredFields = formData.value.signup_fields.filter(f => f.required)
+            return requiredFields.length >= 3
+        case 5:
+            // 第5步：要求选择项目
             return selectedItems.value.length > 0
         default:
             return false
@@ -1384,20 +1457,20 @@ const goToStep = (step: number) => {
     if (step <= maxReachedStep.value) {
         currentStep.value = step
         
-        // 如果跳转到第4步，确保加载分类数据
-        if (step === 4) {
-            // 如果是编辑模式且还没有加载赛事数据，先加载赛事数据
-            if (isEditMode.value && eventId.value && selectedItems.value.length === 0) {
-                loadEventData().then(() => {
-                    // 赛事数据加载完成后，再加载分类数据
-                    if (categories.value.length === 0) {
-                        loadCategories()
-                    }
-                })
-            } else if (categories.value.length === 0) {
-                loadCategories()
+                    // 如果跳转到第5步，确保加载分类数据
+            if (step === 5) {
+                // 如果是编辑模式且还没有加载赛事数据，先加载赛事数据
+                if (isEditMode.value && eventId.value && selectedItems.value.length === 0) {
+                    loadEventData().then(() => {
+                        // 赛事数据加载完成后，再加载分类数据
+                        if (categories.value.length === 0) {
+                            loadCategories()
+                        }
+                    })
+                } else if (categories.value.length === 0) {
+                    loadCategories()
+                }
             }
-        }
     }
 }
 
@@ -1420,14 +1493,26 @@ const nextStep = () => {
         }
     }
     
-    if (canProceedToNext.value && currentStep.value < 4) {
+    if (canProceedToNext.value && currentStep.value < 5) {
+        // 第4步特殊验证：检查必填字段数量
+        if (currentStep.value === 4) {
+            const requiredFields = formData.value.signup_fields.filter(f => f.required)
+            if (requiredFields.length < 3) {
+                uni.showToast({
+                    title: '请至少设置3个必填字段',
+                    icon: 'none'
+                })
+                return
+            }
+        }
+        
         currentStep.value++
         if (currentStep.value > maxReachedStep.value) {
             maxReachedStep.value = currentStep.value
         }
         
-        // 进入第4步时加载分类数据
-        if (currentStep.value === 4) {
+        // 进入第5步时加载分类数据
+        if (currentStep.value === 5) {
             loadCategories()
         }
     }
@@ -2299,7 +2384,8 @@ const loadEventData = async () => {
             age_groups: eventData.age_groups ? (typeof eventData.age_groups === 'string' ? JSON.parse(eventData.age_groups) : eventData.age_groups) : ['不限年龄'],
             items: [],
             custom_groups: [],
-            co_organizers: []
+            co_organizers: [],
+            signup_fields: []
         }
         
         // 设置时间选择器的值
@@ -2436,7 +2522,8 @@ onMounted(() => {
                 age_groups: ['不限年龄'],
                 items: [],
                 custom_groups: [],
-                co_organizers: []
+                co_organizers: [],
+                signup_fields: []
             }
             
             // 清空选择的数据
@@ -2488,7 +2575,8 @@ onMounted(() => {
                 age_groups: ['不限年龄'],
                 items: [],
                 custom_groups: [],
-                co_organizers: []
+                co_organizers: [],
+                signup_fields: []
             }
             
             // 清空选择的数据
@@ -2541,6 +2629,15 @@ onMounted(() => {
 
     // 初始化项目选择等其他逻辑
     tempSelectedItems.value = [...selectedItems.value]
+
+    // 首次创建默认选择：姓名、手机、身份证号（三个必填）
+    if (!isEditMode.value && (!formData.value.signup_fields || formData.value.signup_fields.length === 0)) {
+        const defaults = ['name','mobile','id_card']
+        formData.value.signup_fields = defaults.map(k => {
+            const opt = allSignupFieldOptions.find(o => o.key === k)!
+            return { key: k, label: opt.label, required: true }
+        })
+    }
 })
 
 // 表单数据
@@ -2817,10 +2914,198 @@ watch(selectedItems, (val) => {
     formData.value.items = val.map(id => ({ id, name: getItemNameById(id) }))
 })
 
+// 报名参数选项
+const allSignupFieldOptions = [
+    // 基础身份信息
+    { key: 'name', label: '姓名' },
+    { key: 'gender', label: '性别' },
+    { key: 'birthday', label: '生日' },
+    { key: 'id_card', label: '身份证号' },
+    // 联系方式
+    { key: 'mobile', label: '手机' },
+    { key: 'wechat', label: '微信号' },
+    { key: 'qq', label: 'QQ号' },
+    { key: 'email', label: '邮箱' },
+    // 地址/单位
+    { key: 'org', label: '单位' },
+    { key: 'title', label: '职称' },
+    { key: 'address', label: '地址' },
+    // 学校类（青少年）
+    { key: 'school', label: '学校' },
+    { key: 'grade', label: '年级' },
+    { key: 'class', label: '班级' },
+    { key: 'student_no', label: '学号' },
+    // 紧急联系人/监护人
+    { key: 'guardian_name', label: '监护人姓名' },
+    { key: 'guardian_mobile', label: '监护人手机' },
+    { key: 'emergency_contact', label: '紧急联系人' },
+    { key: 'emergency_mobile', label: '紧急联系电话' },
+    // 健康/装备
+    { key: 'blood_type', label: '血型' },
+    { key: 'allergy', label: '过敏史' },
+    { key: 'medical_history', label: '既往病史' },
+    { key: 'tshirt_size', label: 'T恤尺码' },
+    // 其他
+    { key: 'number', label: '编号' }
+]
+
+const isSignupFieldChecked = (key: string) => {
+    return formData.value.signup_fields.some(f => f.key === key)
+}
+
+const toggleSignupField = (key: string) => {
+    const idx = formData.value.signup_fields.findIndex(f => f.key === key)
+    if (idx > -1) {
+        formData.value.signup_fields.splice(idx, 1)
+    } else {
+        const option = allSignupFieldOptions.find(o => o.key === key)
+        if (option) formData.value.signup_fields.push({ key, label: option.label, required: false })
+    }
+}
+
+const setSignupFieldRequired = (key: string, required: boolean) => {
+    const target = formData.value.signup_fields.find(f => f.key === key)
+    if (target) target.required = required
+}
+
+// 分组数据
+const signupFieldGroups = [
+    {
+        key: 'basic',
+        title: '基础信息',
+        options: [
+            { key: 'name', label: '姓名' },
+            { key: 'gender', label: '性别' },
+            { key: 'birthday', label: '生日' },
+            { key: 'id_card', label: '身份证号' }
+        ]
+    },
+    {
+        key: 'contact',
+        title: '联系方式',
+        options: [
+            { key: 'mobile', label: '手机' },
+            { key: 'wechat', label: '微信号' },
+            { key: 'qq', label: 'QQ号' },
+            { key: 'email', label: '邮箱' },
+            { key: 'address', label: '地址' }
+        ]
+    },
+    {
+        key: 'org',
+        title: '单位/学校',
+        options: [
+            { key: 'org', label: '单位' },
+            { key: 'title', label: '职称' },
+            { key: 'school', label: '学校' },
+            { key: 'grade', label: '年级' },
+            { key: 'class', label: '班级' },
+            { key: 'student_no', label: '学号' }
+        ]
+    },
+    {
+        key: 'guardian',
+        title: '监护与紧急',
+        options: [
+            { key: 'guardian_name', label: '监护人姓名' },
+            { key: 'guardian_mobile', label: '监护人手机' },
+            { key: 'emergency_contact', label: '紧急联系人' },
+            { key: 'emergency_mobile', label: '紧急联系电话' }
+        ]
+    },
+    {
+        key: 'health',
+        title: '健康与装备',
+        options: [
+            { key: 'blood_type', label: '血型' },
+            { key: 'allergy', label: '过敏史' },
+            { key: 'medical_history', label: '既往病史' },
+            { key: 'tshirt_size', label: 'T恤尺码' }
+        ]
+    },
+    {
+        key: 'other',
+        title: '其他',
+        options: [
+            { key: 'number', label: '编号' },
+            { key: 'leader', label: '领队' },
+            { key: 'team_name', label: '团队名称' }
+        ]
+    }
+]
+
+// 自定义字段
+const customFields = ref<SignupField[]>([])
+const customFieldName = ref('')
+const addCustomField = () => {
+    const name = customFieldName.value.trim()
+    if (!name) return
+    // 生成唯一key
+    const key = `custom_${Date.now()}`
+    const field: SignupField = { key, label: name, required: false }
+    customFields.value.push(field)
+    // 自动加入选中集合
+    formData.value.signup_fields.push(field)
+    customFieldName.value = ''
+}
+
+const removeCustomField = (key: string) => {
+    // 从自定义字段列表移除
+    const customIndex = customFields.value.findIndex(f => f.key === key)
+    if (customIndex > -1) {
+        customFields.value.splice(customIndex, 1)
+    }
+    // 从已选字段列表移除
+    const selectedIndex = formData.value.signup_fields.findIndex(f => f.key === key)
+    if (selectedIndex > -1) {
+        formData.value.signup_fields.splice(selectedIndex, 1)
+    }
+}
 
 </script>
 
 <style lang="scss" scoped>
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.selected-count { color:#667eea; font-size:24rpx; }
+.required-tip { color:#ff4757; font-size:22rpx; font-weight:bold; }
+.required-tip::before { content:'* '; }
+
+.signup-chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16rpx;
+    padding: 8rpx 0;
+}
+.signup-chip {
+    padding: 12rpx 20rpx;
+    border: 2rpx solid #e6e8f0;
+    border-radius: 24rpx;
+    color: #666;
+    background-color: #f6f8ff;
+}
+.signup-chip.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border-color: transparent;
+}
+.chip-label { font-size: 26rpx; }
+.chip-delete {
+    margin-left: 8rpx;
+    font-size: 24rpx;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+}
+
+.signup-selected-list { display: flex; flex-direction: column; gap: 12rpx; }
+.signup-selected-item { display:flex; align-items:center; justify-content: space-between; padding: 16rpx 20rpx; background:#f8f9fb; border-radius:12rpx; }
+.field-name { color:#333; font-size: 26rpx; }
+.required-toggle { display:flex; align-items:center; gap: 12rpx; }
+.toggle-text { color:#666; font-size:24rpx; }
+
+.signup-groups { display:flex; flex-direction: column; gap: 16rpx; margin-top: 8rpx; }
+.signup-group { background:#fff; border-radius:12rpx; }
+.signup-group-title { font-size: 26rpx; color:#666; padding: 8rpx 0; }
+
 .create-event-page {
     min-height: 100vh;
     background-color: #f8faff;
@@ -2923,7 +3208,10 @@ watch(selectedItems, (val) => {
 
 .form-container {
     padding: 32rpx;
-    margin-bottom: 120rpx;
+    /* 预留底部固定按钮高度，避免内容被遮挡 */
+    padding-bottom: 220rpx;
+    padding-bottom: calc(220rpx + constant(safe-area-inset-bottom));
+    padding-bottom: calc(220rpx + env(safe-area-inset-bottom));
 }
 
 .form-wrapper {
@@ -3091,37 +3379,7 @@ watch(selectedItems, (val) => {
     }
 }
 
-.selected-preview {
-    background-color: white;
-    margin: 20rpx 32rpx;
-    border-radius: 16rpx;
-    padding: 32rpx;
-    
-    .preview-title {
-        font-size: 28rpx;
-        color: #333;
-        margin-bottom: 16rpx;
-    }
-    
-    .preview-items {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16rpx;
-        
-        .preview-item {
-            background-color: #e3f2fd;
-            color: #2196f3;
-            padding: 8rpx 16rpx;
-            border-radius: 20rpx;
-            font-size: 24rpx;
-        }
-        
-        .preview-more {
-            color: #999;
-            font-size: 24rpx;
-        }
-    }
-}
+
 
 .form-item {
     padding: 24rpx 32rpx;
@@ -3374,26 +3632,23 @@ picker {
 }
 
 .selected-preview {
-    margin-top: 20rpx;
-    
-    .preview-title {
-        font-size: 26rpx;
-        color: #666;
-        margin-bottom: 12rpx;
-    }
+    background-color: white;
+    margin: 20rpx 32rpx 8rpx;
+    border-radius: 16rpx;
+    padding: 24rpx 32rpx 8rpx;
     
     .preview-items {
         display: flex;
         flex-wrap: wrap;
-        gap: 12rpx;
+        gap: 12rpx 16rpx;
         
         .preview-item {
-            padding: 8rpx 16rpx;
-            background-color: #e3f2fd;
-            border: 1rpx solid #bbdefb;
-            border-radius: 20rpx;
-            font-size: 24rpx;
-            color: #1976d2;
+            background-color: #e6f2ff;
+            color: #1677ff;
+            padding: 10rpx 14rpx;
+            border-radius: 18rpx;
+            font-size: 22rpx;
+            line-height: 1.2;
         }
     }
 }
@@ -3405,6 +3660,8 @@ picker {
     right: 0;
     background: white;
     padding: 32rpx;
+    padding-bottom: calc(32rpx + constant(safe-area-inset-bottom));
+    padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
     border-top: 1px solid #f0f0f0;
     display: flex;
     gap: 24rpx;
@@ -4030,6 +4287,14 @@ picker {
     color: #333;
 }
 
+.items-actions {
+    position: static;
+    background: #fff;
+    padding: 16rpx 32rpx;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 12rpx;
+}
+
 .action-buttons {
     display: flex;
     gap: 16rpx;
@@ -4136,5 +4401,36 @@ picker {
             }
         }
     }
+}
+
+.custom-field-row {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    margin-top: 16rpx;
+}
+
+.custom-field-row .form-input {
+    flex: 1;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8rpx;
+    padding: 16rpx 20rpx;
+    height: 88rpx;
+    box-sizing: border-box;
+}
+
+.custom-field-row .btn-secondary {
+    flex-shrink: 0;
+    padding: 16rpx 24rpx;
+    background-color: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8rpx;
+    font-size: 26rpx;
+    white-space: nowrap;
+    height: 88rpx;
+    line-height: 56rpx;
+    box-sizing: border-box;
 }
 </style> 
