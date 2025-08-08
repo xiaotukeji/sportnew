@@ -597,7 +597,7 @@ class EventService extends BaseApiService
             ->field($field)
             ->order('sort asc, id asc');
         
-        return $this->pageQuery($search_model, $data['page'] ?? 1, $data['limit'] ?? 15);
+        return $this->pageQuery($search_model);
     }
     
     /**
@@ -743,10 +743,10 @@ class EventService extends BaseApiService
         // 验证权限
         $this->checkEventPermission($eventId);
         
-        $venue_model = new \addon\sport\app\model\venue\SportVenue();
         $venueIds = [];
         
         for ($i = 1; $i <= $data['count']; $i++) {
+            $venue_model = new \addon\sport\app\model\venue\SportVenue();
             $venueCode = $data['code_prefix'] . '_' . $i;
             $venueName = $data['name_prefix'] . $i;
             

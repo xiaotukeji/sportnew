@@ -769,8 +769,6 @@ class EventItemService extends BaseApiService
             throw new \core\exception\CommonException('请选择要分配的场地');
         }
         
-        $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
-        
         foreach ($data['venue_ids'] as $venueId) {
             // 验证场地是否存在且属于该赛事
             $venue_model = new \addon\sport\app\model\venue\SportVenue();
@@ -785,6 +783,7 @@ class EventItemService extends BaseApiService
             }
             
             // 检查是否已经分配过该场地
+            $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
             $exists = $assignment_model->where([
                 ['item_id', '=', $itemId],
                 ['venue_id', '=', $venueId],
@@ -856,6 +855,6 @@ class EventItemService extends BaseApiService
             ->field($field)
             ->order('sort asc, id asc');
         
-        return $this->pageQuery($search_model, $data['page'] ?? 1, $data['limit'] ?? 15);
+        return $this->pageQuery($search_model);
     }
 } 
