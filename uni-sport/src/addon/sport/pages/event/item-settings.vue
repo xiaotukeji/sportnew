@@ -116,7 +116,73 @@
                                 <text class="textarea-count">{{ item.remark.length }}/200</text>
                                     </view>
                                 </view>
+                            
+                            <!-- 场地设备管理 -->
+                            <view class="venue-management">
+                                <view class="venue-header">
+                                    <text class="venue-title">场地设备管理</text>
+                                    <button class="add-venue-btn" @tap="showVenueModal(getItemGlobalIndex(groupIndex, index))">
+                                        <text class="btn-text">添加场地</text>
+                                    </button>
+                                </view>
+                                
+                                <!-- 场地类型选择 -->
+                                <view class="venue-type-selector">
+                                    <text class="selector-label">场地类型：</text>
+                                    <picker 
+                                        :value="getVenueTypeIndex(item.venue_type)" 
+                                        :range="venueTypeOptions" 
+                                        range-key="label"
+                                        @change="onVenueTypeChange(getItemGlobalIndex(groupIndex, index), $event)"
+                                    >
+                                        <view class="picker-value">
+                                            <text>{{ getVenueTypeLabel(item.venue_type) || '请选择场地类型' }}</text>
+                                            <text class="picker-arrow">></text>
+                                        </view>
+                                    </picker>
+                                </view>
+                                
+                                <!-- 场地数量设置 -->
+                                <view class="venue-count-setting">
+                                    <text class="count-label">场地数量：</text>
+                                    <view class="count-controls">
+                                        <button class="count-btn" @tap="decreaseVenueCount(getItemGlobalIndex(groupIndex, index))">-</button>
+                                        <input 
+                                            class="count-input" 
+                                            type="number" 
+                                            :value="item.venue_count || 0"
+                                            @input="onVenueCountChange(getItemGlobalIndex(groupIndex, index), $event)"
+                                        />
+                                        <button class="count-btn" @tap="increaseVenueCount(getItemGlobalIndex(groupIndex, index))">+</button>
+                                    </view>
+                                </view>
+                                
+                                <!-- 已分配场地列表 -->
+                                <view v-if="itemVenueAssignments[item.id] && itemVenueAssignments[item.id].length > 0" class="assigned-venues">
+                                    <text class="venues-title">已分配场地：</text>
+                                    <view class="venue-list">
+                                        <view 
+                                            v-for="venue in itemVenueAssignments[item.id]" 
+                                            :key="venue.id" 
+                                            class="venue-item"
+                                        >
+                                            <text class="venue-name">{{ venue.name }}</text>
+                                            <text class="venue-code">({{ venue.venue_code }})</text>
+                                            <button class="remove-venue-btn" @tap="removeVenueFromItem(item.id, venue.id)">
+                                                <text class="remove-text">×</text>
+                                            </button>
+                                        </view>
+                                    </view>
+                                </view>
+                                
+                                <!-- 批量添加场地 -->
+                                <view v-if="item.venue_type && item.venue_count > 0" class="batch-add-venue">
+                                    <button class="batch-btn" @tap="batchAddVenues(getItemGlobalIndex(groupIndex, index))">
+                                        <text class="batch-text">批量添加{{ item.venue_count }}个{{ getVenueTypeLabel(item.venue_type) }}</text>
+                                    </button>
+                                </view>
                             </view>
+                        </view>
                         </view>
                     </view>
                 </view>
@@ -171,6 +237,100 @@
                 <text class="btn-text">{{ saving ? '保存中...' : '保存设置' }}</text>
             </button>
         </view>
+        
+        <!-- 场地管理弹窗 -->
+        <view v-if="showVenueDialog" class="venue-dialog-overlay" @tap="closeVenueDialog">
+            <view class="venue-dialog" @tap.stop>
+                <view class="dialog-header">
+                    <text class="dialog-title">场地管理</text>
+                    <button class="close-btn" @tap="closeVenueDialog">
+                        <text class="close-text">×</text>
+                    </button>
+                </view>
+                
+                <view class="dialog-content">
+                    <!-- 添加新场地 -->
+                    <view class="add-venue-section">
+                        <text class="section-title">添加新场地</text>
+                        
+                        <view class="form-item">
+                            <text class="form-label">场地类型：</text>
+                            <picker 
+                                :value="newVenueTypeIndex" 
+                                :range="venueTypeOptions" 
+                                range-key="label"
+                                @change="onNewVenueTypeChange"
+                            >
+                                <view class="picker-value">
+                                    <text>{{ getVenueTypeLabel(newVenue.venue_type) || '请选择场地类型' }}</text>
+                                    <text class="picker-arrow">></text>
+                                </view>
+                            </picker>
+                        </view>
+                        
+                        <view class="form-item">
+                            <text class="form-label">场地名称：</text>
+                            <input 
+                                class="form-input" 
+                                v-model="newVenue.name"
+                                placeholder="如：乒乓球台1、羽毛球场地A"
+                            />
+                        </view>
+                        
+                        <view class="form-item">
+                            <text class="form-label">场地编码：</text>
+                            <input 
+                                class="form-input" 
+                                v-model="newVenue.venue_code"
+                                placeholder="如：table_1、court_a"
+                            />
+                        </view>
+                        
+                        <view class="form-item">
+                            <text class="form-label">场地位置：</text>
+                            <input 
+                                class="form-input" 
+                                v-model="newVenue.location"
+                                placeholder="如：体育馆一楼"
+                            />
+                        </view>
+                        
+                        <button class="add-btn" @tap="addNewVenue">
+                            <text class="add-text">添加场地</text>
+                        </button>
+                    </view>
+                    
+                    <!-- 现有场地列表 -->
+                    <view class="existing-venues-section">
+                        <text class="section-title">现有场地</text>
+                        <view v-if="venues.length > 0" class="venue-list">
+                            <view 
+                                v-for="venue in venues" 
+                                :key="venue.id" 
+                                class="venue-item"
+                            >
+                                <view class="venue-info">
+                                    <text class="venue-name">{{ venue.name }}</text>
+                                    <text class="venue-code">({{ venue.venue_code }})</text>
+                                    <text class="venue-location">{{ venue.location }}</text>
+                                </view>
+                                <view class="venue-actions">
+                                    <button class="action-btn edit-btn" @tap="editVenue(venue)">
+                                        <text class="action-text">编辑</text>
+                                    </button>
+                                    <button class="action-btn delete-btn" @tap="deleteVenue(venue.id)">
+                                        <text class="action-text">删除</text>
+                                    </button>
+                                </view>
+                            </view>
+                        </view>
+                        <view v-else class="empty-venues">
+                            <text class="empty-text">暂无场地，请先添加</text>
+                        </view>
+                    </view>
+                </view>
+            </view>
+        </view>
     </view>
 </template>
 
@@ -178,6 +338,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useLoginCheck } from '@/addon/sport/hooks/useLoginCheck'
 import { getEventInfo, getEventItems, updateEventSettings, updateItemSettings } from '@/addon/sport/api/event'
+import { getEventVenues, addEventVenue, editEventVenue, deleteEventVenue, batchAddVenues as apiBatchAddVenues, getItemVenues as apiGetItemVenues, assignVenueToItem, removeVenueFromItem as apiRemoveVenueFromItem, batchAssignVenuesToItem, getAvailableVenuesForItem } from '@/addon/sport/api/venue'
 
 // 使用登录检查
 const { requireLogin } = useLoginCheck()
@@ -196,6 +357,37 @@ const eventSettings = ref({
     age_group_display: false,
     show_participant_count: true,
     show_progress: true
+})
+
+// 场馆设备管理相关数据
+const venues = ref<any[]>([])
+const itemVenueAssignments = ref<Record<number, any[]>>({})
+
+// 场地类型选项
+const venueTypeOptions = ref([
+    { value: 'pingpong_table', label: '乒乓球台' },
+    { value: 'badminton_court', label: '羽毛球场地' },
+    { value: 'basketball_court', label: '篮球场' },
+    { value: 'football_field', label: '足球场' },
+    { value: 'tennis_court', label: '网球场' },
+    { value: 'volleyball_court', label: '排球场' },
+    { value: 'track', label: '田径跑道' },
+    { value: 'swimming_pool', label: '游泳池' },
+    { value: 'other', label: '其他' }
+])
+
+// 场地管理弹窗相关数据
+const showVenueDialog = ref(false)
+const newVenue = ref({
+    venue_type: '',
+    name: '',
+    venue_code: '',
+    location: ''
+})
+
+// 计算属性
+const newVenueTypeIndex = computed(() => {
+    return getVenueTypeIndex(newVenue.value.venue_type)
 })
 
 /**
@@ -685,6 +877,7 @@ onMounted(() => {
         eventId.value = parseInt(options.event_id)
         loadEventInfo()
         loadEventItems()
+        loadVenues()
     } else {
         uni.showToast({
             title: '缺少赛事ID参数',
@@ -692,6 +885,340 @@ onMounted(() => {
         })
     }
 })
+
+// ==================== 场馆设备管理相关函数 ====================
+
+/**
+ * 加载赛事场地列表
+ */
+const loadVenues = async () => {
+    if (!eventId.value) return
+    
+    try {
+        const response: any = await getEventVenues(eventId.value)
+        venues.value = response.data || []
+        console.log('场地列表:', venues.value)
+    } catch (error) {
+        console.error('加载场地列表失败:', error)
+        venues.value = []
+    }
+}
+
+/**
+ * 获取场地类型索引
+ */
+const getVenueTypeIndex = (venueType: string) => {
+    return venueTypeOptions.value.findIndex(option => option.value === venueType)
+}
+
+/**
+ * 获取场地类型标签
+ */
+const getVenueTypeLabel = (venueType: string) => {
+    const option = venueTypeOptions.value.find(option => option.value === venueType)
+    return option ? option.label : ''
+}
+
+/**
+ * 场地类型变更
+ */
+const onVenueTypeChange = (index: number, event: any) => {
+    const venueType = venueTypeOptions.value[event.detail.value].value
+    eventItems.value[index].venue_type = venueType
+    eventItems.value[index].is_configured = true
+    
+    // 批量模式同步
+    const currentItem = eventItems.value[index]
+    const categoryName = currentItem.category_name || '其他'
+    const group = groupedEventItems.value.find(g => g.categoryName === categoryName)
+    
+    if (getCategoryBatchMode(categoryName) && group && group.items.length > 1) {
+        const isFirstItem = group.items[0].id === currentItem.id
+        if (isFirstItem) {
+            for (let i = 1; i < group.items.length; i++) {
+                const otherItem = group.items[i]
+                const otherIndex = eventItems.value.findIndex(item => item.id === otherItem.id)
+                if (otherIndex !== -1) {
+                    eventItems.value[otherIndex].venue_type = venueType
+                    eventItems.value[otherIndex].is_configured = true
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 场地数量变更
+ */
+const onVenueCountChange = (index: number, event: any) => {
+    let value = parseInt(event.detail?.value || event.target?.value || event) || 0
+    if (value < 0) value = 0
+    
+    eventItems.value[index].venue_count = value
+    eventItems.value[index].is_configured = true
+    
+    // 批量模式同步
+    const currentItem = eventItems.value[index]
+    const categoryName = currentItem.category_name || '其他'
+    const group = groupedEventItems.value.find(g => g.categoryName === categoryName)
+    
+    if (getCategoryBatchMode(categoryName) && group && group.items.length > 1) {
+        const isFirstItem = group.items[0].id === currentItem.id
+        if (isFirstItem) {
+            for (let i = 1; i < group.items.length; i++) {
+                const otherItem = group.items[i]
+                const otherIndex = eventItems.value.findIndex(item => item.id === otherItem.id)
+                if (otherIndex !== -1) {
+                    eventItems.value[otherIndex].venue_count = value
+                    eventItems.value[otherIndex].is_configured = true
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 增加场地数量
+ */
+const increaseVenueCount = (index: number) => {
+    const currentCount = eventItems.value[index].venue_count || 0
+    onVenueCountChange(index, { detail: { value: currentCount + 1 } })
+}
+
+/**
+ * 减少场地数量
+ */
+const decreaseVenueCount = (index: number) => {
+    const currentCount = eventItems.value[index].venue_count || 0
+    if (currentCount > 0) {
+        onVenueCountChange(index, { detail: { value: currentCount - 1 } })
+    }
+}
+
+/**
+ * 获取项目已分配的场地
+ */
+const getItemVenues = async (itemId: number) => {
+    try {
+        const response: any = await apiGetItemVenues(itemId)
+        return response.data || []
+    } catch (error) {
+        console.error('获取项目场地失败:', error)
+        return []
+    }
+}
+
+// 这个函数已经在下面重新定义了，这里删除重复定义
+
+/**
+ * 从项目中移除场地
+ */
+const removeVenueFromItem = async (itemId: number, venueId: number) => {
+    try {
+        await apiRemoveVenueFromItem(itemId, venueId)
+        
+        // 更新本地数据
+        if (itemVenueAssignments.value[itemId]) {
+            itemVenueAssignments.value[itemId] = itemVenueAssignments.value[itemId].filter(
+                venue => venue.id !== venueId
+            )
+        }
+        
+        uni.showToast({
+            title: '移除成功',
+            icon: 'success'
+        })
+    } catch (error) {
+        console.error('移除场地失败:', error)
+        uni.showToast({
+            title: '移除失败',
+            icon: 'none'
+        })
+    }
+}
+
+/**
+ * 批量添加场地
+ */
+const batchAddVenues = async (index: number) => {
+    const item = eventItems.value[index]
+    if (!item.venue_type || !item.venue_count) {
+        uni.showToast({
+            title: '请先设置场地类型和数量',
+            icon: 'none'
+        })
+        return
+    }
+    
+    try {
+        const venueTypeLabel = getVenueTypeLabel(item.venue_type)
+        const data = {
+            venue_type: item.venue_type,
+            venue_category: venueTypeLabel,
+            count: item.venue_count,
+            name_prefix: venueTypeLabel,
+            code_prefix: item.venue_type.replace('_', ''),
+            location: eventInfo.value?.location || '',
+            capacity: 0
+        }
+        
+        const response: any = await apiBatchAddVenues(eventId.value, data)
+        
+        // 重新加载场地列表
+        await loadVenues()
+        
+        uni.showToast({
+            title: `成功添加${item.venue_count}个${venueTypeLabel}`,
+            icon: 'success'
+        })
+    } catch (error) {
+        console.error('批量添加场地失败:', error)
+        uni.showToast({
+            title: '批量添加失败',
+            icon: 'none'
+        })
+    }
+}
+
+// ==================== 场地管理弹窗相关函数 ====================
+
+/**
+ * 显示场地管理弹窗
+ */
+const showVenueModal = (index: number) => {
+    showVenueDialog.value = true
+    // 重置新场地表单
+    newVenue.value = {
+        venue_type: '',
+        name: '',
+        venue_code: '',
+        location: ''
+    }
+}
+
+/**
+ * 关闭场地管理弹窗
+ */
+const closeVenueDialog = () => {
+    showVenueDialog.value = false
+}
+
+/**
+ * 新场地类型变更
+ */
+const onNewVenueTypeChange = (event: any) => {
+    const venueType = venueTypeOptions.value[event.detail.value].value
+    newVenue.value.venue_type = venueType
+    
+    // 自动生成场地编码
+    if (!newVenue.value.venue_code) {
+        const typeMap: Record<string, string> = {
+            'pingpong_table': 'table',
+            'badminton_court': 'court',
+            'basketball_court': 'court',
+            'football_field': 'field',
+            'tennis_court': 'court',
+            'volleyball_court': 'court',
+            'track': 'track',
+            'swimming_pool': 'pool',
+            'other': 'venue'
+        }
+        const prefix = typeMap[venueType] || 'venue'
+        newVenue.value.venue_code = `${prefix}_1`
+    }
+}
+
+/**
+ * 添加新场地
+ */
+const addNewVenue = async () => {
+    if (!newVenue.value.venue_type || !newVenue.value.name || !newVenue.value.venue_code) {
+        uni.showToast({
+            title: '请填写完整的场地信息',
+            icon: 'none'
+        })
+        return
+    }
+    
+    try {
+        const data = {
+            venue_type: newVenue.value.venue_type,
+            venue_category: getVenueTypeLabel(newVenue.value.venue_type),
+            name: newVenue.value.name,
+            venue_code: newVenue.value.venue_code,
+            location: newVenue.value.location,
+            capacity: 0,
+            is_available: 1,
+            remark: ''
+        }
+        
+        await addEventVenue(eventId.value, data)
+        
+        // 重新加载场地列表
+        await loadVenues()
+        
+        uni.showToast({
+            title: '场地添加成功',
+            icon: 'success'
+        })
+        
+        // 重置表单
+        newVenue.value = {
+            venue_type: '',
+            name: '',
+            venue_code: '',
+            location: ''
+        }
+    } catch (error) {
+        console.error('添加场地失败:', error)
+        uni.showToast({
+            title: '添加失败',
+            icon: 'none'
+        })
+    }
+}
+
+/**
+ * 编辑场地
+ */
+const editVenue = (venue: any) => {
+    // TODO: 实现编辑场地功能
+    uni.showToast({
+        title: '编辑功能开发中',
+        icon: 'none'
+    })
+}
+
+/**
+ * 删除场地
+ */
+const deleteVenue = async (venueId: number) => {
+    uni.showModal({
+        title: '确认删除',
+        content: '确定要删除这个场地吗？',
+        success: async (res) => {
+            if (res.confirm) {
+                try {
+                    await deleteEventVenue(eventId.value, venueId)
+                    
+                    // 重新加载场地列表
+                    await loadVenues()
+                    
+                    uni.showToast({
+                        title: '删除成功',
+                        icon: 'success'
+                    })
+                } catch (error) {
+                    console.error('删除场地失败:', error)
+                    uni.showToast({
+                        title: '删除失败',
+                        icon: 'none'
+                    })
+                }
+            }
+        }
+    })
+}
 </script>
 
 <style lang="scss" scoped>
@@ -1011,6 +1538,186 @@ onMounted(() => {
         }
     }
     
+    .venue-management {
+        margin-top: 32rpx;
+        padding: 24rpx;
+        background-color: #f8f9fa;
+        border-radius: 12rpx;
+        border: 1rpx solid #e9ecef;
+        
+        .venue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24rpx;
+            
+            .venue-title {
+                font-size: 28rpx;
+                font-weight: bold;
+                color: #333;
+            }
+            
+            .add-venue-btn {
+                padding: 12rpx 24rpx;
+                background-color: #007aff;
+                color: white;
+                border-radius: 8rpx;
+                border: none;
+                font-size: 24rpx;
+                
+                .btn-text {
+                    font-size: 24rpx;
+                }
+            }
+        }
+        
+        .venue-type-selector {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20rpx;
+            
+            .selector-label {
+                width: 140rpx;
+                font-size: 26rpx;
+                color: #333;
+                flex-shrink: 0;
+            }
+            
+            .picker-value {
+                flex: 1;
+                height: 60rpx;
+                padding: 0 20rpx;
+                border: 1rpx solid #e0e0e0;
+                border-radius: 8rpx;
+                background-color: white;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 26rpx;
+                color: #333;
+                
+                .picker-arrow {
+                    color: #999;
+                    font-size: 24rpx;
+                }
+            }
+        }
+        
+        .venue-count-setting {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20rpx;
+            
+            .count-label {
+                width: 140rpx;
+                font-size: 26rpx;
+                color: #333;
+                flex-shrink: 0;
+            }
+            
+            .count-controls {
+                display: flex;
+                align-items: center;
+                flex: 1;
+                
+                .count-btn {
+                    width: 60rpx;
+                    height: 60rpx;
+                    background-color: #f8f9fa;
+                    border: 1rpx solid #e0e0e0;
+                    border-radius: 8rpx;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 32rpx;
+                    color: #333;
+                    font-weight: bold;
+                }
+                
+                .count-input {
+                    width: 120rpx;
+                    height: 60rpx;
+                    margin: 0 16rpx;
+                    padding: 0 20rpx;
+                    border: 1rpx solid #e0e0e0;
+                    border-radius: 8rpx;
+                    background-color: white;
+                    text-align: center;
+                    font-size: 26rpx;
+                    color: #333;
+                }
+            }
+        }
+        
+        .assigned-venues {
+            margin-bottom: 20rpx;
+            
+            .venues-title {
+                display: block;
+                font-size: 26rpx;
+                color: #333;
+                margin-bottom: 16rpx;
+            }
+            
+            .venue-list {
+                .venue-item {
+                    display: flex;
+                    align-items: center;
+                    padding: 12rpx 16rpx;
+                    background-color: white;
+                    border-radius: 8rpx;
+                    margin-bottom: 12rpx;
+                    border: 1rpx solid #e9ecef;
+                    
+                    .venue-name {
+                        flex: 1;
+                        font-size: 26rpx;
+                        color: #333;
+                    }
+                    
+                    .venue-code {
+                        font-size: 24rpx;
+                        color: #666;
+                        margin-right: 16rpx;
+                    }
+                    
+                    .remove-venue-btn {
+                        width: 40rpx;
+                        height: 40rpx;
+                        background-color: #ff4757;
+                        border-radius: 50%;
+                        border: none;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        
+                        .remove-text {
+                            color: white;
+                            font-size: 24rpx;
+                            font-weight: bold;
+                        }
+                    }
+                }
+            }
+        }
+        
+        .batch-add-venue {
+            .batch-btn {
+                width: 100%;
+                height: 60rpx;
+                background-color: #28a745;
+                color: white;
+                border-radius: 8rpx;
+                border: none;
+                font-size: 26rpx;
+                
+                .batch-text {
+                    font-size: 26rpx;
+                }
+            }
+        }
+    }
+    
     .empty-items {
         text-align: center;
         padding: 60rpx 0;
@@ -1133,6 +1840,220 @@ onMounted(() => {
         
         &:active {
             opacity: 0.8;
+        }
+    }
+}
+
+// ==================== 场地管理弹窗样式 ====================
+
+.venue-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.venue-dialog {
+    width: 90%;
+    max-height: 80%;
+    background-color: white;
+    border-radius: 16rpx;
+    overflow: hidden;
+    
+    .dialog-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 32rpx;
+        border-bottom: 1rpx solid #f0f0f0;
+        
+        .dialog-title {
+            font-size: 32rpx;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .close-btn {
+            width: 60rpx;
+            height: 60rpx;
+            background-color: #f8f9fa;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            .close-text {
+                font-size: 32rpx;
+                color: #666;
+                font-weight: bold;
+            }
+        }
+    }
+    
+    .dialog-content {
+        padding: 32rpx;
+        max-height: 60vh;
+        overflow-y: auto;
+        
+        .add-venue-section {
+            margin-bottom: 40rpx;
+            padding-bottom: 32rpx;
+            border-bottom: 1rpx solid #f0f0f0;
+            
+            .section-title {
+                display: block;
+                font-size: 28rpx;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 24rpx;
+            }
+            
+            .form-item {
+                display: flex;
+                align-items: center;
+                margin-bottom: 20rpx;
+                
+                .form-label {
+                    width: 140rpx;
+                    font-size: 26rpx;
+                    color: #333;
+                    flex-shrink: 0;
+                }
+                
+                .form-input {
+                    flex: 1;
+                    height: 60rpx;
+                    padding: 0 20rpx;
+                    border: 1rpx solid #e0e0e0;
+                    border-radius: 8rpx;
+                    background-color: white;
+                    font-size: 26rpx;
+                    color: #333;
+                }
+                
+                .picker-value {
+                    flex: 1;
+                    height: 60rpx;
+                    padding: 0 20rpx;
+                    border: 1rpx solid #e0e0e0;
+                    border-radius: 8rpx;
+                    background-color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    font-size: 26rpx;
+                    color: #333;
+                    
+                    .picker-arrow {
+                        color: #999;
+                        font-size: 24rpx;
+                    }
+                }
+            }
+            
+            .add-btn {
+                width: 100%;
+                height: 60rpx;
+                background-color: #007aff;
+                color: white;
+                border-radius: 8rpx;
+                border: none;
+                font-size: 26rpx;
+                margin-top: 20rpx;
+                
+                .add-text {
+                    font-size: 26rpx;
+                }
+            }
+        }
+        
+        .existing-venues-section {
+            .section-title {
+                display: block;
+                font-size: 28rpx;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 24rpx;
+            }
+            
+            .venue-list {
+                .venue-item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20rpx;
+                    background-color: #f8f9fa;
+                    border-radius: 8rpx;
+                    margin-bottom: 16rpx;
+                    border: 1rpx solid #e9ecef;
+                    
+                    .venue-info {
+                        flex: 1;
+                        
+                        .venue-name {
+                            display: block;
+                            font-size: 26rpx;
+                            font-weight: bold;
+                            color: #333;
+                            margin-bottom: 8rpx;
+                        }
+                        
+                        .venue-code {
+                            font-size: 24rpx;
+                            color: #666;
+                            margin-right: 16rpx;
+                        }
+                        
+                        .venue-location {
+                            font-size: 24rpx;
+                            color: #999;
+                        }
+                    }
+                    
+                    .venue-actions {
+                        display: flex;
+                        gap: 12rpx;
+                        
+                        .action-btn {
+                            padding: 8rpx 16rpx;
+                            border-radius: 6rpx;
+                            border: none;
+                            font-size: 22rpx;
+                            
+                            &.edit-btn {
+                                background-color: #007aff;
+                                color: white;
+                            }
+                            
+                            &.delete-btn {
+                                background-color: #ff4757;
+                                color: white;
+                            }
+                            
+                            .action-text {
+                                font-size: 22rpx;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            .empty-venues {
+                text-align: center;
+                padding: 60rpx 0;
+                
+                .empty-text {
+                    font-size: 26rpx;
+                    color: #999;
+                }
+            }
         }
     }
 }

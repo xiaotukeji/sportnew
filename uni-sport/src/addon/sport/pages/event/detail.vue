@@ -103,6 +103,45 @@
                 </view>
             </view>
             
+            <!-- 报名参数字段 -->
+            <view class="detail-card">
+                <view class="card-title">
+                    <text class="title-text">报名参数字段</text>
+                    <text v-if="eventInfo.signup_fields && eventInfo.signup_fields.length > 0" class="item-count">
+                        ({{ eventInfo.signup_fields.length }}项，必填{{ requiredFieldsCount }}项)
+                    </text>
+                </view>
+                
+                <view v-if="eventInfo.signup_fields && eventInfo.signup_fields.length > 0" class="signup-fields-container">
+                    <view 
+                        v-for="(field, index) in eventInfo.signup_fields" 
+                        :key="field.key" 
+                        class="signup-field-item"
+                    >
+                        <view class="field-header">
+                            <view class="field-info">
+                                <text class="field-index">{{ index + 1 }}</text>
+                                <text class="field-name">{{ field.label }}</text>
+                            </view>
+                            <view :class="field.required ? 'required-badge' : 'optional-badge'">
+                                <text :class="field.required ? 'required-text' : 'optional-text'">
+                                    {{ field.required ? '必填' : '选填' }}
+                                </text>
+                            </view>
+                        </view>
+                        <view class="field-key">
+                            <text class="key-label">字段标识：</text>
+                            <text class="key-value">{{ field.key }}</text>
+                        </view>
+                    </view>
+                </view>
+                
+                <view v-else class="empty-signup-fields">
+                    <text class="empty-text">暂未设置报名参数字段</text>
+                    <text class="empty-tip">可在编辑赛事时设置报名所需的字段</text>
+                </view>
+            </view>
+            
             <!-- 其他信息 -->
             <view v-if="eventInfo.remark" class="detail-card">
                 <view class="card-title">
@@ -244,6 +283,12 @@ const groupedEventItems = computed(() => {
             categoryName,
             items: groups[categoryName].sort((a, b) => a.name.localeCompare(b.name)) // 项目名称也排序
         }))
+})
+
+// 必填字段数量
+const requiredFieldsCount = computed(() => {
+    if (!eventInfo.value?.signup_fields) return 0
+    return eventInfo.value.signup_fields.filter((field: any) => field.required).length
 })
 
 // 获取大类颜色
@@ -698,6 +743,125 @@ onMounted(() => {
             display: block;
             font-size: 24rpx;
             color: #ccc;
+        }
+    }
+    
+    .empty-signup-fields {
+        text-align: center;
+        padding: 60rpx 0;
+        
+        .empty-text {
+            display: block;
+            font-size: 28rpx;
+            color: #999;
+            margin-bottom: 16rpx;
+        }
+        
+        .empty-tip {
+            display: block;
+            font-size: 24rpx;
+            color: #ccc;
+        }
+    }
+    
+    .signup-fields-container {
+        .signup-field-item {
+            background-color: #f8f9fa;
+            border-radius: 12rpx;
+            padding: 20rpx;
+            margin-bottom: 16rpx;
+            border: 1rpx solid #e9ecef;
+            transition: all 0.3s ease;
+            
+            &:hover {
+                transform: translateY(-2rpx);
+                box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
+            }
+            
+            &:last-child {
+                margin-bottom: 0;
+            }
+            
+            .field-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12rpx;
+                
+                .field-info {
+                    display: flex;
+                    align-items: center;
+                    flex: 1;
+                    
+                    .field-index {
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        font-size: 20rpx;
+                        font-weight: bold;
+                        width: 32rpx;
+                        height: 32rpx;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-right: 16rpx;
+                        flex-shrink: 0;
+                    }
+                    
+                    .field-name {
+                        font-size: 30rpx;
+                        font-weight: bold;
+                        color: #333;
+                        flex: 1;
+                    }
+                }
+                
+                .required-badge {
+                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+                    padding: 6rpx 12rpx;
+                    border-radius: 20rpx;
+                    margin-left: 16rpx;
+                    
+                    .required-text {
+                        font-size: 20rpx;
+                        color: white;
+                        font-weight: bold;
+                    }
+                }
+                
+                .optional-badge {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    padding: 6rpx 12rpx;
+                    border-radius: 20rpx;
+                    margin-left: 16rpx;
+                    
+                    .optional-text {
+                        font-size: 20rpx;
+                        color: white;
+                        font-weight: bold;
+                    }
+                }
+            }
+            
+            .field-key {
+                display: flex;
+                align-items: center;
+                
+                .key-label {
+                    font-size: 24rpx;
+                    color: #666;
+                    margin-right: 8rpx;
+                }
+                
+                .key-value {
+                    font-size: 24rpx;
+                    color: #999;
+                    background-color: #e9ecef;
+                    padding: 4rpx 8rpx;
+                    border-radius: 6rpx;
+                    font-family: 'Courier New', monospace;
+                }
+            }
         }
     }
 }

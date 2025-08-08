@@ -201,4 +201,114 @@ class Event extends BaseApiController
         (new EventService())->updateSettings($id, $data);
         return success('UPDATE_SUCCESS');
     }
+    
+    /**
+     * 获取赛事场地列表
+     * @param int $id 赛事ID
+     * @return \think\Response
+     */
+    public function venues(int $id)
+    {
+        $data = $this->request->params([
+            ['venue_type', ''],                     // 场地类型筛选
+            ['is_available', ''],                   // 可用状态筛选
+            ['page', 1],                           // 页码
+            ['limit', 15],                         // 每页数量
+        ]);
+        
+        return success((new EventService())->getEventVenues($id, $data));
+    }
+    
+    /**
+     * 添加赛事场地
+     * @param int $id 赛事ID
+     * @return \think\Response
+     */
+    public function addVenue(int $id)
+    {
+        $data = $this->request->params([
+            ['venue_type', ''],                     // 场地类型
+            ['venue_category', ''],                 // 场地分类
+            ['name', ''],                          // 场地名称
+            ['venue_code', ''],                    // 场地编码
+            ['location', ''],                      // 场地位置
+            ['capacity', 0],                       // 容纳人数
+            ['is_available', 1],                   // 是否可用
+            ['remark', ''],                        // 备注
+        ]);
+        
+        // 验证必填字段
+        if (empty($data['venue_type']) || empty($data['name']) || empty($data['venue_code'])) {
+            return error('请填写完整的场地信息');
+        }
+        
+        $venueId = (new EventService())->addEventVenue($id, $data);
+        return success('ADD_SUCCESS', ['id' => $venueId]);
+    }
+    
+    /**
+     * 编辑赛事场地
+     * @param int $id 赛事ID
+     * @param int $venueId 场地ID
+     * @return \think\Response
+     */
+    public function editVenue(int $id, int $venueId)
+    {
+        $data = $this->request->params([
+            ['venue_type', ''],                     // 场地类型
+            ['venue_category', ''],                 // 场地分类
+            ['name', ''],                          // 场地名称
+            ['venue_code', ''],                    // 场地编码
+            ['location', ''],                      // 场地位置
+            ['capacity', 0],                       // 容纳人数
+            ['is_available', 1],                   // 是否可用
+            ['remark', ''],                        // 备注
+        ]);
+        
+        // 验证必填字段
+        if (empty($data['venue_type']) || empty($data['name']) || empty($data['venue_code'])) {
+            return error('请填写完整的场地信息');
+        }
+        
+        (new EventService())->editEventVenue($id, $venueId, $data);
+        return success('EDIT_SUCCESS');
+    }
+    
+    /**
+     * 删除赛事场地
+     * @param int $id 赛事ID
+     * @param int $venueId 场地ID
+     * @return \think\Response
+     */
+    public function deleteVenue(int $id, int $venueId)
+    {
+        (new EventService())->deleteEventVenue($id, $venueId);
+        return success('DELETE_SUCCESS');
+    }
+    
+    /**
+     * 批量添加场地
+     * @param int $id 赛事ID
+     * @return \think\Response
+     */
+    public function batchAddVenues(int $id)
+    {
+        $data = $this->request->params([
+            ['venue_type', ''],                     // 场地类型
+            ['venue_category', ''],                 // 场地分类
+            ['count', 1],                          // 添加数量
+            ['name_prefix', ''],                   // 名称前缀
+            ['code_prefix', ''],                   // 编码前缀
+            ['location', ''],                      // 场地位置
+            ['capacity', 0],                       // 容纳人数
+        ]);
+        
+        // 验证必填字段
+        if (empty($data['venue_type']) || empty($data['venue_category']) || $data['count'] <= 0) {
+            return error('请填写完整的批量添加信息');
+        }
+        
+        $venueIds = (new EventService())->batchAddEventVenues($id, $data);
+        return success('BATCH_ADD_SUCCESS', ['ids' => $venueIds]);
+    }
 } 

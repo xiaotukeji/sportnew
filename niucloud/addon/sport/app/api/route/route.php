@@ -59,6 +59,23 @@ Route::group('sport', function() {
     // 更新赛事设置
     Route::put('event/:id/settings', 'addon\sport\app\api\controller\event\Event@updateSettings');
     
+    /***************************************************** 赛事场地管理 ****************************************************/
+    
+    // 获取赛事场地列表
+    Route::get('event/:id/venues', 'addon\sport\app\api\controller\event\Event@venues');
+    
+    // 添加赛事场地
+    Route::post('event/:id/venues', 'addon\sport\app\api\controller\event\Event@addVenue');
+    
+    // 编辑赛事场地
+    Route::put('event/:id/venues/:venue_id', 'addon\sport\app\api\controller\event\Event@editVenue');
+    
+    // 删除赛事场地
+    Route::delete('event/:id/venues/:venue_id', 'addon\sport\app\api\controller\event\Event@deleteVenue');
+    
+    // 批量添加场地
+    Route::post('event/:id/venues/batch', 'addon\sport\app\api\controller\event\Event@batchAddVenues');
+    
     /***************************************************** 赛事项目管理 ****************************************************/
     
     // 获取运动分类列表（包含基础项目）
@@ -75,6 +92,23 @@ Route::group('sport', function() {
     
     // 更新项目设置
     Route::put('item/:id/settings', 'addon\sport\app\api\controller\event\EventItem@updateItemSettings');
+    
+    /***************************************************** 项目场地分配管理 ****************************************************/
+    
+    // 获取项目已分配的场地
+    Route::get('item/:id/venues', 'addon\sport\app\api\controller\event\EventItem@getItemVenues');
+    
+    // 为项目分配场地
+    Route::post('item/:id/venues/assign', 'addon\sport\app\api\controller\event\EventItem@assignVenue');
+    
+    // 移除项目场地分配
+    Route::delete('item/:id/venues/:venue_id', 'addon\sport\app\api\controller\event\EventItem@removeVenueAssignment');
+    
+    // 批量分配场地给项目
+    Route::post('item/:id/venues/batch-assign', 'addon\sport\app\api\controller\event\EventItem@batchAssignVenues');
+    
+    // 获取可用场地列表（用于项目选择）
+    Route::get('item/:id/venues/available', 'addon\sport\app\api\controller\event\EventItem@getAvailableVenues');
     
     /***************************************************** 主办方管理 ****************************************************/
     
