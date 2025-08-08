@@ -626,6 +626,7 @@ class EventService extends BaseApiService
             'event_id' => $eventId,
             'venue_type' => $data['venue_type'],
             'venue_category' => $data['venue_category'],
+            'type' => $data['venue_type'], // 兼容原始type字段
             'name' => $data['name'],
             'venue_code' => $data['venue_code'],
             'location' => $data['location'] ?? '',
@@ -682,6 +683,7 @@ class EventService extends BaseApiService
         $update_data = [
             'venue_type' => $data['venue_type'] ?? $venue['venue_type'],
             'venue_category' => $data['venue_category'] ?? $venue['venue_category'],
+            'type' => $data['venue_type'] ?? $venue['venue_type'], // 兼容原始type字段
             'name' => $data['name'] ?? $venue['name'],
             'venue_code' => $data['venue_code'] ?? $venue['venue_code'],
             'location' => $data['location'] ?? $venue['location'],
@@ -764,6 +766,7 @@ class EventService extends BaseApiService
                 'event_id' => $eventId,
                 'venue_type' => $data['venue_type'],
                 'venue_category' => $data['venue_category'],
+                'type' => $data['venue_type'], // 兼容原始type字段
                 'name' => $venueName,
                 'venue_code' => $venueCode,
                 'location' => $data['location'] ?? '',
