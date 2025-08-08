@@ -609,10 +609,253 @@ class EventItemService extends BaseApiService
             'max_participants' => $data['max_participants'] ?? 0,
             'rounds' => $data['rounds'] ?? 0,
             'allow_duplicate_registration' => $data['allow_duplicate_registration'] ?? 0,
+            'venue_count' => $data['venue_count'] ?? 0,
+            'venue_type' => $data['venue_type'] ?? '',
             'remark' => $data['remark'] ?? '',
             'update_time' => time()
         ];
         
         SportItem::where('id', $id)->update($update_data);
+    }
+    
+    /**
+     * 获取项目已分配的场地
+     * @param int $itemId
+     * @return array
+     */
+    public function getItemVenues(int $itemId)
+    {
+        // 验证项目是否存在
+        $item = SportItem::where('id', $itemId)->find();
+        if (!$item) {
+            throw new \core\exception\CommonException('项目不存在');
+        }
+        
+        // 验证权限：只能查看自己创建的赛事中的项目
+        $event = SportEvent::where('id', $item['event_id'])->find();
+        if (!$event || $event['member_id'] != $this->member_id) {
+            throw new \core\exception\CommonException('无权限操作此项目');
+        }
+        
+        $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
+        
+        return $assignment_model
+            ->alias('a')
+            ->leftJoin('sport_venue v', 'a.venue_id = v.id')
+            ->where([
+                ['a.item_id', '=', $itemId],
+                ['a.status', '=', 1]
+            ])
+            ->field('a.id, a.venue_id, a.assignment_type, a.start_time, a.end_time, a.remark, v.name, v.venue_code, v.venue_category, v.venue_type, v.location, v.capacity')
+            ->order('a.sort asc, a.id asc')
+            ->select()
+            ->toArray();
+    }
+    
+    /**
+     * 为项目分配场地
+     * @param int $itemId
+     * @param array $data
+     * @return void
+     */
+    public function assignVenueToItem(int $itemId, array $data)
+    {
+        // 验证项目是否存在
+        $item = SportItem::where('id', $itemId)->find();
+        if (!$item) {
+            throw new \core\exception\CommonException('项目不存在');
+        }
+        
+        // 验证权限：只能修改自己创建的赛事中的项目
+        $event = SportEvent::where('id', $item['event_id'])->find();
+        if (!$event || $event['member_id'] != $this->member_id) {
+            throw new \core\exception\CommonException('无权限操作此项目');
+        }
+        
+        // 验证场地是否存在且属于该赛事
+        $venue_model = new \addon\sport\app\model\venue\SportVenue();
+        $venue = $venue_model->where([
+            ['id', '=', $data['venue_id']],
+            ['event_id', '=', $item['event_id']],
+            ['status', '=', 1]
+        ])->find();
+        
+        if (!$venue) {
+            throw new \core\exception\CommonException('场地不存在或不可用');
+        }
+        
+        // 检查是否已经分配过该场地
+        $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
+        $exists = $assignment_model->where([
+            ['item_id', '=', $itemId],
+            ['venue_id', '=', $data['venue_id']],
+            ['status', '=', 1]
+        ])->find();
+        
+        if ($exists) {
+            throw new \core\exception\CommonException('该场地已分配给此项目');
+        }
+        
+        // 创建分配记录
+        $assignment_data = [
+            'item_id' => $itemId,
+            'venue_id' => $data['venue_id'],
+            'assignment_type' => $data['assignment_type'] ?? 1,
+            'start_time' => $data['start_time'] ?? null,
+            'end_time' => $data['end_time'] ?? null,
+            'sort' => 0,
+            'status' => 1,
+            'remark' => $data['remark'] ?? '',
+            'create_time' => time(),
+            'update_time' => time()
+        ];
+        
+        $assignment_model->save($assignment_data);
+    }
+    
+    /**
+     * 移除项目场地分配
+     * @param int $itemId
+     * @param int $venueId
+     * @return void
+     */
+    public function removeVenueFromItem(int $itemId, int $venueId)
+    {
+        // 验证项目是否存在
+        $item = SportItem::where('id', $itemId)->find();
+        if (!$item) {
+            throw new \core\exception\CommonException('项目不存在');
+        }
+        
+        // 验证权限：只能修改自己创建的赛事中的项目
+        $event = SportEvent::where('id', $item['event_id'])->find();
+        if (!$event || $event['member_id'] != $this->member_id) {
+            throw new \core\exception\CommonException('无权限操作此项目');
+        }
+        
+        $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
+        
+        // 软删除分配记录
+        $assignment_model->where([
+            ['item_id', '=', $itemId],
+            ['venue_id', '=', $venueId]
+        ])->update([
+            'status' => 0,
+            'update_time' => time()
+        ]);
+    }
+    
+    /**
+     * 批量分配场地给项目
+     * @param int $itemId
+     * @param array $data
+     * @return void
+     */
+    public function batchAssignVenuesToItem(int $itemId, array $data)
+    {
+        // 验证项目是否存在
+        $item = SportItem::where('id', $itemId)->find();
+        if (!$item) {
+            throw new \core\exception\CommonException('项目不存在');
+        }
+        
+        // 验证权限：只能修改自己创建的赛事中的项目
+        $event = SportEvent::where('id', $item['event_id'])->find();
+        if (!$event || $event['member_id'] != $this->member_id) {
+            throw new \core\exception\CommonException('无权限操作此项目');
+        }
+        
+        if (empty($data['venue_ids']) || !is_array($data['venue_ids'])) {
+            throw new \core\exception\CommonException('请选择要分配的场地');
+        }
+        
+        $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
+        
+        foreach ($data['venue_ids'] as $venueId) {
+            // 验证场地是否存在且属于该赛事
+            $venue_model = new \addon\sport\app\model\venue\SportVenue();
+            $venue = $venue_model->where([
+                ['id', '=', $venueId],
+                ['event_id', '=', $item['event_id']],
+                ['status', '=', 1]
+            ])->find();
+            
+            if (!$venue) {
+                continue; // 跳过无效场地
+            }
+            
+            // 检查是否已经分配过该场地
+            $exists = $assignment_model->where([
+                ['item_id', '=', $itemId],
+                ['venue_id', '=', $venueId],
+                ['status', '=', 1]
+            ])->find();
+            
+            if ($exists) {
+                continue; // 跳过已分配的场地
+            }
+            
+            // 创建分配记录
+            $assignment_data = [
+                'item_id' => $itemId,
+                'venue_id' => $venueId,
+                'assignment_type' => $data['assignment_type'] ?? 1,
+                'start_time' => $data['start_time'] ?? null,
+                'end_time' => $data['end_time'] ?? null,
+                'sort' => 0,
+                'status' => 1,
+                'remark' => '',
+                'create_time' => time(),
+                'update_time' => time()
+            ];
+            
+            $assignment_model->save($assignment_data);
+        }
+    }
+    
+    /**
+     * 获取可用场地列表（用于项目选择）
+     * @param int $itemId
+     * @param array $data
+     * @return array
+     */
+    public function getAvailableVenuesForItem(int $itemId, array $data = [])
+    {
+        // 验证项目是否存在
+        $item = SportItem::where('id', $itemId)->find();
+        if (!$item) {
+            throw new \core\exception\CommonException('项目不存在');
+        }
+        
+        // 验证权限：只能查看自己创建的赛事中的项目
+        $event = SportEvent::where('id', $item['event_id'])->find();
+        if (!$event || $event['member_id'] != $this->member_id) {
+            throw new \core\exception\CommonException('无权限操作此项目');
+        }
+        
+        $venue_model = new \addon\sport\app\model\venue\SportVenue();
+        
+        $where = [
+            ['event_id', '=', $item['event_id']],
+            ['status', '=', 1],
+            ['is_available', '=', 1]
+        ];
+        
+        if (!empty($data['venue_type'])) {
+            $where[] = ['venue_type', '=', $data['venue_type']];
+        }
+        
+        if (!empty($data['keyword'])) {
+            $where[] = ['name|venue_code', 'like', '%' . $data['keyword'] . '%'];
+        }
+        
+        $field = 'id, name, venue_code, venue_category, venue_type, location, capacity, is_available';
+        
+        $search_model = $venue_model
+            ->where($where)
+            ->field($field)
+            ->order('sort asc, id asc');
+        
+        return $this->pageQuery($search_model, $data['page'] ?? 1, $data['limit'] ?? 15);
     }
 } 

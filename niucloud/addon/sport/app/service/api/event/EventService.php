@@ -565,4 +565,221 @@ class EventService extends BaseApiService
         
         $this->model->where('id', $id)->update($update_data);
     }
+    
+    /**
+     * 获取赛事场地列表
+     * @param int $eventId
+     * @param array $data
+     * @return array
+     */
+    public function getEventVenues(int $eventId, array $data = [])
+    {
+        // 验证权限
+        $this->checkEventPermission($eventId);
+        
+        $venue_model = new \addon\sport\app\model\venue\SportVenue();
+        
+        $where = [
+            ['event_id', '=', $eventId]
+        ];
+        
+        if (!empty($data['venue_type'])) {
+            $where[] = ['venue_type', '=', $data['venue_type']];
+        }
+        if ($data['is_available'] !== '' && $data['is_available'] !== null) {
+            $where[] = ['is_available', '=', $data['is_available']];
+        }
+        
+        $field = 'id, event_id, name, venue_code, venue_category, venue_type, capacity, location, is_available, sort, status, remark, create_time, update_time';
+        
+        $search_model = $venue_model
+            ->where($where)
+            ->field($field)
+            ->order('sort asc, id asc');
+        
+        return $this->pageQuery($search_model, $data['page'] ?? 1, $data['limit'] ?? 15);
+    }
+    
+    /**
+     * 添加赛事场地
+     * @param int $eventId
+     * @param array $data
+     * @return int
+     */
+    public function addEventVenue(int $eventId, array $data)
+    {
+        // 验证权限
+        $this->checkEventPermission($eventId);
+        
+        // 验证场地编码唯一性
+        $venue_model = new \addon\sport\app\model\venue\SportVenue();
+        $exists = $venue_model->where([
+            ['event_id', '=', $eventId],
+            ['venue_code', '=', $data['venue_code']]
+        ])->find();
+        
+        if ($exists) {
+            throw new CommonException('场地编码已存在');
+        }
+        
+        $venue_data = [
+            'event_id' => $eventId,
+            'venue_type' => $data['venue_type'],
+            'venue_category' => $data['venue_category'],
+            'name' => $data['name'],
+            'venue_code' => $data['venue_code'],
+            'location' => $data['location'] ?? '',
+            'capacity' => $data['capacity'] ?? 0,
+            'is_available' => $data['is_available'] ?? 1,
+            'sort' => 0,
+            'status' => 1,
+            'remark' => $data['remark'] ?? '',
+            'create_time' => time(),
+            'update_time' => time()
+        ];
+        
+        $venue_model->save($venue_data);
+        return $venue_model->id;
+    }
+    
+    /**
+     * 编辑赛事场地
+     * @param int $eventId
+     * @param int $venueId
+     * @param array $data
+     * @return void
+     */
+    public function editEventVenue(int $eventId, int $venueId, array $data)
+    {
+        // 验证权限
+        $this->checkEventPermission($eventId);
+        
+        $venue_model = new \addon\sport\app\model\venue\SportVenue();
+        
+        // 检查场地是否存在且属于该赛事
+        $venue = $venue_model->where([
+            ['id', '=', $venueId],
+            ['event_id', '=', $eventId]
+        ])->find();
+        
+        if (!$venue) {
+            throw new CommonException('场地不存在');
+        }
+        
+        // 验证场地编码唯一性（排除自己）
+        if (isset($data['venue_code']) && $data['venue_code'] !== $venue['venue_code']) {
+            $exists = $venue_model->where([
+                ['event_id', '=', $eventId],
+                ['venue_code', '=', $data['venue_code']],
+                ['id', '<>', $venueId]
+            ])->find();
+            
+            if ($exists) {
+                throw new CommonException('场地编码已存在');
+            }
+        }
+        
+        $update_data = [
+            'venue_type' => $data['venue_type'] ?? $venue['venue_type'],
+            'venue_category' => $data['venue_category'] ?? $venue['venue_category'],
+            'name' => $data['name'] ?? $venue['name'],
+            'venue_code' => $data['venue_code'] ?? $venue['venue_code'],
+            'location' => $data['location'] ?? $venue['location'],
+            'capacity' => $data['capacity'] ?? $venue['capacity'],
+            'is_available' => $data['is_available'] ?? $venue['is_available'],
+            'remark' => $data['remark'] ?? $venue['remark'],
+            'update_time' => time()
+        ];
+        
+        $venue_model->where('id', $venueId)->update($update_data);
+    }
+    
+    /**
+     * 删除赛事场地
+     * @param int $eventId
+     * @param int $venueId
+     * @return void
+     */
+    public function deleteEventVenue(int $eventId, int $venueId)
+    {
+        // 验证权限
+        $this->checkEventPermission($eventId);
+        
+        $venue_model = new \addon\sport\app\model\venue\SportVenue();
+        
+        // 检查场地是否存在且属于该赛事
+        $venue = $venue_model->where([
+            ['id', '=', $venueId],
+            ['event_id', '=', $eventId]
+        ])->find();
+        
+        if (!$venue) {
+            throw new CommonException('场地不存在');
+        }
+        
+        // 检查是否有关联的项目分配
+        $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
+        $assignments = $assignment_model->where('venue_id', $venueId)->count();
+        
+        if ($assignments > 0) {
+            throw new CommonException('该场地已被项目使用，无法删除');
+        }
+        
+        // 软删除场地
+        $venue_model->where('id', $venueId)->update([
+            'status' => 0,
+            'update_time' => time()
+        ]);
+    }
+    
+    /**
+     * 批量添加场地
+     * @param int $eventId
+     * @param array $data
+     * @return array
+     */
+    public function batchAddEventVenues(int $eventId, array $data)
+    {
+        // 验证权限
+        $this->checkEventPermission($eventId);
+        
+        $venue_model = new \addon\sport\app\model\venue\SportVenue();
+        $venueIds = [];
+        
+        for ($i = 1; $i <= $data['count']; $i++) {
+            $venueCode = $data['code_prefix'] . '_' . $i;
+            $venueName = $data['name_prefix'] . $i;
+            
+            // 检查编码是否已存在
+            $exists = $venue_model->where([
+                ['event_id', '=', $eventId],
+                ['venue_code', '=', $venueCode]
+            ])->find();
+            
+            if ($exists) {
+                continue; // 跳过已存在的编码
+            }
+            
+            $venue_data = [
+                'event_id' => $eventId,
+                'venue_type' => $data['venue_type'],
+                'venue_category' => $data['venue_category'],
+                'name' => $venueName,
+                'venue_code' => $venueCode,
+                'location' => $data['location'] ?? '',
+                'capacity' => $data['capacity'] ?? 0,
+                'is_available' => 1,
+                'sort' => $i,
+                'status' => 1,
+                'remark' => '',
+                'create_time' => time(),
+                'update_time' => time()
+            ];
+            
+            $venue_model->save($venue_data);
+            $venueIds[] = $venue_model->id;
+        }
+        
+        return $venueIds;
+    }
 } 

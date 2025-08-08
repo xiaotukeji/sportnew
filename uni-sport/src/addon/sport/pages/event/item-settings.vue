@@ -746,11 +746,25 @@ const loadEventItems = async () => {
             max_participants: item.max_participants ?? 0, // 使用 ?? 确保 0 值不被覆盖
             rounds: item.rounds ?? 0,
             allow_duplicate_registration: item.allow_duplicate_registration ?? false,
+            venue_count: item.venue_count ?? 0,
+            venue_type: item.venue_type ?? '',
             remark: item.remark ?? '',
             is_configured: !!(item.registration_fee || item.max_participants || item.rounds || item.remark)
         }))
         
+        // 加载每个项目的已分配场地
+        for (const item of eventItems.value) {
+            try {
+                const venues = await getItemVenues(item.id)
+                itemVenueAssignments.value[item.id] = venues
+            } catch (error) {
+                console.error(`加载项目${item.id}的场地失败:`, error)
+                itemVenueAssignments.value[item.id] = []
+            }
+        }
+        
         console.log('赛事项目列表:', eventItems.value)
+        console.log('项目场地分配:', itemVenueAssignments.value)
     } catch (error) {
         console.error('加载赛事项目失败:', error)
         eventItems.value = []
@@ -831,6 +845,8 @@ const saveAllSettings = async () => {
                     max_participants: item.max_participants,
                     rounds: item.rounds,
                     allow_duplicate_registration: item.allow_duplicate_registration,
+                    venue_count: item.venue_count,
+                    venue_type: item.venue_type,
                     remark: item.remark
                 })
             }
