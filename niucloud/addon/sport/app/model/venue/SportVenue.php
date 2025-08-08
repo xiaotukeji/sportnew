@@ -37,7 +37,7 @@ class SportVenue extends BaseModel
      * @var array
      */
     protected $field = [
-        'id', 'event_id', 'name', 'venue_code', 'venue_category', 'type', 'capacity', 
+        'id', 'event_id', 'name', 'venue_code', 'venue_category', 'venue_type', 'type', 'capacity', 
         'location', 'is_available', 'sort', 'status', 'remark', 'create_time', 'update_time'
     ];
 

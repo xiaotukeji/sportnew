@@ -646,7 +646,7 @@ class EventItemService extends BaseApiService
                 ['a.item_id', '=', $itemId],
                 ['a.status', '=', 1]
             ])
-            ->field('a.id, a.venue_id, a.assignment_type, a.start_time, a.end_time, a.remark, v.name, v.venue_code, v.venue_category, v.venue_type, v.location, v.capacity')
+            ->field('a.id, a.venue_id, a.assignment_type, a.start_time, a.end_time, a.remark, v.name, v.venue_code, v.venue_category, v.venue_type, v.type, v.location, v.capacity')
             ->order('a.sort asc, a.id asc')
             ->select()
             ->toArray();
@@ -849,7 +849,7 @@ class EventItemService extends BaseApiService
             $where[] = ['name|venue_code', 'like', '%' . $data['keyword'] . '%'];
         }
         
-        $field = 'id, name, venue_code, venue_category, venue_type, location, capacity, is_available';
+        $field = 'id, name, venue_code, venue_category, venue_type, type, location, capacity, is_available';
         
         $search_model = $venue_model
             ->where($where)

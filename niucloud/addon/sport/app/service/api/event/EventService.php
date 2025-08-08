@@ -590,7 +590,7 @@ class EventService extends BaseApiService
             $where[] = ['is_available', '=', $data['is_available']];
         }
         
-        $field = 'id, event_id, name, venue_code, venue_category, venue_type, capacity, location, is_available, sort, status, remark, create_time, update_time';
+        $field = 'id, event_id, name, venue_code, venue_category, venue_type, type, capacity, location, is_available, sort, status, remark, create_time, update_time';
         
         $search_model = $venue_model
             ->where($where)
