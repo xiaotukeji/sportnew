@@ -87,7 +87,7 @@ class EventService extends BaseApiService
      */
     public function getInfo(int $id)
     {
-        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.address_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.registration_start_time, se.registration_end_time, se.registration_fee, se.max_participants, se.group_size, se.rounds, se.allow_duplicate_registration, se.show_participant_count, se.show_progress, se.create_time, se.update_time';
+        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.address_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.signup_fields, se.registration_start_time, se.registration_end_time, se.registration_fee, se.max_participants, se.group_size, se.rounds, se.allow_duplicate_registration, se.show_participant_count, se.show_progress, se.create_time, se.update_time';
         
         $info = $this->model
             ->alias('se')
@@ -125,6 +125,11 @@ class EventService extends BaseApiService
         $custom_groups = $data['custom_groups'] ?? [];
         $base_item_ids = $data['base_item_ids'] ?? [];
         unset($data['custom_groups'], $data['base_item_ids']);
+        
+        // 处理报名字段配置
+        if (isset($data['signup_fields']) && is_array($data['signup_fields'])) {
+            $data['signup_fields'] = json_encode($data['signup_fields'], JSON_UNESCAPED_UNICODE);
+        }
         
         $data['create_time'] = time();
         $data['update_time'] = time();
@@ -174,6 +179,11 @@ class EventService extends BaseApiService
         // 如果是系列赛，验证系列赛是否属于当前用户
         if ($data['event_type'] == 2 && !empty($data['series_id'])) {
             $this->checkSeriesPermission($data['series_id']);
+        }
+        
+        // 处理报名字段配置
+        if (isset($data['signup_fields']) && is_array($data['signup_fields'])) {
+            $data['signup_fields'] = json_encode($data['signup_fields'], JSON_UNESCAPED_UNICODE);
         }
         
         $data['update_time'] = time();

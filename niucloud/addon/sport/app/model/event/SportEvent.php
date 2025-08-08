@@ -92,8 +92,8 @@ class SportEvent extends BaseModel
     protected $field = [
         'id', 'series_id', 'name', 'event_type', 'year', 'season', 'start_time', 
         'end_time', 'registration_start_time', 'registration_end_time', 'location', 'location_detail', 
-        'latitude', 'longitude', 'organizer_id', 'organizer_type', 'member_id', 'sort', 'status', 
-        'remark', 'create_time', 'update_time', 'delete_time'
+        'address_detail', 'latitude', 'longitude', 'organizer_id', 'organizer_type', 'member_id', 'sort', 'status', 
+        'age_groups', 'age_group_display', 'signup_fields', 'remark', 'create_time', 'update_time', 'delete_time'
     ];
 
     /**
@@ -158,6 +158,20 @@ class SportEvent extends BaseModel
             3 => '已作废'
         ];
         return $status[$data['status']] ?? '未知';
+    }
+
+    /**
+     * 获取器 - 解析报名字段配置
+     * @param $value
+     * @param $data
+     * @return array
+     */
+    public function getSignupFieldsAttr($value, $data)
+    {
+        if (empty($value)) {
+            return [];
+        }
+        return json_decode($value, true) ?: [];
     }
 
     /**

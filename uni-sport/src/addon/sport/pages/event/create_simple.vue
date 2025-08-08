@@ -2385,7 +2385,7 @@ const loadEventData = async () => {
             items: [],
             custom_groups: [],
             co_organizers: [],
-            signup_fields: []
+            signup_fields: eventData.signup_fields || []
         }
         
         // 设置时间选择器的值

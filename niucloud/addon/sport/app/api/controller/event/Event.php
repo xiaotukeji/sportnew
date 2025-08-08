@@ -71,6 +71,9 @@ class Event extends BaseApiController
             ['series_id', 0],          // 系列赛ID
             ['year', 0],               // 举办年份
             ['season', ''],            // 赛季
+            ['age_groups', ''],        // 年龄组设置
+            ['age_group_display', 0],  // 年龄组显示方式
+            ['signup_fields', []],     // 报名字段配置
             ['remark', ''],            // 备注
         ]);
 
@@ -105,6 +108,9 @@ class Event extends BaseApiController
             ['series_id', 0],          // 系列赛ID
             ['year', 0],               // 举办年份
             ['season', ''],            // 赛季
+            ['age_groups', ''],        // 年龄组设置
+            ['age_group_display', 0],  // 年龄组显示方式
+            ['signup_fields', []],     // 报名字段配置
             ['remark', ''],            // 备注
         ]);
 
