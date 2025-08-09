@@ -157,23 +157,26 @@
                                     </view>
                                 </view>
                                 
-                                <!-- 场地选择 -->
+                                <!-- 场地选择（直接展示可用场地，支持多选与全选） -->
                                 <view class="venue-selection">
                                     <text class="selection-label">选择场地：</text>
-                                    <view class="venue-selector">
-                                        <picker 
-                                            mode="multiSelector"
-                                            :value="getSelectedVenueIndexes(item.id)"
-                                            :range="getAvailableVenuesForItem(item.id)"
-                                            range-key="name"
-                                            @change="onVenueSelectionChange(item.id, $event)"
-                                        >
-                                            <view class="picker-value">
-                                                <text v-if="getSelectedVenuesText(item.id)">{{ getSelectedVenuesText(item.id) }}</text>
-                                                <text v-else class="placeholder">请选择场地</text>
-                                                <text class="picker-arrow">></text>
-                                            </view>
-                                        </picker>
+                                    <view class="venue-selector-list">
+                                        <view class="select-all" v-if="getAvailableVenuesForItem(item.id).length > 0">
+                                            <label class="checkbox-item all">
+                                                <checkbox :checked="isAllVenuesSelected(item.id)" @tap.stop="toggleSelectAllVenues(item.id)" />
+                                                <text class="checkbox-text">{{ isAllVenuesSelected(item.id) ? '取消全选' : '全选' }}</text>
+                                            </label>
+                                        </view>
+                                        <checkbox-group @change="onVenueCheckboxGroupChange(item.id, $event)">
+                                            <label v-for="venue in getAvailableVenuesForItem(item.id)" :key="venue.id" class="checkbox-item">
+                                                <checkbox :value="String(venue.id)" :checked="isVenueSelectedForItem(item.id, venue.id)" />
+                                                <text class="checkbox-text">{{ venue.name }}</text>
+                                                <text class="venue-code">({{ venue.venue_code }})</text>
+                                            </label>
+                                        </checkbox-group>
+                                        <view v-if="getAvailableVenuesForItem(item.id).length === 0" class="empty-venues">
+                                            <text class="empty-text">暂无可用场地</text>
+                                        </view>
                                     </view>
                                 </view>
                                 
@@ -195,12 +198,7 @@
                                     </view>
                                 </view>
                                 
-                                <!-- 快速分配按钮 -->
-                                <view v-if="venues.length > 0" class="quick-assign">
-                                    <button class="quick-btn" @tap="quickAssignVenues(item.id)">
-                                        <text class="quick-text">快速分配可用场地</text>
-                                    </button>
-                                </view>
+                                <!-- 快速分配按钮（已移除，改为直接勾选） -->
                             </view>
                         </view>
                         </view>
@@ -382,7 +380,7 @@
                     <!-- 现有场地列表 -->
                     <view class="existing-venues-section">
                         <text class="section-title">现有场地</text>
-                        <view v-if="venues.length > 0" class="venue-list">
+                        <view v-if="Array.isArray(venues) && venues.length > 0" class="venue-list">
                             <view 
                                 v-for="venue in venues" 
                                 :key="venue.id" 
@@ -980,6 +978,11 @@ onMounted(() => {
         loadEventInfo()
         loadEventItems()
         loadVenues()
+        
+        // 调试信息
+        console.log('页面初始化完成')
+        console.log('eventId:', eventId.value)
+        console.log('venues初始值:', venues.value)
     } else {
         uni.showToast({
             title: '缺少赛事ID参数',
@@ -998,7 +1001,24 @@ const loadVenues = async () => {
     
     try {
         const response: any = await getEventVenues(eventId.value)
-        venues.value = response.data || []
+        console.log('场地API响应:', response)
+        
+        // 确保返回的数据是数组
+        if (response && response.data) {
+            if (Array.isArray(response.data)) {
+                venues.value = response.data
+            } else if (response.data.list && Array.isArray(response.data.list)) {
+                venues.value = response.data.list
+            } else if (response.data.data && Array.isArray(response.data.data)) {
+                venues.value = response.data.data
+            } else {
+                console.warn('场地数据格式不正确:', response.data)
+                venues.value = []
+            }
+        } else {
+            venues.value = []
+        }
+        
         console.log('场地列表:', venues.value)
     } catch (error) {
         console.error('加载场地列表失败:', error)
@@ -1376,25 +1396,135 @@ const deleteVenue = async (venueId: number) => {
 }
 
 /**
- * 获取项目可用的场地列表
+ * 获取项目可用的场地列表（按类型自动过滤）
  */
 const getAvailableVenuesForItem = (itemId: number) => {
-    // 过滤出可用的场地（未被其他项目使用或当前项目已使用的）
-    const usedVenueIds = new Set()
-    
-    // 收集所有已分配的场地ID
+    // 确保venues.value是数组
+    if (!Array.isArray(venues.value)) {
+        console.warn('venues.value is not an array:', venues.value)
+        return []
+    }
+
+    // 确定当前项目及其目标场地类型
+    const currentItem = eventItems.value.find((it: any) => it.id === itemId)
+    const targetVenueType = currentItem ? (currentItem.venue_type || mapCategoryToVenueType(currentItem.category_name)) : ''
+
+    // 过滤出可用的场地（未被其他项目使用或当前项目已使用的），并按类型过滤
+    const usedVenueIds = new Set<number>()
     Object.values(itemVenueAssignments.value).forEach(assignments => {
-        assignments.forEach(assignment => {
-            usedVenueIds.add(assignment.venue_id)
-        })
+        if (Array.isArray(assignments)) {
+            assignments.forEach(assignment => {
+                if (assignment && assignment.venue_id) usedVenueIds.add(assignment.venue_id)
+            })
+        }
     })
-    
-    // 返回可用场地（排除已使用的，但包含当前项目已使用的）
+
     return venues.value.filter(venue => {
+        if (!venue || !venue.id) return false
+        // 类型匹配：若设置了目标类型，则要求 venue.venue_type === 目标类型
+        if (targetVenueType && venue.venue_type && venue.venue_type !== targetVenueType) return false
         const isUsedByOthers = usedVenueIds.has(venue.id)
         const isUsedByCurrent = itemVenueAssignments.value[itemId]?.some(a => a.venue_id === venue.id)
         return !isUsedByOthers || isUsedByCurrent
     })
+}
+
+/**
+ * 根据项目大类名称映射到场地类型
+ */
+const mapCategoryToVenueType = (categoryName: string): string => {
+    const map: Record<string, string> = {
+        '乒乓球': 'pingpong_table',
+        '羽毛球': 'badminton_court',
+        '篮球': 'basketball_court',
+        '足球': 'football_field',
+        '网球': 'tennis_court',
+        '排球': 'volleyball_court',
+        '田径': 'track',
+        '游泳': 'swimming_pool'
+    }
+    return map[categoryName] || ''
+}
+
+/**
+ * 是否已选中某场地
+ */
+const isVenueSelectedForItem = (itemId: number, venueId: number) => {
+    const selected = itemVenueAssignments.value[itemId] || []
+    return selected.some(a => a.venue_id === venueId)
+}
+
+/**
+ * 是否全选
+ */
+const isAllVenuesSelected = (itemId: number) => {
+    const available = getAvailableVenuesForItem(itemId)
+    if (available.length === 0) return false
+    const selectedIds = new Set((itemVenueAssignments.value[itemId] || []).map(a => a.venue_id))
+    return available.every(v => selectedIds.has(v.id))
+}
+
+/**
+ * 切换全选/取消全选
+ */
+const toggleSelectAllVenues = async (itemId: number) => {
+    // 对可用场地ID去重
+    const available = getAvailableVenuesForItem(itemId)
+    const uniqueAvailableIds = Array.from(new Set<number>(available.map(v => v.id)))
+    const selectedIds = new Set<number>((itemVenueAssignments.value[itemId] || []).map(a => a.venue_id))
+    try {
+        if (isAllVenuesSelected(itemId)) {
+            // 取消全选：移除全部已选
+            for (const vid of Array.from(selectedIds)) {
+                await apiRemoveVenueFromItem(itemId, vid)
+            }
+        } else {
+            // 全选：添加未选中的
+            for (const vid of uniqueAvailableIds) {
+                if (!selectedIds.has(vid)) {
+                    await assignVenueToItem(itemId, { venue_id: vid, assignment_type: 1 })
+                    // 立即加入已选集合，防止重复提交导致唯一键冲突
+                    selectedIds.add(vid)
+                }
+            }
+        }
+        const list = await getItemVenues(itemId)
+        itemVenueAssignments.value[itemId] = list
+    } catch (err) {
+        console.error('切换全选失败:', err)
+        uni.showToast({ title: '操作失败', icon: 'none' })
+    }
+}
+
+/**
+ * 复选框组选中变化
+ */
+const onVenueCheckboxGroupChange = async (itemId: number, event: any) => {
+    // 对新选择的值去重并转为数字集合
+    const newIds = new Set<number>((event.detail?.value || []).map((v: string) => parseInt(v)))
+    const currentAssignments = itemVenueAssignments.value[itemId] || []
+    const currentIds = new Set<number>(currentAssignments.map(a => a.venue_id))
+    try {
+        // 需要移除的
+        for (const cid of Array.from(currentIds)) {
+            if (!newIds.has(cid)) {
+                await apiRemoveVenueFromItem(itemId, cid)
+            }
+        }
+        // 需要新增的
+        for (const nid of Array.from(newIds)) {
+            if (!currentIds.has(nid)) {
+                await assignVenueToItem(itemId, { venue_id: nid, assignment_type: 1 })
+                currentIds.add(nid)
+            }
+        }
+        const list = await getItemVenues(itemId)
+        itemVenueAssignments.value[itemId] = list
+        uni.showToast({ title: '已更新场地选择', icon: 'success' })
+    } catch (error) {
+        console.error('更新场地选择失败:', error)
+        uni.showToast({ title: '更新失败', icon: 'none' })
+    }
 }
 
 /**
@@ -1417,8 +1547,13 @@ const getSelectedVenuesText = (itemId: number) => {
     const selectedVenues = itemVenueAssignments.value[itemId] || []
     if (selectedVenues.length === 0) return ''
     
+    // 确保venues.value是数组
+    if (!Array.isArray(venues.value)) {
+        return ''
+    }
+    
     const venueNames = selectedVenues.map(assignment => {
-        const venue = venues.value.find(v => v.id === assignment.venue_id)
+        const venue = venues.value.find(v => v && v.id === assignment.venue_id)
         return venue ? venue.name : ''
     }).filter(name => name)
     
@@ -2009,36 +2144,58 @@ const quickAssignVenues = async (itemId: number) => {
         
         .venue-selection {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 20rpx;
-            
+            gap: 16rpx;
+
             .selection-label {
                 width: 140rpx;
                 font-size: 26rpx;
                 color: #333;
                 flex-shrink: 0;
+                line-height: 48rpx;
             }
-            
-            .venue-selector {
+
+            .venue-selector-list {
                 flex: 1;
-                
-                .picker-value {
-                    height: 80rpx;
-                    padding: 0 24rpx;
-                    border: 1rpx solid #e0e0e0;
-                    border-radius: 8rpx;
-                    background-color: #fafafa;
+                background-color: #fafafa;
+                border: 1rpx solid #e0e0e0;
+                border-radius: 8rpx;
+                padding: 16rpx;
+
+                .select-all {
+                    margin-bottom: 8rpx;
+                }
+
+                .checkbox-item {
                     display: flex;
                     align-items: center;
-                    justify-content: space-between;
-                    font-size: 28rpx;
-                    color: #333;
-                    
-                    .placeholder {
-                        color: #999;
+                    padding: 8rpx 4rpx;
+
+                    &.all {
+                        border-bottom: 1rpx dashed #e0e0e0;
+                        margin-bottom: 8rpx;
+                        padding-bottom: 12rpx;
                     }
-                    
-                    .picker-arrow {
+
+                    .checkbox-text {
+                        font-size: 26rpx;
+                        color: #333;
+                        margin-left: 8rpx;
+                    }
+
+                    .venue-code {
+                        font-size: 22rpx;
+                        color: #999;
+                        margin-left: 8rpx;
+                    }
+                }
+
+                .empty-venues {
+                    text-align: center;
+                    padding: 16rpx 0;
+
+                    .empty-text {
                         color: #999;
                         font-size: 24rpx;
                     }

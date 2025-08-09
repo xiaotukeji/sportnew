@@ -684,18 +684,30 @@ class EventItemService extends BaseApiService
             throw new \core\exception\CommonException('场地不存在或不可用');
         }
         
-        // 检查是否已经分配过该场地
+        // 检查是否已经分配过该场地（包含已软删除记录）
         $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
         $exists = $assignment_model->where([
             ['item_id', '=', $itemId],
             ['venue_id', '=', $data['venue_id']],
-            ['status', '=', 1]
         ])->find();
-        
+
         if ($exists) {
-            throw new \core\exception\CommonException('该场地已分配给此项目');
+            if ((int)$exists['status'] === 1) {
+                // 已是有效分配，直接返回提示
+                throw new \core\exception\CommonException('该场地已分配给此项目');
+            }
+            // 如果存在软删除记录，则恢复为有效，避免触发唯一索引
+            $assignment_model->where('id', $exists['id'])->update([
+                'assignment_type' => $data['assignment_type'] ?? ($exists['assignment_type'] ?? 1),
+                'start_time' => $data['start_time'] ?? $exists['start_time'] ?? null,
+                'end_time' => $data['end_time'] ?? $exists['end_time'] ?? null,
+                'remark' => $data['remark'] ?? $exists['remark'] ?? '',
+                'status' => 1,
+                'update_time' => time()
+            ]);
+            return;
         }
-        
+
         // 创建分配记录
         $assignment_data = [
             'item_id' => $itemId,
@@ -709,7 +721,7 @@ class EventItemService extends BaseApiService
             'create_time' => time(),
             'update_time' => time()
         ];
-        
+
         $assignment_model->save($assignment_data);
     }
     
@@ -782,18 +794,29 @@ class EventItemService extends BaseApiService
                 continue; // 跳过无效场地
             }
             
-            // 检查是否已经分配过该场地
+            // 检查是否已经分配过该场地（包含已软删除记录）
             $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
             $exists = $assignment_model->where([
                 ['item_id', '=', $itemId],
                 ['venue_id', '=', $venueId],
-                ['status', '=', 1]
             ])->find();
-            
+
             if ($exists) {
-                continue; // 跳过已分配的场地
+                if ((int)$exists['status'] === 1) {
+                    continue; // 已有效分配，跳过
+                }
+                // 恢复软删除记录为有效
+                $assignment_model->where('id', $exists['id'])->update([
+                    'assignment_type' => $data['assignment_type'] ?? ($exists['assignment_type'] ?? 1),
+                    'start_time' => $data['start_time'] ?? $exists['start_time'] ?? null,
+                    'end_time' => $data['end_time'] ?? $exists['end_time'] ?? null,
+                    'remark' => $exists['remark'] ?? '',
+                    'status' => 1,
+                    'update_time' => time()
+                ]);
+                continue;
             }
-            
+
             // 创建分配记录
             $assignment_data = [
                 'item_id' => $itemId,
@@ -807,7 +830,7 @@ class EventItemService extends BaseApiService
                 'create_time' => time(),
                 'update_time' => time()
             ];
-            
+
             $assignment_model->save($assignment_data);
         }
     }
