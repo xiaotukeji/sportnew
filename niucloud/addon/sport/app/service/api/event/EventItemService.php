@@ -17,6 +17,7 @@ use addon\sport\app\model\sport_item\SportItem;
 use addon\sport\app\model\sport_event\SportEvent;
 use addon\sport\app\service\api\event\EventService;
 use core\base\BaseApiService;
+use think\facade\Db;
 
 /**
  * 赛事项目管理服务类
@@ -684,45 +685,65 @@ class EventItemService extends BaseApiService
             throw new \core\exception\CommonException('场地不存在或不可用');
         }
         
-        // 检查是否已经分配过该场地（包含已软删除记录）
-        $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
-        $exists = $assignment_model->where([
-            ['item_id', '=', $itemId],
-            ['venue_id', '=', $data['venue_id']],
-        ])->find();
+        Db::transaction(function () use ($itemId, $data) {
+            $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
+            // 使用行级锁避免并发导致的唯一键冲突
+            $exists = $assignment_model->where([
+                ['item_id', '=', $itemId],
+                ['venue_id', '=', $data['venue_id']],
+            ])->lock(true)->find();
 
-        if ($exists) {
-            if ((int)$exists['status'] === 1) {
-                // 已是有效分配，直接返回提示
-                throw new \core\exception\CommonException('该场地已分配给此项目');
+            if ($exists) {
+                if ((int)$exists['status'] === 1) {
+                    // 已是有效分配，直接返回
+                    return;
+                }
+                // 恢复软删除记录为有效
+                $assignment_model->where('id', $exists['id'])->update([
+                    'assignment_type' => $data['assignment_type'] ?? ($exists['assignment_type'] ?? 1),
+                    'start_time' => $data['start_time'] ?? $exists['start_time'] ?? null,
+                    'end_time' => $data['end_time'] ?? $exists['end_time'] ?? null,
+                    'remark' => $data['remark'] ?? $exists['remark'] ?? '',
+                    'status' => 1,
+                    'update_time' => time()
+                ]);
+                return;
             }
-            // 如果存在软删除记录，则恢复为有效，避免触发唯一索引
-            $assignment_model->where('id', $exists['id'])->update([
-                'assignment_type' => $data['assignment_type'] ?? ($exists['assignment_type'] ?? 1),
-                'start_time' => $data['start_time'] ?? $exists['start_time'] ?? null,
-                'end_time' => $data['end_time'] ?? $exists['end_time'] ?? null,
-                'remark' => $data['remark'] ?? $exists['remark'] ?? '',
+
+            // 创建分配记录
+            $assignment_data = [
+                'item_id' => $itemId,
+                'venue_id' => $data['venue_id'],
+                'assignment_type' => $data['assignment_type'] ?? 1,
+                'start_time' => $data['start_time'] ?? null,
+                'end_time' => $data['end_time'] ?? null,
+                'sort' => 0,
                 'status' => 1,
+                'remark' => $data['remark'] ?? '',
+                'create_time' => time(),
                 'update_time' => time()
-            ]);
-            return;
-        }
+            ];
 
-        // 创建分配记录
-        $assignment_data = [
-            'item_id' => $itemId,
-            'venue_id' => $data['venue_id'],
-            'assignment_type' => $data['assignment_type'] ?? 1,
-            'start_time' => $data['start_time'] ?? null,
-            'end_time' => $data['end_time'] ?? null,
-            'sort' => 0,
-            'status' => 1,
-            'remark' => $data['remark'] ?? '',
-            'create_time' => time(),
-            'update_time' => time()
-        ];
-
-        $assignment_model->save($assignment_data);
+            try {
+                $assignment_model->save($assignment_data);
+            } catch (\Throwable $e) {
+                // 并发场景下兜底：若触发唯一键冲突，转为更新/恢复
+                if (strpos($e->getMessage(), '1062') !== false || strpos($e->getMessage(), '23000') !== false) {
+                    $existsAgain = $assignment_model->where([
+                        ['item_id', '=', $itemId],
+                        ['venue_id', '=', $data['venue_id']],
+                    ])->find();
+                    if ($existsAgain) {
+                        $assignment_model->where('id', $existsAgain['id'])->update([
+                            'status' => 1,
+                            'update_time' => time()
+                        ]);
+                        return;
+                    }
+                }
+                throw $e;
+            }
+        });
     }
     
     /**
@@ -794,44 +815,63 @@ class EventItemService extends BaseApiService
                 continue; // 跳过无效场地
             }
             
-            // 检查是否已经分配过该场地（包含已软删除记录）
-            $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
-            $exists = $assignment_model->where([
-                ['item_id', '=', $itemId],
-                ['venue_id', '=', $venueId],
-            ])->find();
+            Db::transaction(function () use ($itemId, $venueId, $data) {
+                // 检查是否已经分配过该场地（包含已软删除记录），并加锁避免并发
+                $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
+                $exists = $assignment_model->where([
+                    ['item_id', '=', $itemId],
+                    ['venue_id', '=', $venueId],
+                ])->lock(true)->find();
 
-            if ($exists) {
-                if ((int)$exists['status'] === 1) {
-                    continue; // 已有效分配，跳过
+                if ($exists) {
+                    if ((int)$exists['status'] === 1) {
+                        return; // 已有效分配
+                    }
+                    // 恢复软删除记录为有效
+                    $assignment_model->where('id', $exists['id'])->update([
+                        'assignment_type' => $data['assignment_type'] ?? ($exists['assignment_type'] ?? 1),
+                        'start_time' => $data['start_time'] ?? $exists['start_time'] ?? null,
+                        'end_time' => $data['end_time'] ?? $exists['end_time'] ?? null,
+                        'remark' => $exists['remark'] ?? '',
+                        'status' => 1,
+                        'update_time' => time()
+                    ]);
+                    return;
                 }
-                // 恢复软删除记录为有效
-                $assignment_model->where('id', $exists['id'])->update([
-                    'assignment_type' => $data['assignment_type'] ?? ($exists['assignment_type'] ?? 1),
-                    'start_time' => $data['start_time'] ?? $exists['start_time'] ?? null,
-                    'end_time' => $data['end_time'] ?? $exists['end_time'] ?? null,
-                    'remark' => $exists['remark'] ?? '',
+
+                // 创建分配记录
+                $assignment_data = [
+                    'item_id' => $itemId,
+                    'venue_id' => $venueId,
+                    'assignment_type' => $data['assignment_type'] ?? 1,
+                    'start_time' => $data['start_time'] ?? null,
+                    'end_time' => $data['end_time'] ?? null,
+                    'sort' => 0,
                     'status' => 1,
+                    'remark' => '',
+                    'create_time' => time(),
                     'update_time' => time()
-                ]);
-                continue;
-            }
+                ];
 
-            // 创建分配记录
-            $assignment_data = [
-                'item_id' => $itemId,
-                'venue_id' => $venueId,
-                'assignment_type' => $data['assignment_type'] ?? 1,
-                'start_time' => $data['start_time'] ?? null,
-                'end_time' => $data['end_time'] ?? null,
-                'sort' => 0,
-                'status' => 1,
-                'remark' => '',
-                'create_time' => time(),
-                'update_time' => time()
-            ];
-
-            $assignment_model->save($assignment_data);
+                try {
+                    $assignment_model->save($assignment_data);
+                } catch (\Throwable $e) {
+                    if (strpos($e->getMessage(), '1062') !== false || strpos($e->getMessage(), '23000') !== false) {
+                        $existsAgain = $assignment_model->where([
+                            ['item_id', '=', $itemId],
+                            ['venue_id', '=', $venueId],
+                        ])->find();
+                        if ($existsAgain) {
+                            $assignment_model->where('id', $existsAgain['id'])->update([
+                                'status' => 1,
+                                'update_time' => time()
+                            ]);
+                            return;
+                        }
+                    }
+                    throw $e;
+                }
+            });
         }
     }
     
