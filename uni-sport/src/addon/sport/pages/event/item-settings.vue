@@ -98,7 +98,7 @@
                             <text class="setting-label">允许重复\n报名</text>
                             <switch 
                                 :checked="item.allow_duplicate_registration" 
-                                        @change="onItemSwitchChange(getItemGlobalIndex(groupIndex, index), 'allow_duplicate_registration', $event)"
+                                        @change="onItemSwitchChange(item.id, 'allow_duplicate_registration', $event)"
                             />
                         </view>
 
@@ -107,7 +107,7 @@
                             <text class="setting-label">循环赛\n(小组)</text>
                             <switch
                                 :checked="item.is_round_robin"
-                                @change="onItemSwitchChange(getItemGlobalIndex(groupIndex, index), 'is_round_robin', $event)"
+                                @change="onItemSwitchChange(item.id, 'is_round_robin', $event)"
                             />
                         </view>
 
@@ -675,7 +675,9 @@ const onRemarkChange = (index: number, event: any) => {
 /**
  * 项目开关变更
  */
-const onItemSwitchChange = (index: number, field: string, event: any) => {
+const onItemSwitchChange = (itemId: number, field: string, event: any) => {
+    const index = eventItems.value.findIndex(i => i.id === itemId)
+    if (index === -1) return
     eventItems.value[index][field] = event.detail.value
     eventItems.value[index].is_configured = true
     
@@ -709,7 +711,7 @@ const applyCategoryBatchSettings = (categoryName: string) => {
     if (!group || group.items.length <= 1) return
     
     const firstItem = group.items[0]
-    const batchFields = ['registration_fee', 'max_participants', 'allow_duplicate_registration', 'remark']
+    const batchFields = ['registration_fee', 'max_participants', 'allow_duplicate_registration', 'is_round_robin', 'group_size', 'remark']
     
     // 将第一个项目的设置应用到该分类下的其他项目
     for (let i = 1; i < group.items.length; i++) {
