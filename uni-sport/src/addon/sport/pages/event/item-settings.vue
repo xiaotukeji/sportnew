@@ -126,54 +126,28 @@
                                     </button>
                                 </view>
                                 
-                                <!-- 场地类型选择 -->
-                                <view class="venue-type-selector">
-                                    <text class="selector-label">场地类型：</text>
-                                    <picker 
-                                        :value="getVenueTypeIndex(item.venue_type)" 
-                                        :range="venueTypeOptions" 
-                                        range-key="label"
-                                        @change="onVenueTypeChange(getItemGlobalIndex(groupIndex, index), $event)"
-                                    >
-                                        <view class="picker-value">
-                                            <text>{{ getVenueTypeLabel(item.venue_type) || '请选择场地类型' }}</text>
-                                            <text class="picker-arrow">></text>
-                                        </view>
-                                    </picker>
-                                </view>
-                                
-                                <!-- 场地数量设置 -->
-                                <view class="venue-count-setting">
-                                    <text class="count-label">场地数量：</text>
-                                    <view class="count-controls">
-                                        <button class="count-btn" @tap="decreaseVenueCount(getItemGlobalIndex(groupIndex, index))">-</button>
-                                        <input 
-                                            class="count-input" 
-                                            type="number" 
-                                            :value="item.venue_count || 0"
-                                            @input="onVenueCountChange(getItemGlobalIndex(groupIndex, index), $event)"
-                                        />
-                                        <button class="count-btn" @tap="increaseVenueCount(getItemGlobalIndex(groupIndex, index))">+</button>
-                                    </view>
-                                </view>
                                 
                                 <!-- 场地选择（直接展示可用场地，支持多选与全选） -->
                                 <view class="venue-selection">
                                     <text class="selection-label">选择场地：</text>
                                     <view class="venue-selector-list">
                                         <view class="select-all" v-if="getAvailableVenuesForItem(item.id).length > 0">
-                                            <label class="checkbox-item all">
-                                                <checkbox :checked="isAllVenuesSelected(item.id)" @tap.stop="toggleSelectAllVenues(item.id)" />
-                                                <text class="checkbox-text">{{ isAllVenuesSelected(item.id) ? '取消全选' : '全选' }}</text>
-                                            </label>
+                                            <view class="select-row" :class="{ selected: isAllVenuesSelected(item.id) }" @tap.stop="toggleSelectAllVenues(item.id)">
+                                                <text class="select-text">{{ isAllVenuesSelected(item.id) ? '取消全选' : '全选' }}</text>
+                                            </view>
                                         </view>
-                                        <checkbox-group @change="onVenueCheckboxGroupChange(item.id, $event)">
-                                            <label v-for="venue in getAvailableVenuesForItem(item.id)" :key="venue.id" class="checkbox-item">
-                                                <checkbox :value="String(venue.id)" :checked="isVenueSelectedForItem(item.id, venue.id)" />
-                                                <text class="checkbox-text">{{ venue.name }}</text>
+                                        <view class="venue-options">
+                                            <view
+                                                v-for="venue in getAvailableVenuesForItem(item.id)"
+                                                :key="venue.id"
+                                                class="venue-option"
+                                                :class="{ selected: isVenueSelectedForItem(item.id, venue.id) }"
+                                                @tap="toggleVenueSelection(item.id, venue.id)"
+                                            >
+                                                <text class="option-text">{{ venue.name }}</text>
                                                 <text class="venue-code">({{ venue.venue_code }})</text>
-                                            </label>
-                                        </checkbox-group>
+                                            </view>
+                                        </view>
                                         <view v-if="getAvailableVenuesForItem(item.id).length === 0" class="empty-venues">
                                             <text class="empty-text">暂无可用场地</text>
                                         </view>
@@ -256,9 +230,9 @@
             </button>
         </view>
         
-        <!-- 场地管理弹窗 -->
+        <!-- 场地管理弹窗（底部全宽抽屉样式） -->
         <view v-if="showVenueDialog" class="venue-dialog-overlay" @tap="closeVenueDialog">
-            <view class="venue-dialog" @tap.stop>
+            <view class="venue-dialog bottom-full" @tap.stop>
                 <view class="dialog-header">
                     <text class="dialog-title">场地管理</text>
                     <button class="close-btn" @tap="closeVenueDialog">
@@ -287,19 +261,13 @@
                         </view>
                         
                         <!-- 添加模式切换 -->
-                        <view class="form-item">
-                            <text class="form-label">添加模式：</text>
-                            <view class="mode-switch">
-                                <text 
-                                    :class="['mode-option', { active: !batchMode }]" 
-                                    @tap="batchMode = false"
-                                >单个添加</text>
-                                <text 
-                                    :class="['mode-option', { active: batchMode }]" 
-                                    @tap="batchMode = true"
-                                >批量添加</text>
-                            </view>
-                        </view>
+                <view class="form-item">
+                    <text class="form-label">添加模式：</text>
+                    <view class="mode-switch buttons row">
+                        <view class="mode-btn" :class="{ active: !batchMode }" @tap="batchMode = false">单个添加</view>
+                        <view class="mode-btn" :class="{ active: batchMode }" @tap="batchMode = true">批量添加</view>
+                    </view>
+                </view>
                         
                         <!-- 单个添加模式 -->
                         <view v-if="!batchMode">
@@ -309,15 +277,6 @@
                                     class="form-input" 
                                     v-model="newVenue.name"
                                     placeholder="如：乒乓球台1、羽毛球场地A"
-                                />
-                            </view>
-                            
-                            <view class="form-item">
-                                <text class="form-label">场地编码：</text>
-                                <input 
-                                    class="form-input" 
-                                    v-model="newVenue.venue_code"
-                                    placeholder="如：table_1、court_a"
                                 />
                             </view>
                         </view>
@@ -333,14 +292,7 @@
                                 />
                             </view>
                             
-                            <view class="form-item">
-                                <text class="form-label">编码前缀：</text>
-                                <input 
-                                    class="form-input" 
-                                    v-model="batchVenue.codePrefix"
-                                    placeholder="如：table"
-                                />
-                            </view>
+                            <!-- 编码前缀：已自动根据类型生成，不再手动输入 -->
                             
                             <view class="form-item">
                                 <text class="form-label">起始编号：</text>
@@ -406,6 +358,10 @@
                         </view>
                     </view>
                 </view>
+                <!-- 底部关闭按钮 -->
+                <view style="padding: 16rpx">
+                    <button class="add-btn" @tap="closeVenueDialog"><text class="add-text">关闭</text></button>
+                </view>
             </view>
         </view>
     </view>
@@ -456,6 +412,7 @@ const venueTypeOptions = ref([
 // 场地管理弹窗相关数据
 const showVenueDialog = ref(false)
 const batchMode = ref(false)
+const currentItemId = ref<number | null>(null)
 const newVenue = ref({
     venue_type: '',
     name: '',
@@ -464,7 +421,6 @@ const newVenue = ref({
 })
 const batchVenue = ref({
     namePrefix: '',
-    codePrefix: '',
     startNumber: 1,
     endNumber: 10
 })
@@ -1209,13 +1165,19 @@ const batchAddVenues = async (index: number) => {
  */
 const showVenueModal = (index: number) => {
     showVenueDialog.value = true
-    // 重置新场地表单
+    const item = eventItems.value[index]
+    currentItemId.value = item?.id || null
+    // 优先使用“项目大类 → 场地类型”映射；若映射为空再回退到项目自身 venue_type
+    const defaultType = mapCategoryToVenueType(item?.category_name || '') || (item?.venue_type || '')
+    // 重置新场地表单并根据项目类型自动设置默认类型
     newVenue.value = {
-        venue_type: '',
+        venue_type: defaultType || '',
         name: '',
         venue_code: '',
         location: ''
     }
+    // 默认批量名称前缀使用类型标签
+    batchVenue.value.namePrefix = getVenueTypeLabel(defaultType || '') || ''
 }
 
 /**
@@ -1234,18 +1196,7 @@ const onNewVenueTypeChange = (event: any) => {
     
     // 自动生成场地编码
     if (!newVenue.value.venue_code) {
-        const typeMap: Record<string, string> = {
-            'pingpong_table': 'table',
-            'badminton_court': 'court',
-            'basketball_court': 'court',
-            'football_field': 'field',
-            'tennis_court': 'court',
-            'volleyball_court': 'court',
-            'track': 'track',
-            'swimming_pool': 'pool',
-            'other': 'venue'
-        }
-        const prefix = typeMap[venueType] || 'venue'
+        const prefix = getVenueCodePrefixByType(venueType)
         newVenue.value.venue_code = `${prefix}_1`
     }
 }
@@ -1253,6 +1204,21 @@ const onNewVenueTypeChange = (event: any) => {
 /**
  * 添加新场地
  */
+const getVenueCodePrefixByType = (venueType: string) => {
+    const typeMap: Record<string, string> = {
+        'pingpong_table': 'table',
+        'badminton_court': 'court',
+        'basketball_court': 'court',
+        'football_field': 'field',
+        'tennis_court': 'court',
+        'volleyball_court': 'court',
+        'track': 'track',
+        'swimming_pool': 'pool',
+        'other': 'venue'
+    }
+    return typeMap[venueType] || 'venue'
+}
+
 const addNewVenue = async () => {
     if (!newVenue.value.venue_type) {
         uni.showToast({
@@ -1265,7 +1231,7 @@ const addNewVenue = async () => {
     try {
         if (batchMode.value) {
             // 批量添加模式
-            if (!batchVenue.value.namePrefix || !batchVenue.value.codePrefix || 
+            if (!batchVenue.value.namePrefix || 
                 !batchVenue.value.startNumber || !batchVenue.value.endNumber) {
                 uni.showToast({
                     title: '请填写完整的批量添加信息',
@@ -1288,7 +1254,7 @@ const addNewVenue = async () => {
                 venue_category: getVenueTypeLabel(newVenue.value.venue_type),
                 count: count,
                 name_prefix: batchVenue.value.namePrefix,
-                code_prefix: batchVenue.value.codePrefix,
+                code_prefix: getVenueCodePrefixByType(newVenue.value.venue_type),
                 location: newVenue.value.location,
                 capacity: 0
             }
@@ -1309,6 +1275,19 @@ const addNewVenue = async () => {
                 return
             }
             
+            // 若未填写编码，自动生成不重复编码（基于类型前缀与已有数量）
+            if (!newVenue.value.venue_code) {
+                const prefix = getVenueCodePrefixByType(newVenue.value.venue_type)
+                let suffix = 1
+                const existingCodes = (venues.value || []).map((v: any) => v.venue_code)
+                let candidate = `${prefix}_${suffix}`
+                while (existingCodes.includes(candidate)) {
+                    suffix += 1
+                    candidate = `${prefix}_${suffix}`
+                }
+                newVenue.value.venue_code = candidate
+            }
+
             const data = {
                 venue_type: newVenue.value.venue_type,
                 venue_category: getVenueTypeLabel(newVenue.value.venue_type),
@@ -1340,7 +1319,6 @@ const addNewVenue = async () => {
         }
         batchVenue.value = {
             namePrefix: '',
-            codePrefix: '',
             startNumber: 1,
             endNumber: 10
         }
@@ -1443,7 +1421,9 @@ const mapCategoryToVenueType = (categoryName: string): string => {
         '田径': 'track',
         '游泳': 'swimming_pool'
     }
-    return map[categoryName] || ''
+    // 严格匹配分类名称，避免误判
+    if (map[categoryName]) return map[categoryName]
+    return ''
 }
 
 /**
@@ -1524,6 +1504,26 @@ const onVenueCheckboxGroupChange = async (itemId: number, event: any) => {
     } catch (error) {
         console.error('更新场地选择失败:', error)
         uni.showToast({ title: '更新失败', icon: 'none' })
+    }
+}
+
+/**
+ * 单个场地点击切换选中状态
+ */
+const toggleVenueSelection = async (itemId: number, venueId: number) => {
+    const selected = itemVenueAssignments.value[itemId] || []
+    const isSelected = selected.some(a => a.venue_id === venueId)
+    try {
+        if (isSelected) {
+            await apiRemoveVenueFromItem(itemId, venueId)
+        } else {
+            await assignVenueToItem(itemId, { venue_id: venueId, assignment_type: 1 })
+        }
+        const list = await getItemVenues(itemId)
+        itemVenueAssignments.value[itemId] = list
+    } catch (error) {
+        console.error('切换场地选中失败:', error)
+        uni.showToast({ title: '操作失败', icon: 'none' })
     }
 }
 
@@ -2165,23 +2165,44 @@ const quickAssignVenues = async (itemId: number) => {
 
                 .select-all {
                     margin-bottom: 8rpx;
+                    .select-row {
+                        display: flex;
+                        align-items: center;
+                        padding: 12rpx 8rpx;
+                        border-radius: 6rpx;
+                        background-color: #f5f7fa;
+                        cursor: pointer;
+                        &.selected {
+                            background-color: #e6f3ff;
+                            color: #007aff;
+                        }
+                        .select-text {
+                            font-size: 26rpx;
+                        }
+                    }
                 }
 
-                .checkbox-item {
+                .venue-options {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8rpx;
+                }
+
+                .venue-option {
                     display: flex;
                     align-items: center;
-                    padding: 8rpx 4rpx;
-
-                    &.all {
-                        border-bottom: 1rpx dashed #e0e0e0;
-                        margin-bottom: 8rpx;
-                        padding-bottom: 12rpx;
+                    padding: 12rpx 8rpx;
+                    border-radius: 6rpx;
+                    transition: background-color 0.2s ease;
+                    
+                    &.selected {
+                        background-color: #e6f3ff;
+                        .option-text { color: #007aff; }
                     }
 
-                    .checkbox-text {
+                    .option-text {
                         font-size: 26rpx;
                         color: #333;
-                        margin-left: 8rpx;
                     }
 
                     .venue-code {
@@ -2302,37 +2323,32 @@ const quickAssignVenues = async (itemId: number) => {
                 }
             }
             
-            .mode-switch {
+            .mode-switch.buttons {
                 flex: 1;
                 display: flex;
+                align-items: center;
+                gap: 16rpx;
+                flex-wrap: nowrap;
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .mode-btn {
+                flex: 1;
+                height: 80rpx;
                 border: 1rpx solid #e0e0e0;
                 border-radius: 8rpx;
-                overflow: hidden;
-                
-                .mode-option {
-                    flex: 1;
-                    height: 80rpx;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 28rpx;
-                    color: #666;
-                    background-color: #f8f9fa;
-                    border-right: 1rpx solid #e0e0e0;
-                    transition: all 0.3s ease;
-                    
-                    &:last-child {
-                        border-right: none;
-                    }
-                    
-                    &.active {
-                        background-color: #007aff;
-                        color: white;
-                    }
-                    
-                    &:active {
-                        opacity: 0.8;
-                    }
+                background-color: #f8f9fa;
+                color: #666;
+                font-size: 28rpx;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 0;
+                &.active {
+                    background-color: #007aff;
+                    color: #fff;
+                    border-color: #007aff;
                 }
             }
         }
@@ -2404,11 +2420,17 @@ const quickAssignVenues = async (itemId: number) => {
 }
 
 .venue-dialog {
-    width: 90%;
-    max-height: 80%;
+    width: 100%;
+    max-height: 85%;
     background-color: white;
     border-radius: 16rpx;
     overflow: hidden;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
     
     .dialog-header {
         display: flex;
