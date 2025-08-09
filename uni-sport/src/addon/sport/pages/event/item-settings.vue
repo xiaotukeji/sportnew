@@ -101,6 +101,27 @@
                                         @change="onItemSwitchChange(getItemGlobalIndex(groupIndex, index), 'allow_duplicate_registration', $event)"
                             />
                         </view>
+
+                        <!-- 是否循环赛（小组） -->
+                        <view class="setting-item">
+                            <text class="setting-label">循环赛\n(小组)</text>
+                            <switch
+                                :checked="item.is_round_robin"
+                                @change="onItemSwitchChange(getItemGlobalIndex(groupIndex, index), 'is_round_robin', $event)"
+                            />
+                        </view>
+
+                        <!-- 每组人数（0表示不分组） -->
+                        <view class="setting-item">
+                            <text class="setting-label">每组人数</text>
+                            <input 
+                                class="setting-input" 
+                                type="number" 
+                                v-model.number="item.group_size"
+                                placeholder="0表示不分组"
+                                @blur="item.group_size = Math.max(0, parseInt(item.group_size || 0) || 0)"
+                            />
+                        </view>
                         
                         <!-- 项目说明 -->
                         <view class="setting-item">
@@ -121,7 +142,7 @@
                             <view class="venue-management">
                                 <view class="venue-header">
                                     <text class="venue-title">场地设备管理</text>
-                                    <button class="add-venue-btn" @tap="showVenueModal(getItemGlobalIndex(groupIndex, index))">
+                                    <button class="add-venue-btn" @tap="showVenueModal(item.id, group.categoryName)">
                                         <text class="btn-text">添加场地</text>
                                     </button>
                                 </view>
@@ -264,8 +285,8 @@
                 <view class="form-item">
                     <text class="form-label">添加模式：</text>
                     <view class="mode-switch buttons row">
-                        <view class="mode-btn" :class="{ active: !batchMode }" @tap="batchMode = false">单个添加</view>
-                        <view class="mode-btn" :class="{ active: batchMode }" @tap="batchMode = true">批量添加</view>
+                        <view class="mode-btn left" :class="{ active: !batchMode }" @tap="batchMode = false">单个添加</view>
+                        <view class="mode-btn right" :class="{ active: batchMode }" @tap="batchMode = true">批量添加</view>
                     </view>
                 </view>
                         
@@ -514,6 +535,13 @@ const getMaxParticipantsDisplayValue = (value: number) => {
     return value === 0 ? '' : value.toString()
 }
 
+    /**
+     * 获取每组人数显示值
+     */
+    const getGroupSizeDisplayValue = (value: number) => {
+        return value === 0 ? '' : value.toString()
+    }
+
 /**
  * 报名费获得焦点
  */
@@ -543,6 +571,35 @@ const onMaxParticipantsChange = (index: number, event: any) => {
     // 只允许非负整数
     if (value < 0) {
         value = 0
+    }
+
+    /**
+     * 每组人数变更（0 表示不分组）
+     */
+    const onGroupSizeInput = (index: number, event: any) => {
+        let value = event.detail?.value || event.target?.value || event
+        if (value < 0) value = 0
+        const intValue = parseInt(value) || 0
+        eventItems.value[index].group_size = intValue
+        eventItems.value[index].is_configured = true
+
+        // 批量模式只在同分类、首个项目时同步
+        const currentItem = eventItems.value[index]
+        const categoryName = currentItem.category_name || '其他'
+        const group = groupedEventItems.value.find(g => g.categoryName === categoryName)
+        if (getCategoryBatchMode(categoryName) && group && group.items.length > 1) {
+            const isFirstItem = group.items[0].id === currentItem.id
+            if (isFirstItem) {
+                for (let i = 1; i < group.items.length; i++) {
+                    const otherItem = group.items[i]
+                    const otherIndex = eventItems.value.findIndex(item => item.id === otherItem.id)
+                    if (otherIndex !== -1) {
+                        eventItems.value[otherIndex].group_size = intValue
+                        eventItems.value[otherIndex].is_configured = true
+                    }
+                }
+            }
+        }
     }
     
     // 转换为整数
@@ -786,6 +843,8 @@ const loadEventItems = async () => {
             max_participants: item.max_participants ?? 0, // 使用 ?? 确保 0 值不被覆盖
             rounds: item.rounds ?? 0,
             allow_duplicate_registration: item.allow_duplicate_registration ?? false,
+            is_round_robin: item.is_round_robin ?? false,
+            group_size: item.group_size ?? 0,
             venue_count: item.venue_count ?? 0,
             venue_type: item.venue_type ?? '',
             remark: item.remark ?? '',
@@ -885,6 +944,8 @@ const saveAllSettings = async () => {
                     max_participants: item.max_participants,
                     rounds: item.rounds,
                     allow_duplicate_registration: item.allow_duplicate_registration,
+                    is_round_robin: item.is_round_robin ? 1 : 0,
+                    group_size: item.group_size,
                     venue_count: item.venue_count,
                     venue_type: item.venue_type,
                     remark: item.remark
@@ -1163,20 +1224,54 @@ const batchAddVenues = async (index: number) => {
 /**
  * 显示场地管理弹窗
  */
-const showVenueModal = (index: number) => {
+const showVenueModal = (itemOrIndex: number, categoryName?: string) => {
     showVenueDialog.value = true
-    const item = eventItems.value[index]
+
+    // 允许传入 itemId 或全局索引，两者兼容
+    let item = eventItems.value.find((it: any) => it.id === itemOrIndex)
+    if (!item) item = eventItems.value[itemOrIndex]
     currentItemId.value = item?.id || null
-    // 优先使用“项目大类 → 场地类型”映射；若映射为空再回退到项目自身 venue_type
-    const defaultType = mapCategoryToVenueType(item?.category_name || '') || (item?.venue_type || '')
-    // 重置新场地表单并根据项目类型自动设置默认类型
+
+    console.log('打开弹窗的项目:', item)
+    console.log('传入的categoryName参数:', categoryName)
+    console.log('item.category_name:', item?.category_name)
+    console.log('item.name:', item?.name)
+    console.log('item.venue_type:', item?.venue_type)
+
+    // 1) 优先使用“传入的分类 → 类型”映射（绑定分组分类，避免串类）
+    let defaultType = mapCategoryToVenueType(String(categoryName || '').trim())
+    console.log('由参数categoryName映射得到的类型:', defaultType)
+
+    // 2) 若没有显式传入分类，则使用 item.category_name 映射
+    if (!defaultType) {
+        defaultType = mapCategoryToVenueType(String(item?.category_name || '').trim())
+        console.log('由item.category_name映射得到的类型:', defaultType)
+    }
+
+    // 3) 仍无结果时，基于名称关键字兜底
+    if (!defaultType) {
+        const text = `${item?.category_name || ''}${item?.name || ''}`
+        console.log('关键字判定text:', text)
+        if (/乒乓/.test(text)) defaultType = 'pingpong_table'
+        else if (/羽毛/.test(text)) defaultType = 'badminton_court'
+        else if (/篮球/.test(text)) defaultType = 'basketball_court'
+        else if (/足球/.test(text)) defaultType = 'football_field'
+        else if (/网球/.test(text)) defaultType = 'tennis_court'
+        else if (/排球/.test(text)) defaultType = 'volleyball_court'
+        else if (/田径|跑/.test(text)) defaultType = 'track'
+        else if (/泳/.test(text)) defaultType = 'swimming_pool'
+    }
+
+    // 4) 最后回退到 item 自身的 venue_type
+    if (!defaultType) defaultType = (item?.venue_type || '')
+    console.log('最终defaultType:', defaultType)
+
     newVenue.value = {
         venue_type: defaultType || '',
         name: '',
         venue_code: '',
         location: ''
     }
-    // 默认批量名称前缀使用类型标签
     batchVenue.value.namePrefix = getVenueTypeLabel(defaultType || '') || ''
 }
 
@@ -1983,15 +2078,21 @@ const quickAssignVenues = async (itemId: number) => {
             }
             
             .add-venue-btn {
-                padding: 12rpx 24rpx;
+                height: 48rpx; /* 比文字略高，整体更紧凑 */
+                padding: 0 20rpx; /* 去除上下内边距，改为定高 */
                 background-color: #007aff;
                 color: white;
                 border-radius: 8rpx;
                 border: none;
                 font-size: 24rpx;
+                display: flex;
+                align-items: center; /* 垂直居中文本 */
+                justify-content: center; /* 水平居中 */
+                line-height: 1; /* 防止基线导致上下不居中 */
                 
                 .btn-text {
                     font-size: 24rpx;
+                    line-height: 1;
                 }
             }
         }
@@ -2326,15 +2427,14 @@ const quickAssignVenues = async (itemId: number) => {
             .mode-switch.buttons {
                 flex: 1;
                 display: flex;
+                flex-direction: row;
                 align-items: center;
-                gap: 16rpx;
                 flex-wrap: nowrap;
                 width: 100%;
-                justify-content: space-between;
             }
 
             .mode-btn {
-                flex: 1;
+                flex: 1 1 50%;
                 height: 80rpx;
                 border: 1rpx solid #e0e0e0;
                 border-radius: 8rpx;
@@ -2345,6 +2445,9 @@ const quickAssignVenues = async (itemId: number) => {
                 align-items: center;
                 justify-content: center;
                 min-width: 0;
+                white-space: nowrap;
+                text-align: center;
+                &:not(:first-child) { margin-left: 16rpx; }
                 &.active {
                     background-color: #007aff;
                     color: #fff;
@@ -2526,16 +2629,50 @@ const quickAssignVenues = async (itemId: number) => {
             
             .add-btn {
                 width: 100%;
-                height: 60rpx;
+                height: 64rpx; /* 与上面的模式按钮同高 */
+                padding: 0; /* 去掉默认内边距，避免文字下沉 */
                 background-color: #007aff;
                 color: white;
                 border-radius: 8rpx;
                 border: none;
                 font-size: 26rpx;
                 margin-top: 20rpx;
+                display: flex;
+                align-items: center; /* 垂直居中文本 */
+                justify-content: center; /* 水平居中 */
+                line-height: 1; /* 防止基线导致偏移 */
                 
                 .add-text {
                     font-size: 26rpx;
+                    line-height: 1;
+                }
+            }
+            /* 添加模式：弹窗专属样式，强制一行显示为两个按钮 */
+            .form-item {
+                .mode-switch.buttons {
+                    flex: 1;
+                    display: flex;
+                    flex-wrap: nowrap;
+                }
+                .mode-switch.buttons .mode-btn {
+                    flex: 1 1 0;
+                    height: 64rpx; /* 矮一点，与添加按钮一致 */
+                    border: 1rpx solid #e0e0e0;
+                    border-radius: 8rpx;
+                    background-color: #f8f9fa;
+                    color: #333;
+                    font-size: 28rpx;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    white-space: nowrap;
+                    user-select: none;
+                }
+                .mode-switch.buttons .mode-btn + .mode-btn { margin-left: 16rpx; }
+                .mode-switch.buttons .mode-btn.active {
+                    background-color: #007aff;
+                    color: #fff;
+                    border-color: #007aff;
                 }
             }
         }

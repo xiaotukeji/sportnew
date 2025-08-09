@@ -610,6 +610,9 @@ class EventItemService extends BaseApiService
             'max_participants' => $data['max_participants'] ?? 0,
             'rounds' => $data['rounds'] ?? 0,
             'allow_duplicate_registration' => $data['allow_duplicate_registration'] ?? 0,
+            // 新增：是否循环赛、小组人数
+            'is_round_robin' => isset($data['is_round_robin']) ? (int)$data['is_round_robin'] : ($item['is_round_robin'] ?? 0),
+            'group_size' => isset($data['group_size']) ? (int)$data['group_size'] : ($item['group_size'] ?? 0),
             'venue_count' => $data['venue_count'] ?? 0,
             'venue_type' => $data['venue_type'] ?? '',
             'remark' => $data['remark'] ?? '',

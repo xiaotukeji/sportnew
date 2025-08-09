@@ -83,6 +83,8 @@ class EventItem extends BaseApiController
             ['max_participants', 0],                // 人数限制
             ['rounds', 0],                          // 比赛轮次
             ['allow_duplicate_registration', 0],    // 是否允许重复报名
+            ['is_round_robin', 0],                  // 是否循环赛（小组）
+            ['group_size', 0],                      // 每组人数（0表示不分组）
             ['remark', ''],                         // 项目说明
             ['venue_count', 0],                     // 需要的场地数量
             ['venue_type', ''],                     // 场地类型
