@@ -168,7 +168,7 @@ export function getEventItems(eventId: number) {
  * @returns
  */
 export function updateEventSettings(params: Record<string, any>) {
-    return request.put(`sport/event/${params.event_id}/settings`, params, { showErrorMessage: true, showSuccessMessage: true });
+    return request.put(`sport/event/${params.event_id}/settings`, params, { showErrorMessage: true, showSuccessMessage: false });
 }
 
 /**
@@ -177,5 +177,5 @@ export function updateEventSettings(params: Record<string, any>) {
  * @returns
  */
 export function updateItemSettings(params: Record<string, any>) {
-    return request.put(`sport/item/${params.item_id}/settings`, params, { showErrorMessage: true, showSuccessMessage: true });
+    return request.put(`sport/item/${params.item_id}/settings`, params, { showErrorMessage: true, showSuccessMessage: false });
 } 

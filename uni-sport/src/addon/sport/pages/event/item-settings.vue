@@ -35,7 +35,8 @@
                     <text class="batch-label">批量设置</text>
                     <switch 
                                 :checked="getCategoryBatchMode(group.categoryName)" 
-                                @change="onCategoryBatchModeChange(group.categoryName, $event)"
+                                :data-category="group.categoryName"
+                                @change="onCategoryBatchModeChangeEvt"
                     />
                 </view>
             </view>
@@ -74,9 +75,10 @@
                                 type="digit" 
                                 :value="getRegistrationFeeDisplayValue(item.registration_fee)"
                                 placeholder="0表示免费"
-                                        @input="onRegistrationFeeChange(getItemGlobalIndex(groupIndex, index), $event)"
-                                        @focus="onRegistrationFeeFocus(getItemGlobalIndex(groupIndex, index), $event)"
-                                        @blur="onRegistrationFeeBlur(getItemGlobalIndex(groupIndex, index), $event)"
+                                        :data-index="getItemGlobalIndex(groupIndex, index)"
+                                        @input="onRegistrationFeeInput"
+                                        @focus="onRegistrationFeeFocusEvt"
+                                        @blur="onRegistrationFeeBlurEvt"
                             />
                         </view>
                         
@@ -88,8 +90,9 @@
                                 type="number" 
                                 :value="getMaxParticipantsDisplayValue(item.max_participants)"
                                 placeholder="0表示不限制"
-                                        @input="onMaxParticipantsChange(getItemGlobalIndex(groupIndex, index), $event)"
-                                        @blur="onMaxParticipantsBlur(getItemGlobalIndex(groupIndex, index), $event)"
+                                        :data-index="getItemGlobalIndex(groupIndex, index)"
+                                        @input="onMaxParticipantsInput"
+                                        @blur="onMaxParticipantsBlurEvt"
                             />
                         </view>
                         
@@ -98,7 +101,9 @@
                             <text class="setting-label">允许重复\n报名</text>
                             <switch 
                                 :checked="item.allow_duplicate_registration" 
-                                        @change="onItemSwitchChange(item.id, 'allow_duplicate_registration', $event)"
+                                :data-id="item.id"
+                                data-field="allow_duplicate_registration"
+                                @change="onItemSwitchChangeEvt"
                             />
                         </view>
 
@@ -107,7 +112,9 @@
                             <text class="setting-label">循环赛\n(小组)</text>
                             <switch
                                 :checked="item.is_round_robin"
-                                @change="onItemSwitchChange(item.id, 'is_round_robin', $event)"
+                                :data-id="item.id"
+                                data-field="is_round_robin"
+                                @change="onItemSwitchChangeEvt"
                             />
                         </view>
 
@@ -133,8 +140,7 @@
                                     v-model="item.remark"
                                     placeholder="请输入项目说明..."
                                     maxlength="200"
-                                            @input="onRemarkChange(getItemGlobalIndex(groupIndex, index), $event)"
-                                />
+                                ></textarea>
                                 <text class="textarea-count">{{ item.remark.length }}/200</text>
                                     </view>
                                 </view>
@@ -245,7 +251,7 @@
         <!-- 底部按钮 -->
         <view class="bottom-actions">
             <button class="action-btn cancel-btn" @tap="goBack">
-                <text class="btn-text">取消</text>
+                <text class="btn-text">返回</text>
             </button>
             <button class="action-btn save-btn" @tap="saveAllSettings" :loading="saving">
                 <text class="btn-text">{{ saving ? '保存中...' : '保存设置' }}</text>
@@ -552,6 +558,58 @@ const onRegistrationFeeFocus = (index: number, event: any) => {
 }
 
 /**
+ * 批量开关（分类）事件版本
+ */
+const onCategoryBatchModeChangeEvt = (e: any) => {
+    const category = e?.currentTarget?.dataset?.category || e?.target?.dataset?.category || ''
+    onCategoryBatchModeChange(String(category), e)
+}
+
+/**
+ * 报名费 事件版本
+ */
+const onRegistrationFeeInput = (e: any) => {
+    const idx = e?.currentTarget?.dataset?.index
+    if (idx === undefined || idx === null) return
+    onRegistrationFeeChange(Number(idx), e)
+}
+const onRegistrationFeeFocusEvt = (e: any) => {
+    const idx = e?.currentTarget?.dataset?.index
+    if (idx === undefined || idx === null) return
+    onRegistrationFeeFocus(Number(idx), e)
+}
+const onRegistrationFeeBlurEvt = (e: any) => {
+    const idx = e?.currentTarget?.dataset?.index
+    if (idx === undefined || idx === null) return
+    onRegistrationFeeBlur(Number(idx), e)
+}
+
+/**
+ * 人数输入 事件版本
+ */
+const onMaxParticipantsInput = (e: any) => {
+    const idx = e?.currentTarget?.dataset?.index
+    if (idx === undefined || idx === null) return
+    onMaxParticipantsChange(Number(idx), e)
+}
+const onMaxParticipantsBlurEvt = (e: any) => {
+    const idx = e?.currentTarget?.dataset?.index
+    if (idx === undefined || idx === null) return
+    onMaxParticipantsBlur(Number(idx), e)
+}
+
+/**
+ * 项目开关事件版本（允许重复/循环赛）
+ */
+const onItemSwitchChangeEvt = (e: any) => {
+    const idAttr = e?.currentTarget?.dataset?.id || e?.target?.dataset?.id
+    const field = e?.currentTarget?.dataset?.field || e?.target?.dataset?.field
+    const itemId = typeof idAttr === 'string' ? parseInt(idAttr) : idAttr
+    if (!itemId || !field) return
+    onItemSwitchChange(itemId, String(field), e)
+}
+
+/**
  * 报名费失去焦点
  */
 const onRegistrationFeeBlur = (index: number, event: any) => {
@@ -671,6 +729,8 @@ const onRemarkChange = (index: number, event: any) => {
         }
     }
 }
+
+// 备注直接使用 v-model 双向绑定，无需事件函数
 
 /**
  * 项目开关变更
@@ -960,10 +1020,8 @@ const saveAllSettings = async () => {
                 icon: 'success'
             })
             
-            // 延迟返回上一页
-            setTimeout(() => {
-                uni.navigateBack()
-            }, 1500)
+            // 留在本页，刷新数据以便用户确认设置已生效
+            await loadEventItems()
             
         } catch (error) {
             console.error('保存设置失败:', error)

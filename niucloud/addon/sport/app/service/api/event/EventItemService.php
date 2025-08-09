@@ -308,10 +308,12 @@ class EventItemService extends BaseApiService
             ->select()
             ->toArray();
             
-        // 处理返回数据
+        // 处理返回数据：名称使用基础项目名；备注仅在项目备注为空时回填基础备注，避免覆盖用户自定义
         foreach ($list as &$item) {
-            $item['name'] = $item['base_item_name']; // 使用基础项目名称
-            $item['remark'] = $item['base_item_remark']; // 使用基础项目备注
+            $item['name'] = $item['base_item_name'];
+            if (!isset($item['remark']) || $item['remark'] === '' || $item['remark'] === null) {
+                $item['remark'] = $item['base_item_remark'];
+            }
         }
         unset($item);
             
