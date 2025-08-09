@@ -604,16 +604,23 @@ class EventItemService extends BaseApiService
             throw new \core\exception\CommonException('比赛轮次不能为负数');
         }
         
+        // 规范化/校验
+        $registration_fee = $data['registration_fee'] ?? 0;
+        $max_participants = (int)($data['max_participants'] ?? 0);
+        $rounds = (int)($data['rounds'] ?? 0);
+        $allow_duplicate_registration = isset($data['allow_duplicate_registration']) ? (int)$data['allow_duplicate_registration'] : 0;
+        $is_round_robin = isset($data['is_round_robin']) ? (int)$data['is_round_robin'] : ((int)($item['is_round_robin'] ?? 0));
+        $group_size = isset($data['group_size']) ? max(0, (int)$data['group_size']) : ((int)($item['group_size'] ?? 0));
+
         // 更新数据
         $update_data = [
-            'registration_fee' => $data['registration_fee'] ?? 0,
-            'max_participants' => $data['max_participants'] ?? 0,
-            'rounds' => $data['rounds'] ?? 0,
-            'allow_duplicate_registration' => $data['allow_duplicate_registration'] ?? 0,
-            // 新增：是否循环赛、小组人数
-            'is_round_robin' => isset($data['is_round_robin']) ? (int)$data['is_round_robin'] : ($item['is_round_robin'] ?? 0),
-            'group_size' => isset($data['group_size']) ? (int)$data['group_size'] : ($item['group_size'] ?? 0),
-            'venue_count' => $data['venue_count'] ?? 0,
+            'registration_fee' => $registration_fee,
+            'max_participants' => $max_participants,
+            'rounds' => $rounds,
+            'allow_duplicate_registration' => $allow_duplicate_registration,
+            'is_round_robin' => $is_round_robin,
+            'group_size' => $group_size,
+            'venue_count' => (int)($data['venue_count'] ?? 0),
             'venue_type' => $data['venue_type'] ?? '',
             'remark' => $data['remark'] ?? '',
             'update_time' => time()

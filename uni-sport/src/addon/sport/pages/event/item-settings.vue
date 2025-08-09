@@ -121,6 +121,7 @@
                                 placeholder="0表示不分组"
                                 @blur="item.group_size = Math.max(0, parseInt(item.group_size || 0) || 0)"
                             />
+                            <text class="input-tip">0 表示不分组</text>
                         </view>
                         
                         <!-- 项目说明 -->
@@ -2016,6 +2017,13 @@ const quickAssignVenues = async (itemId: number) => {
                             border-color: #007aff;
                             z-index: 10; /* 聚焦时稍微提升，但不超过按钮 */
                         }
+                    }
+
+                    .input-tip {
+                        margin-left: 12rpx;
+                        font-size: 24rpx;
+                        color: #999;
+                        flex-shrink: 0;
                     }
                     
                     .textarea-container {
