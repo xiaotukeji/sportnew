@@ -837,16 +837,16 @@ const loadEventItems = async () => {
         const response: any = await getEventItems(eventId.value)
         const items = response.data || []
         
-        // 为每个项目添加默认设置
+        // 为每个项目添加默认设置（并将后端返回的数字字符串规范为正确类型）
         eventItems.value = items.map((item: any) => ({
             ...item,
-            registration_fee: item.registration_fee ?? 0, // 使用 ?? 确保 0 值不被覆盖
-            max_participants: item.max_participants ?? 0, // 使用 ?? 确保 0 值不被覆盖
+            registration_fee: item.registration_fee ?? 0,
+            max_participants: item.max_participants ?? 0,
             rounds: item.rounds ?? 0,
-            allow_duplicate_registration: item.allow_duplicate_registration ?? false,
-            is_round_robin: item.is_round_robin ?? false,
-            group_size: item.group_size ?? 0,
-            venue_count: item.venue_count ?? 0,
+            allow_duplicate_registration: (item.allow_duplicate_registration === 1 || item.allow_duplicate_registration === '1' || item.allow_duplicate_registration === true),
+            is_round_robin: (item.is_round_robin === 1 || item.is_round_robin === '1' || item.is_round_robin === true),
+            group_size: (Number.parseInt(item.group_size, 10) || 0),
+            venue_count: (Number.parseInt(item.venue_count, 10) || 0),
             venue_type: item.venue_type ?? '',
             remark: item.remark ?? '',
             is_configured: !!(item.registration_fee || item.max_participants || item.rounds || item.remark)
