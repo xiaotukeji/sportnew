@@ -193,7 +193,7 @@
                                         >
                                             <text class="venue-name">{{ venue.name }}</text>
                                             <text class="venue-code">({{ venue.venue_code }})</text>
-                                            <button class="remove-venue-btn" @tap="removeVenueFromItem(item.id, venue.id)">
+                                            <button class="remove-venue-btn" @tap="removeVenueFromItem(item.id, venue.venue_id)">
                                                 <text class="remove-text">×</text>
                                             </button>
                                         </view>
@@ -1220,7 +1220,7 @@ const removeVenueFromItem = async (itemId: number, venueId: number) => {
         // 更新本地数据
         if (itemVenueAssignments.value[itemId]) {
             itemVenueAssignments.value[itemId] = itemVenueAssignments.value[itemId].filter(
-                venue => venue.id !== venueId
+                venue => venue.venue_id !== venueId
             )
         }
         
