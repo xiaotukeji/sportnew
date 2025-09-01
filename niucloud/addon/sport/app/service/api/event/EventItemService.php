@@ -655,11 +655,7 @@ class EventItemService extends BaseApiService
         
         $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
         
-        // 调试：先查看所有分配记录（包括已删除的）
-        $allAssignments = $assignment_model->where('item_id', $itemId)->select()->toArray();
-        \think\facade\Log::info('获取项目场地 - 所有分配记录', ['itemId' => $itemId, 'all_assignments' => $allAssignments]);
-        
-        $result = $assignment_model
+        return $assignment_model
             ->alias('a')
             ->leftJoin('sport_venue v', 'a.venue_id = v.id')
             ->where([
@@ -670,10 +666,6 @@ class EventItemService extends BaseApiService
             ->order('a.sort asc, a.id asc')
             ->select()
             ->toArray();
-            
-        \think\facade\Log::info('获取项目场地 - 有效分配记录', ['itemId' => $itemId, 'active_assignments' => $result]);
-        
-        return $result;
     }
     
     /**
