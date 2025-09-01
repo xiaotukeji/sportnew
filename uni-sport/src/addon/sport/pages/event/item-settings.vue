@@ -1229,8 +1229,30 @@ const removeVenueFromItem = async (itemId: number, venueId: number) => {
             title: '移除成功',
             icon: 'success'
         })
-    } catch (error) {
-        console.error('移除场地失败:', error)
+    } catch (error: any) {
+        console.error('移除场地失败 - 完整错误信息:', error)
+        console.error('错误对象类型:', typeof error)
+        console.error('错误消息:', error?.message || error?.msg || '未知错误')
+        console.error('错误数据:', error?.data || '无数据')
+        
+        // 尝试解析调试信息
+        try {
+            const errorMsg = error?.message || error?.msg || ''
+            if (errorMsg.includes('{')) {
+                const debugInfo = JSON.parse(errorMsg)
+                console.log('🔍 调试信息:', debugInfo)
+                
+                uni.showModal({
+                    title: '调试信息',
+                    content: `member_id_from_this: ${debugInfo.debug_info?.member_id_from_this}\nmember_id_type: ${debugInfo.debug_info?.member_id_type}\nitem_exists: ${debugInfo.debug_info?.item_exists}`,
+                    showCancel: false
+                })
+                return
+            }
+        } catch (parseError) {
+            console.error('解析调试信息失败:', parseError)
+        }
+        
         uni.showToast({
             title: '移除失败',
             icon: 'none'

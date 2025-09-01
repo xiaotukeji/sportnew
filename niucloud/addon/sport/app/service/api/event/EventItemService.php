@@ -777,55 +777,45 @@ class EventItemService extends BaseApiService
      */
     public function removeVenueFromItem(int $itemId, int $venueId)
     {
-        // 调试信息 - 比较两种获取方式
-        $member_id_from_request = request()->uid();
-        $member_id_from_this = $this->member_id;
-        
-        \think\facade\Log::info('删除场地分配 - 开始执行', [
-            'itemId' => $itemId, 
-            'venueId' => $venueId, 
-            'member_id_from_request' => $member_id_from_request,
-            'member_id_from_this' => $member_id_from_this,
-            'member_id_type' => gettype($member_id_from_this)
-        ]);
-        
-        // 使用 $this->member_id，这是正确的方式
-        $member_id = $this->member_id;
-        
-        // 验证项目是否存在
-        $item = SportItem::where('id', $itemId)->find();
-        if (!$item) {
-            \think\facade\Log::error('删除场地分配 - 项目不存在', ['itemId' => $itemId]);
-            throw new \core\exception\CommonException('项目不存在');
+        // 临时调试：只返回调试信息，不执行删除操作
+        try {
+            $member_id_from_request = request()->uid();
+            $member_id_from_this = $this->member_id;
+            
+            // 验证项目是否存在
+            $item = SportItem::where('id', $itemId)->find();
+            $event = null;
+            if ($item) {
+                $event = SportEvent::where('id', $item['event_id'])->find();
+            }
+            
+            $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
+            $assignment = $assignment_model->where([
+                ['item_id', '=', $itemId],
+                ['venue_id', '=', $venueId]
+            ])->find();
+            
+            // 返回调试信息而不是执行删除
+            throw new \core\exception\CommonException(json_encode([
+                'debug_info' => [
+                    'itemId' => $itemId,
+                    'venueId' => $venueId,
+                    'member_id_from_request' => $member_id_from_request,
+                    'member_id_from_this' => $member_id_from_this,
+                    'member_id_type' => gettype($member_id_from_this),
+                    'item_exists' => $item ? true : false,
+                    'event_member_id' => $event ? $event['member_id'] : null,
+                    'assignment_exists' => $assignment ? true : false,
+                    'assignment_id' => $assignment ? $assignment['id'] : null
+                ]
+            ], JSON_UNESCAPED_UNICODE));
+            
+        } catch (\core\exception\CommonException $e) {
+            throw $e; // 重新抛出我们的调试异常
+        } catch (\Exception $e) {
+            // 捕获其他异常并返回异常信息
+            throw new \core\exception\CommonException('调试异常: ' . $e->getMessage() . ' 在第 ' . $e->getLine() . ' 行');
         }
-        
-        // 验证权限：只能修改自己创建的赛事中的项目
-        $event = SportEvent::where('id', $item['event_id'])->find();
-        if (!$event || $event['member_id'] != $member_id) {
-            \think\facade\Log::error('删除场地分配 - 无权限', ['event_member_id' => $event['member_id'] ?? null, 'current_member_id' => $member_id]);
-            throw new \core\exception\CommonException('无权限操作此项目');
-        }
-        
-        $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
-        
-        // 查找要删除的分配记录
-        $assignment = $assignment_model->where([
-            ['item_id', '=', $itemId],
-            ['venue_id', '=', $venueId]
-        ])->find();
-        
-        \think\facade\Log::info('删除场地分配 - 查找分配记录', ['assignment' => $assignment ? $assignment->toArray() : null]);
-        
-        // 软删除分配记录
-        $affected = $assignment_model->where([
-            ['item_id', '=', $itemId],
-            ['venue_id', '=', $venueId]
-        ])->update([
-            'status' => 0,
-            'update_time' => time()
-        ]);
-        
-        \think\facade\Log::info('删除场地分配 - 执行结果', ['affected_rows' => $affected]);
     }
     
     /**
