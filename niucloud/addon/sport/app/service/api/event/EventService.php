@@ -580,7 +580,8 @@ class EventService extends BaseApiService
         $venue_model = new \addon\sport\app\model\venue\SportVenue();
         
         $where = [
-            ['event_id', '=', $eventId]
+            ['event_id', '=', $eventId],
+            ['status', '=', 1]  // 只获取有效的场地
         ];
         
         if (!empty($data['venue_type'])) {
