@@ -638,8 +638,8 @@ class EventItemService extends BaseApiService
      */
     public function getItemVenues(int $itemId)
     {
-        // 获取当前用户ID
-        $member_id = request()->uid();
+        // 使用 $this->member_id，这是正确的方式
+        $member_id = $this->member_id;
         
         // 验证项目是否存在
         $item = SportItem::where('id', $itemId)->find();
@@ -777,11 +777,20 @@ class EventItemService extends BaseApiService
      */
     public function removeVenueFromItem(int $itemId, int $venueId)
     {
-        // 获取当前用户ID
-        $member_id = request()->uid();
+        // 调试信息 - 比较两种获取方式
+        $member_id_from_request = request()->uid();
+        $member_id_from_this = $this->member_id;
         
-        // 调试信息
-        \think\facade\Log::info('删除场地分配 - 开始执行', ['itemId' => $itemId, 'venueId' => $venueId, 'member_id' => $member_id]);
+        \think\facade\Log::info('删除场地分配 - 开始执行', [
+            'itemId' => $itemId, 
+            'venueId' => $venueId, 
+            'member_id_from_request' => $member_id_from_request,
+            'member_id_from_this' => $member_id_from_this,
+            'member_id_type' => gettype($member_id_from_this)
+        ]);
+        
+        // 使用 $this->member_id，这是正确的方式
+        $member_id = $this->member_id;
         
         // 验证项目是否存在
         $item = SportItem::where('id', $itemId)->find();
