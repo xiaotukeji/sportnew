@@ -1020,8 +1020,8 @@ const saveAllSettings = async () => {
                 icon: 'success'
             })
             
-            // 留在本页，刷新数据以便用户确认设置已生效
-            await loadEventItems()
+            // 不再重新加载数据，避免覆盖已删除的场地分配
+            // await loadEventItems()
             
         } catch (error) {
             console.error('保存设置失败:', error)
