@@ -638,6 +638,9 @@ class EventItemService extends BaseApiService
      */
     public function getItemVenues(int $itemId)
     {
+        // 获取当前用户ID
+        $member_id = request()->uid();
+        
         // 验证项目是否存在
         $item = SportItem::where('id', $itemId)->find();
         if (!$item) {
@@ -646,7 +649,7 @@ class EventItemService extends BaseApiService
         
         // 验证权限：只能查看自己创建的赛事中的项目
         $event = SportEvent::where('id', $item['event_id'])->find();
-        if (!$event || $event['member_id'] != $this->member_id) {
+        if (!$event || $event['member_id'] != $member_id) {
             throw new \core\exception\CommonException('无权限操作此项目');
         }
         
@@ -774,8 +777,11 @@ class EventItemService extends BaseApiService
      */
     public function removeVenueFromItem(int $itemId, int $venueId)
     {
+        // 获取当前用户ID
+        $member_id = request()->uid();
+        
         // 调试信息
-        \think\facade\Log::info('删除场地分配 - 开始执行', ['itemId' => $itemId, 'venueId' => $venueId, 'member_id' => $this->member_id]);
+        \think\facade\Log::info('删除场地分配 - 开始执行', ['itemId' => $itemId, 'venueId' => $venueId, 'member_id' => $member_id]);
         
         // 验证项目是否存在
         $item = SportItem::where('id', $itemId)->find();
@@ -786,8 +792,8 @@ class EventItemService extends BaseApiService
         
         // 验证权限：只能修改自己创建的赛事中的项目
         $event = SportEvent::where('id', $item['event_id'])->find();
-        if (!$event || $event['member_id'] != $this->member_id) {
-            \think\facade\Log::error('删除场地分配 - 无权限', ['event_member_id' => $event['member_id'] ?? null, 'current_member_id' => $this->member_id]);
+        if (!$event || $event['member_id'] != $member_id) {
+            \think\facade\Log::error('删除场地分配 - 无权限', ['event_member_id' => $event['member_id'] ?? null, 'current_member_id' => $member_id]);
             throw new \core\exception\CommonException('无权限操作此项目');
         }
         
