@@ -1215,14 +1215,15 @@ const getItemVenues = async (itemId: number) => {
  */
 const removeVenueFromItem = async (itemId: number, venueId: number) => {
     try {
-        await apiRemoveVenueFromItem(itemId, venueId)
+        console.log('删除场地分配 - 请求参数:', { itemId, venueId })
         
-        // 更新本地数据
-        if (itemVenueAssignments.value[itemId]) {
-            itemVenueAssignments.value[itemId] = itemVenueAssignments.value[itemId].filter(
-                venue => venue.venue_id !== venueId
-            )
-        }
+        const response = await apiRemoveVenueFromItem(itemId, venueId)
+        console.log('删除场地分配 - 接口响应:', response)
+        
+        // 删除后立即从后端获取最新数据验证
+        const updatedList = await getItemVenues(itemId)
+        console.log('删除后重新获取的场地列表:', updatedList)
+        itemVenueAssignments.value[itemId] = updatedList
         
         uni.showToast({
             title: '移除成功',

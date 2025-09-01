@@ -652,7 +652,11 @@ class EventItemService extends BaseApiService
         
         $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
         
-        return $assignment_model
+        // 调试：先查看所有分配记录（包括已删除的）
+        $allAssignments = $assignment_model->where('item_id', $itemId)->select()->toArray();
+        \think\facade\Log::info('获取项目场地 - 所有分配记录', ['itemId' => $itemId, 'all_assignments' => $allAssignments]);
+        
+        $result = $assignment_model
             ->alias('a')
             ->leftJoin('sport_venue v', 'a.venue_id = v.id')
             ->where([
@@ -663,6 +667,10 @@ class EventItemService extends BaseApiService
             ->order('a.sort asc, a.id asc')
             ->select()
             ->toArray();
+            
+        \think\facade\Log::info('获取项目场地 - 有效分配记录', ['itemId' => $itemId, 'active_assignments' => $result]);
+        
+        return $result;
     }
     
     /**
@@ -766,28 +774,43 @@ class EventItemService extends BaseApiService
      */
     public function removeVenueFromItem(int $itemId, int $venueId)
     {
+        // 调试信息
+        \think\facade\Log::info('删除场地分配 - 开始执行', ['itemId' => $itemId, 'venueId' => $venueId, 'member_id' => $this->member_id]);
+        
         // 验证项目是否存在
         $item = SportItem::where('id', $itemId)->find();
         if (!$item) {
+            \think\facade\Log::error('删除场地分配 - 项目不存在', ['itemId' => $itemId]);
             throw new \core\exception\CommonException('项目不存在');
         }
         
         // 验证权限：只能修改自己创建的赛事中的项目
         $event = SportEvent::where('id', $item['event_id'])->find();
         if (!$event || $event['member_id'] != $this->member_id) {
+            \think\facade\Log::error('删除场地分配 - 无权限', ['event_member_id' => $event['member_id'] ?? null, 'current_member_id' => $this->member_id]);
             throw new \core\exception\CommonException('无权限操作此项目');
         }
         
         $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
         
+        // 查找要删除的分配记录
+        $assignment = $assignment_model->where([
+            ['item_id', '=', $itemId],
+            ['venue_id', '=', $venueId]
+        ])->find();
+        
+        \think\facade\Log::info('删除场地分配 - 查找分配记录', ['assignment' => $assignment ? $assignment->toArray() : null]);
+        
         // 软删除分配记录
-        $assignment_model->where([
+        $affected = $assignment_model->where([
             ['item_id', '=', $itemId],
             ['venue_id', '=', $venueId]
         ])->update([
             'status' => 0,
             'update_time' => time()
         ]);
+        
+        \think\facade\Log::info('删除场地分配 - 执行结果', ['affected_rows' => $affected]);
     }
     
     /**
