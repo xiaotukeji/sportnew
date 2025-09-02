@@ -150,7 +150,7 @@
                                 <view class="venue-header">
                                     <text class="venue-title">场地设备管理</text>
                                     <button class="add-venue-btn" @tap="showVenueModal(item.id, group.categoryName)">
-                                        <text class="btn-text">添加场地</text>
+                                        <text class="btn-text">{{ hasVenues ? '管理场地' : '添加场地' }}</text>
                                     </button>
                                 </view>
                                 
@@ -162,6 +162,10 @@
                                         <view class="select-all" v-if="getAvailableVenuesForItem(item.id).length > 0">
                                             <view class="select-row" :class="{ selected: isAllVenuesSelected(item.id) }" @tap.stop="toggleSelectAllVenues(item.id)">
                                                 <text class="select-text">{{ isAllVenuesSelected(item.id) ? '取消全选' : '全选' }}</text>
+                                                <!-- 全选状态显示勾选标记 -->
+                                                <view v-if="isAllVenuesSelected(item.id)" class="selected-mark">
+                                                    <text class="mark-text">✓</text>
+                                                </view>
                                             </view>
                                         </view>
                                         <view class="venue-options">
@@ -174,28 +178,14 @@
                                             >
                                                 <text class="option-text">{{ venue.name }}</text>
                                                 <text class="venue-code">({{ venue.venue_code }})</text>
+                                                <!-- 已选中的场地显示勾选标记 -->
+                                                <view v-if="isVenueSelectedForItem(item.id, venue.id)" class="selected-mark">
+                                                    <text class="mark-text">✓</text>
+                                                </view>
                                             </view>
                                         </view>
                                         <view v-if="getAvailableVenuesForItem(item.id).length === 0" class="empty-venues">
                                             <text class="empty-text">暂无可用场地</text>
-                                        </view>
-                                    </view>
-                                </view>
-                                
-                                <!-- 已分配场地列表 -->
-                                <view v-if="itemVenueAssignments[item.id] && itemVenueAssignments[item.id].length > 0" class="assigned-venues">
-                                    <text class="venues-title">已分配场地：</text>
-                                    <view class="venue-list">
-                                        <view 
-                                            v-for="venue in itemVenueAssignments[item.id]" 
-                                            :key="venue.id" 
-                                            class="venue-item"
-                                        >
-                                            <text class="venue-name">{{ venue.name }}</text>
-                                            <text class="venue-code">({{ venue.venue_code }})</text>
-                                            <button class="remove-venue-btn" @tap="removeVenueFromItem(item.id, venue.venue_id)">
-                                                <text class="remove-text">×</text>
-                                            </button>
                                         </view>
                                     </view>
                                 </view>
@@ -456,6 +446,11 @@ const batchVenue = ref({
 // 计算属性
 const newVenueTypeIndex = computed(() => {
     return getVenueTypeIndex(newVenue.value.venue_type)
+})
+
+// 判断是否有可用场馆
+const hasVenues = computed(() => {
+    return Array.isArray(venues.value) && venues.value.length > 0
 })
 
 /**
@@ -1545,23 +1540,12 @@ const getAvailableVenuesForItem = (itemId: number) => {
     const currentItem = eventItems.value.find((it: any) => it.id === itemId)
     const targetVenueType = currentItem ? (currentItem.venue_type || mapCategoryToVenueType(currentItem.category_name)) : ''
 
-    // 过滤出可用的场地（未被其他项目使用或当前项目已使用的），并按类型过滤
-    const usedVenueIds = new Set<number>()
-    Object.values(itemVenueAssignments.value).forEach(assignments => {
-        if (Array.isArray(assignments)) {
-            assignments.forEach(assignment => {
-                if (assignment && assignment.venue_id) usedVenueIds.add(assignment.venue_id)
-            })
-        }
-    })
-
+    // 共享模式：所有场地都可以选择，不再排他
     return venues.value.filter(venue => {
         if (!venue || !venue.id) return false
         // 类型匹配：若设置了目标类型，则要求 venue.venue_type === 目标类型
         if (targetVenueType && venue.venue_type && venue.venue_type !== targetVenueType) return false
-        const isUsedByOthers = usedVenueIds.has(venue.id)
-        const isUsedByCurrent = itemVenueAssignments.value[itemId]?.some(a => a.venue_id === venue.id)
-        return !isUsedByOthers || isUsedByCurrent
+        return true // 所有匹配类型的场地都可以选择
     })
 }
 
@@ -1802,6 +1786,8 @@ const quickAssignVenues = async (itemId: number) => {
         })
     }
 }
+
+
 </script>
 
 <style lang="scss" scoped>
@@ -1811,25 +1797,25 @@ const quickAssignVenues = async (itemId: number) => {
     padding-bottom: 120rpx;
 }
 
-.page-header {
-    background-color: white;
-    padding: 40rpx 32rpx;
-    margin-bottom: 20rpx;
-    
-    .page-title {
-        display: block;
-        font-size: 36rpx;
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 8rpx;
-    }
-    
-    .page-subtitle {
-        display: block;
-        font-size: 28rpx;
-        color: #666;
-    }
-}
+            .page-header {
+            background-color: white;
+            padding: 40rpx 32rpx;
+            margin-bottom: 20rpx;
+            
+            .page-title {
+                display: block;
+                font-size: 36rpx;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 8rpx;
+            }
+            
+            .page-subtitle {
+                display: block;
+                font-size: 28rpx;
+                color: #666;
+            }
+        }
 
 .event-info-card {
     background-color: white;
@@ -2245,57 +2231,7 @@ const quickAssignVenues = async (itemId: number) => {
             }
         }
         
-        .assigned-venues {
-            margin-bottom: 20rpx;
-            
-            .venues-title {
-                display: block;
-                font-size: 26rpx;
-                color: #333;
-                margin-bottom: 16rpx;
-            }
-            
-            .venue-list {
-                .venue-item {
-                    display: flex;
-                    align-items: center;
-                    padding: 12rpx 16rpx;
-                    background-color: white;
-                    border-radius: 8rpx;
-                    margin-bottom: 12rpx;
-                    border: 1rpx solid #e9ecef;
-                    
-                    .venue-name {
-                        flex: 1;
-                        font-size: 26rpx;
-                        color: #333;
-                    }
-                    
-                    .venue-code {
-                        font-size: 24rpx;
-                        color: #666;
-                        margin-right: 16rpx;
-                    }
-                    
-                    .remove-venue-btn {
-                        width: 40rpx;
-                        height: 40rpx;
-                        background-color: #ff4757;
-                        border-radius: 50%;
-                        border: none;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        
-                        .remove-text {
-                            color: white;
-                            font-size: 24rpx;
-                            font-weight: bold;
-                        }
-                    }
-                }
-            }
-        }
+
         
         .batch-add-venue {
             .batch-btn {
@@ -2343,12 +2279,25 @@ const quickAssignVenues = async (itemId: number) => {
                         border-radius: 6rpx;
                         background-color: #f5f7fa;
                         cursor: pointer;
-                        &.selected {
+                        transition: all 0.2s ease;
+                        border: 1rpx solid transparent;
+                        position: relative;
+                        
+                        &:hover {
                             background-color: #e6f3ff;
+                            border-color: #007aff;
+                        }
+                        
+                        &.selected {
+                            background: linear-gradient(135deg, #e6f3ff, #f0f8ff);
+                            border-color: #007aff;
                             color: #007aff;
+                            font-weight: bold;
+                            box-shadow: 0 2rpx 8rpx rgba(0, 122, 255, 0.15);
                         }
                         .select-text {
                             font-size: 26rpx;
+                            flex: 1;
                         }
                     }
                 }
@@ -2364,22 +2313,57 @@ const quickAssignVenues = async (itemId: number) => {
                     align-items: center;
                     padding: 12rpx 8rpx;
                     border-radius: 6rpx;
-                    transition: background-color 0.2s ease;
+                    transition: all 0.2s ease;
+                    border: 1rpx solid transparent;
+                    position: relative;
+                    
+                    &:hover {
+                        background-color: #f5f7fa;
+                        border-color: #e0e0e0;
+                    }
                     
                     &.selected {
-                        background-color: #e6f3ff;
-                        .option-text { color: #007aff; }
+                        background: linear-gradient(135deg, #e6f3ff, #f0f8ff);
+                        border-color: #007aff;
+                        box-shadow: 0 2rpx 8rpx rgba(0, 122, 255, 0.15);
+                        
+                        .option-text { 
+                            color: #007aff; 
+                            font-weight: bold;
+                        }
+                        .venue-code { 
+                            color: #007aff; 
+                        }
                     }
 
                     .option-text {
                         font-size: 26rpx;
                         color: #333;
+                        flex: 1;
                     }
 
                     .venue-code {
                         font-size: 22rpx;
                         color: #999;
                         margin-left: 8rpx;
+                    }
+                    
+                    .selected-mark {
+                        width: 32rpx;
+                        height: 32rpx;
+                        background-color: #007aff;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-left: 8rpx;
+                        box-shadow: 0 2rpx 4rpx rgba(0, 122, 255, 0.3);
+                        
+                        .mark-text {
+                            color: white;
+                            font-size: 20rpx;
+                            font-weight: bold;
+                        }
                     }
                 }
 
@@ -2640,6 +2624,8 @@ const quickAssignVenues = async (itemId: number) => {
         padding: 32rpx;
         max-height: 60vh;
         overflow-y: auto;
+        
+
         
         .add-venue-section {
             margin-bottom: 40rpx;
