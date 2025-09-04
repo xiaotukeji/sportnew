@@ -68,7 +68,17 @@ class EventItem extends BaseApiController
         $data = $this->request->params([
             ['event_id', 0]
         ]);
-        return success((new EventItemService())->getEventItems($data));
+        
+        // 添加调试日志
+        \think\facade\Log::info('=== EventItem Controller getEventItems 调试 ===');
+        \think\facade\Log::info('接收到的参数: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
+        
+        $result = (new EventItemService())->getEventItems($data);
+        
+        \think\facade\Log::info('服务层返回结果: ' . json_encode($result, JSON_UNESCAPED_UNICODE));
+        \think\facade\Log::info('=== 控制器调试结束 ===');
+        
+        return success($result);
     }
     
     /**

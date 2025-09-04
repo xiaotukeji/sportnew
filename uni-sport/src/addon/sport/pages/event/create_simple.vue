@@ -3082,7 +3082,15 @@ const loadEventData = async () => {
         
         // 加载赛事项目
         const itemsResponse: any = await getEventItems(eventId.value)
+        console.log('=== getEventItems接口原始返回值 ===')
+        console.log('完整响应:', itemsResponse)
+        console.log('响应数据:', itemsResponse.data)
+        
         const items = itemsResponse.data || []
+        console.log('解析后的项目数组:', items)
+        console.log('第一个项目原始数据:', JSON.stringify(items[0], null, 2))
+        console.log('=== getEventItems调试结束 ===')
+        
         selectedItems.value = items.map((item: any) => item.base_item_id || item.id)
         tempSelectedItems.value = [...selectedItems.value]
         
@@ -4026,6 +4034,21 @@ const saveItemSettings = async () => {
             console.log('---')
         })
         
+        // 添加更详细的调试信息
+        console.log('=== 前端调试：eventItems数据结构 ===')
+        console.log('eventItems数组长度:', eventItems.value.length)
+        console.log('第一个项目对象的所有属性:', Object.keys(eventItems.value[0] || {}))
+        console.log('第一个项目的完整数据:', JSON.stringify(eventItems.value[0], null, 2))
+        console.log('=== 前端调试结束 ===')
+        
+        // 显示接口返回的原始数据
+        console.log('=== getEventItems接口原始返回值 ===')
+        console.log('所有项目的原始数据:')
+        eventItems.value.forEach((item, index) => {
+            console.log(`项目${index + 1}:`, JSON.stringify(item, null, 2))
+        })
+        console.log('=== 接口原始数据结束 ===')
+        
         // 保存每个项目的设置
         for (const item of eventItems.value) {
             console.log('--- 保存项目 ---')
@@ -4181,13 +4204,49 @@ const newVenueTypeIndex = computed(() => {
 })
 
 // 初始化赛事项目数据
-const initEventItems = () => {
+const initEventItems = async () => {
     if (selectedItems.value.length === 0) {
         eventItems.value = []
         return
     }
     
-    // 从选中的项目创建eventItems
+    // 如果是编辑模式，从getEventItems接口获取真实的项目数据
+    if (isEditMode.value && eventId.value) {
+        try {
+            console.log('=== 编辑模式：从getEventItems接口获取项目数据 ===')
+            const response: any = await getEventItems(eventId.value)
+            console.log('getEventItems接口返回:', response)
+            
+            if (response && response.data && Array.isArray(response.data)) {
+                // 使用接口返回的真实数据
+                eventItems.value = response.data.map((item: any) => ({
+                    ...item,
+                    is_configured: true // 编辑模式下默认为已配置
+                }))
+                
+                console.log('从接口获取的eventItems:', eventItems.value)
+                
+                // 初始化场地分配
+                eventItems.value.forEach(item => {
+                    if (!itemVenueAssignments.value[item.id]) {
+                        itemVenueAssignments.value[item.id] = []
+                    }
+                })
+                
+                // 确保场地数据已加载
+                if (venues.value.length === 0) {
+                    loadVenues()
+                }
+                
+                return
+            }
+        } catch (error) {
+            console.error('获取项目数据失败:', error)
+        }
+    }
+    
+    // 创建模式或接口失败时的兜底逻辑
+    console.log('=== 使用兜底逻辑创建eventItems ===')
     eventItems.value = selectedItems.value.map((itemId, index) => {
         const itemName = getItemNameById(itemId)
         const categoryName = getItemCategoryName(itemId)
@@ -4220,7 +4279,7 @@ const initEventItems = () => {
         loadVenues()
     }
     
-    console.log('初始化的赛事项目:', eventItems.value)
+    console.log('兜底逻辑创建的赛事项目:', eventItems.value)
 }
 
 // 获取项目分类名称

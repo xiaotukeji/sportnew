@@ -320,6 +320,14 @@ class EventItemService extends BaseApiService
             $item['base_item_id'] = $item['base_item_id'];  // 基础项目ID
         }
         unset($item);
+        
+        // 添加详细的调试日志，打印第一个项目的完整数据
+        if (!empty($list)) {
+            \think\facade\Log::info('=== getEventItems 接口返回数据调试 ===');
+            \think\facade\Log::info('第一个项目原始数据: ' . json_encode($list[0], JSON_UNESCAPED_UNICODE));
+            \think\facade\Log::info('所有项目数量: ' . count($list));
+            \think\facade\Log::info('=== 调试结束 ===');
+        }
             
         return $list;
     }
