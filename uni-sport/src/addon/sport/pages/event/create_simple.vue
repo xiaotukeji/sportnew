@@ -666,6 +666,7 @@
                                             <view class="item-info">
                                                 <text class="item-name">{{ item?.name || '未知项目' }}</text>
                                                 <text class="item-category">{{ item?.category_name || '其他' }}</text>
+                                                <text class="item-id-info">ID: {{ item?.id }} (base: {{ item?.base_item_id }})</text>
                                             </view>
                                             <view class="item-status" :class="'status-' + (item?.is_configured ? 'configured' : 'pending')">
                                                 {{ item?.is_configured ? '已配置' : '待配置' }}
@@ -4013,6 +4014,18 @@ const saveItemSettings = async () => {
         console.log('项目数量:', eventItems.value.length)
         console.log('项目列表:', eventItems.value)
         
+        // 打印每个项目的详细信息，包括sport_item.id
+        eventItems.value.forEach((item, index) => {
+            console.log(`=== 项目${index + 1}详细信息 ===`)
+            console.log('项目名称:', item.name)
+            console.log('项目分类:', item.category_name)
+            console.log('base_item_id (基础项目ID):', item.base_item_id)
+            console.log('sport_item.id (数据库记录ID):', item.id)
+            console.log('sport_item_id (映射后的ID):', item.sport_item_id)
+            console.log('项目完整数据:', item)
+            console.log('---')
+        })
+        
         // 保存每个项目的设置
         for (const item of eventItems.value) {
             console.log('--- 保存项目 ---')
@@ -4022,9 +4035,9 @@ const saveItemSettings = async () => {
             console.log('项目ID:', item.id)
             console.log('项目完整数据:', item)
             
-            // 准备保存的数据
+            // 准备保存的数据 - 使用正确的sport_item.id
             const saveData = {
-                item_id: item.id,
+                item_id: item.sport_item_id || item.id, // 优先使用sport_item_id，兼容旧版本
                 registration_fee: item.registration_fee || 0,
                 max_participants: item.max_participants || 0,
                 rounds: item.rounds || 0,
@@ -6117,6 +6130,16 @@ picker {
                                 background-color: #e3f2fd;
                                 padding: 4rpx 12rpx;
                                 border-radius: 12rpx;
+                            }
+                            
+                            .item-id-info {
+                                font-size: 20rpx;
+                                color: #999;
+                                margin-top: 4rpx;
+                                font-family: monospace;
+                                background-color: #f5f5f5;
+                                padding: 2rpx 8rpx;
+                                border-radius: 8rpx;
                             }
                         }
                         

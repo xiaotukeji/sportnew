@@ -303,7 +303,7 @@ class EventItemService extends BaseApiService
             ->where([
                 ['si.event_id', '=', $event_id]
             ])
-            ->field('si.*, sbi.name as base_item_name, sbi.competition_type, sbi.gender_type, sbi.remark as base_item_remark, sc.name as category_name')
+            ->field('si.*, si.base_item_id, sbi.name as base_item_name, sbi.competition_type, sbi.gender_type, sbi.remark as base_item_remark, sc.name as category_name')
             ->order('si.sort asc, si.id asc')
             ->select()
             ->toArray();
@@ -314,6 +314,10 @@ class EventItemService extends BaseApiService
             if (!isset($item['remark']) || $item['remark'] === '' || $item['remark'] === null) {
                 $item['remark'] = $item['base_item_remark'];
             }
+            
+            // 确保字段映射正确：前端期望的id应该是sport_item.id
+            $item['sport_item_id'] = $item['id'];  // sport_item.id
+            $item['base_item_id'] = $item['base_item_id'];  // 基础项目ID
         }
         unset($item);
             
