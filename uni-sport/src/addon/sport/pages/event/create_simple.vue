@@ -4019,6 +4019,8 @@ const saveItemSettings = async () => {
             console.log('项目ID:', item.id)
             console.log('项目名称:', item.name)
             console.log('项目分类:', item.category_name)
+            console.log('项目ID:', item.id)
+            console.log('项目完整数据:', item)
             
             // 准备保存的数据
             const saveData = {
