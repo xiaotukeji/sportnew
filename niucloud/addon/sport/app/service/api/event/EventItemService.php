@@ -606,12 +606,32 @@ class EventItemService extends BaseApiService
             throw new \core\exception\CommonException('比赛轮次不能为负数');
         }
         
-        // 规范化/校验
-        $registration_fee = $data['registration_fee'] ?? 0;
+        // 规范化/校验 - 修复布尔值转换问题
+        $registration_fee = (float)($data['registration_fee'] ?? 0);
         $max_participants = (int)($data['max_participants'] ?? 0);
         $rounds = (int)($data['rounds'] ?? 0);
-        $allow_duplicate_registration = isset($data['allow_duplicate_registration']) ? (int)$data['allow_duplicate_registration'] : 0;
-        $is_round_robin = isset($data['is_round_robin']) ? (int)$data['is_round_robin'] : ((int)($item['is_round_robin'] ?? 0));
+        
+        // 修复布尔值转换：true->1, false->0
+        $allow_duplicate_registration = 0;
+        if (isset($data['allow_duplicate_registration'])) {
+            if (is_bool($data['allow_duplicate_registration'])) {
+                $allow_duplicate_registration = $data['allow_duplicate_registration'] ? 1 : 0;
+            } else {
+                $allow_duplicate_registration = (int)$data['allow_duplicate_registration'];
+            }
+        }
+        
+        $is_round_robin = 0;
+        if (isset($data['is_round_robin'])) {
+            if (is_bool($data['is_round_robin'])) {
+                $is_round_robin = $data['is_round_robin'] ? 1 : 0;
+            } else {
+                $is_round_robin = (int)$data['is_round_robin'];
+            }
+        } else {
+            $is_round_robin = (int)($item['is_round_robin'] ?? 0);
+        }
+        
         $group_size = isset($data['group_size']) ? max(0, (int)$data['group_size']) : ((int)($item['group_size'] ?? 0));
 
         // 更新数据
@@ -628,7 +648,18 @@ class EventItemService extends BaseApiService
             'update_time' => time()
         ];
         
-        SportItem::where('id', $id)->update($update_data);
+        // 添加调试日志
+        \think\facade\Log::info('EventItemService updateItemSettings Debug: item_id=' . $id . ', update_data=' . json_encode($update_data) . ', original_data=' . json_encode($data));
+        
+        // 执行更新并记录影响行数
+        $affected_rows = SportItem::where('id', $id)->update($update_data);
+        
+        // 记录更新结果
+        \think\facade\Log::info('EventItemService updateItemSettings Result: item_id=' . $id . ', affected_rows=' . $affected_rows);
+        
+        if ($affected_rows === 0) {
+            \think\facade\Log::warning('EventItemService updateItemSettings Warning: No rows affected for item_id=' . $id);
+        }
     }
     
     /**
