@@ -4044,6 +4044,27 @@ const saveItemSettings = async () => {
             // 检查响应状态
             if (response && (response.code === 200 || response.code === 1)) {
                 console.log(`项目 ${item.name} 保存成功`)
+                
+                // 保存场地分配
+                const itemId = item.sport_item_id || item.id
+                const selectedVenues = itemVenueAssignments.value[item.id] || []
+                
+                if (selectedVenues.length > 0) {
+                    console.log(`保存项目 ${item.name} 的场地分配:`, selectedVenues)
+                    try {
+                        const venueIds = selectedVenues.map(venue => venue.id)
+                        const venueResponse = await batchAssignVenuesToItem(itemId, {
+                            venue_ids: venueIds,
+                            assignment_type: 2 // 共享模式
+                        })
+                        console.log(`项目 ${item.name} 场地分配保存结果:`, venueResponse)
+                    } catch (error) {
+                        console.error(`项目 ${item.name} 场地分配保存失败:`, error)
+                        // 场地分配失败不影响整体保存，只记录错误
+                    }
+                } else {
+                    console.log(`项目 ${item.name} 没有选择场地`)
+                }
             } else {
                 console.error(`项目 ${item.name} 保存失败:`, response)
                 throw new Error(`项目 ${item.name} 保存失败: ${response?.msg || '未知错误'}`)
