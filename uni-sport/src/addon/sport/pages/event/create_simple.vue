@@ -854,7 +854,7 @@
                 </view>
             </view>
         </view>
-        
+
         <!-- 底部操作栏 -->
         <view class="bottom-actions">
             <button 
@@ -1978,20 +1978,20 @@ const goToStep = (step: number) => {
     if (step <= maxReachedStep.value || (step === currentStep.value + 1 && canProceedToNext.value)) {
         currentStep.value = step
         
-        // 如果跳转到第5步，确保加载分类数据
-        if (step === 5) {
-            // 如果是编辑模式且还没有加载赛事数据，先加载赛事数据
-            if (isEditMode.value && eventId.value && selectedItems.value.length === 0) {
-                loadEventData().then(() => {
-                    // 赛事数据加载完成后，再加载分类数据
-                    if (categories.value.length === 0) {
-                        loadCategories()
-                    }
-                })
-            } else if (categories.value.length === 0) {
-                loadCategories()
+                    // 如果跳转到第5步，确保加载分类数据
+            if (step === 5) {
+                // 如果是编辑模式且还没有加载赛事数据，先加载赛事数据
+                if (isEditMode.value && eventId.value && selectedItems.value.length === 0) {
+                    loadEventData().then(() => {
+                        // 赛事数据加载完成后，再加载分类数据
+                        if (categories.value.length === 0) {
+                            loadCategories()
+                        }
+                    })
+                } else if (categories.value.length === 0) {
+                    loadCategories()
+                }
             }
-        }
         
         // 如果跳转到第6步，确保初始化项目数据
         if (step === 6) {
@@ -4037,6 +4037,13 @@ const saveItemSettings = async () => {
                 max_participants: item.max_participants
             })
             
+            // 检查这些字段是否真的需要保存
+            console.log('字段保存必要性检查:', {
+                'group_size需要保存': item.group_size !== undefined && item.group_size !== null,
+                'venue_count需要保存': item.venue_count !== undefined && item.venue_count !== null,
+                'venue_type需要保存': item.venue_type !== undefined && item.venue_type !== null && item.venue_type !== ''
+            })
+            
             // 调用接口保存
             const response = await updateItemSettings(saveData)
             console.log('接口响应:', response)
@@ -4124,7 +4131,8 @@ const getAvailableVenuesForItem = (itemId: number) => {
 
 const isVenueSelectedForItem = (itemId: number, venueId: number) => {
     const assignments = itemVenueAssignments.value[itemId] || []
-    return assignments.some(assignment => assignment.id === venueId)
+    // 后端返回的数据结构中，场地ID是 venue_id 字段
+    return assignments.some(assignment => assignment.venue_id === venueId)
 }
 
 const toggleVenueSelection = (itemId: number, venueId: number) => {
@@ -4133,34 +4141,66 @@ const toggleVenueSelection = (itemId: number, venueId: number) => {
     }
     
     const assignments = itemVenueAssignments.value[itemId]
-    const existingIndex = assignments.findIndex(assignment => assignment.id === venueId)
+    // 修复：使用 venue_id 字段进行比较
+    const existingIndex = assignments.findIndex(assignment => assignment.venue_id === venueId)
     
     if (existingIndex > -1) {
+        // 取消选择：从已分配列表中移除
         assignments.splice(existingIndex, 1)
+        console.log(`取消选择场地 ${venueId}，项目 ${itemId}`)
     } else {
+        // 选择场地：添加到已分配列表
         const venue = venues.value.find(v => v.id === venueId)
         if (venue) {
-            assignments.push(venue)
+            // 构造与后端返回格式一致的数据结构
+            const assignmentData = {
+                venue_id: venue.id,
+                name: venue.name,
+                venue_code: venue.venue_code,
+                venue_type: venue.venue_type,
+                assignment_type: 2 // 共享模式
+            }
+            assignments.push(assignmentData)
+            console.log(`选择场地 ${venue.name} (${venueId})，项目 ${itemId}`)
         }
     }
+    
+    console.log(`项目 ${itemId} 当前已分配场地:`, assignments)
 }
 
 const isAllVenuesSelected = (itemId: number) => {
     const availableVenues = getAvailableVenuesForItem(itemId)
     const selectedVenues = itemVenueAssignments.value[itemId] || []
-    return availableVenues.length > 0 && selectedVenues.length === availableVenues.length
+    
+    if (availableVenues.length === 0) {
+        return false
+    }
+    
+    // 检查每个可用场地是否都被选中
+    return availableVenues.every(venue => 
+        selectedVenues.some(assignment => assignment.venue_id === venue.id)
+    )
 }
 
 const toggleSelectAllVenues = (itemId: number) => {
     const availableVenues = getAvailableVenuesForItem(itemId)
     const selectedVenues = itemVenueAssignments.value[itemId] || []
     
-    if (selectedVenues.length === availableVenues.length) {
+    if (isAllVenuesSelected(itemId)) {
         // 取消全选
         itemVenueAssignments.value[itemId] = []
+        console.log(`取消全选场地，项目 ${itemId}`)
     } else {
-        // 全选
-        itemVenueAssignments.value[itemId] = [...availableVenues]
+        // 全选：构造与后端返回格式一致的数据结构
+        const allAssignments = availableVenues.map(venue => ({
+            venue_id: venue.id,
+            name: venue.name,
+            venue_code: venue.venue_code,
+            venue_type: venue.venue_type,
+            assignment_type: 2 // 共享模式
+        }))
+        itemVenueAssignments.value[itemId] = allAssignments
+        console.log(`全选场地，项目 ${itemId}:`, allAssignments)
     }
 }
 
@@ -4222,6 +4262,9 @@ const initEventItems = async () => {
                     loadVenues()
                 }
                 
+                // 加载每个项目的已分配场地
+                await loadItemVenueAssignments()
+                
                 return
             }
         } catch (error) {
@@ -4264,6 +4307,42 @@ const initEventItems = async () => {
     }
     
     console.log('兜底逻辑创建的赛事项目:', eventItems.value)
+}
+
+/**
+ * 加载每个项目的已分配场地
+ */
+const loadItemVenueAssignments = async () => {
+    if (!eventItems.value || eventItems.value.length === 0) {
+        return
+    }
+    
+    console.log('=== 开始加载项目场地分配 ===')
+    
+    for (const item of eventItems.value) {
+        const itemId = item.sport_item_id || item.id
+        console.log(`加载项目 ${item.name} (ID: ${itemId}) 的场地分配`)
+        
+        try {
+            const response = await apiGetItemVenues(itemId)
+            console.log(`项目 ${item.name} 场地分配接口返回:`, response)
+            
+            if (response && response.data && Array.isArray(response.data)) {
+                // 将已分配的场地存储到 itemVenueAssignments 中
+                itemVenueAssignments.value[item.id] = response.data
+                console.log(`项目 ${item.name} 已分配场地:`, response.data)
+            } else {
+                itemVenueAssignments.value[item.id] = []
+                console.log(`项目 ${item.name} 没有已分配场地`)
+            }
+        } catch (error) {
+            console.error(`加载项目 ${item.name} 场地分配失败:`, error)
+            itemVenueAssignments.value[item.id] = []
+        }
+    }
+    
+    console.log('=== 项目场地分配加载完成 ===')
+    console.log('itemVenueAssignments:', itemVenueAssignments.value)
 }
 
 // 获取项目分类名称
@@ -4716,15 +4795,15 @@ const deleteVenue = async (venueId: number | string) => {
             &.active .step-title-container {
                 .step-title-line1,
                 .step-title-line2 {
-                    color: #667eea;
-                    font-weight: bold;
+                color: #667eea;
+                font-weight: bold;
                 }
             }
             
             &.completed .step-title-container {
                 .step-title-line1,
                 .step-title-line2 {
-                    color: #4CAF50;
+                color: #4CAF50;
                 }
             }
             
