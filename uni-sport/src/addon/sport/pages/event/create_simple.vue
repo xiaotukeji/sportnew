@@ -811,39 +811,6 @@
                         </view>
                     </view>
                     
-                    <!-- 赛事级别设置 -->
-                    <view class="event-settings">
-                        <view class="section-title">
-                            <text class="title-text">赛事设置</text>
-                        </view>
-                        
-                        <view class="settings-form">
-                            <!-- 显示设置 -->
-                            <view class="form-item">
-                                <text class="item-label">显示年龄组</text>
-                                <switch 
-                                    :checked="eventSettings.age_group_display" 
-                                    @change="onAgeGroupDisplayChange"
-                                />
-                            </view>
-                            
-                            <view class="form-item">
-                                <text class="item-label">显示报名人数</text>
-                                <switch 
-                                    :checked="eventSettings.show_participant_count" 
-                                    @change="onShowParticipantCountChange"
-                                />
-                            </view>
-                            
-                            <view class="form-item">
-                                <text class="item-label">显示比赛进度</text>
-                                <switch 
-                                    :checked="eventSettings.show_progress" 
-                                    @change="onShowProgressChange"
-                                />
-                            </view>
-                        </view>
-                    </view>
                                 </view>
             </view>
         </view>
@@ -898,16 +865,7 @@
                 上一步
             </button>
             <button 
-                v-if="currentStep < 6" 
-                class="action-btn next-btn" 
-                :class="{ 'disabled': !canProceedToNext }"
-                :disabled="!canProceedToNext"
-                @tap="nextStep"
-            >
-                下一步
-            </button>
-            <button 
-                v-if="currentStep === 6" 
+                v-if="currentStep < 7" 
                 class="action-btn next-btn" 
                 :class="{ 'disabled': !canProceedToNext }"
                 :disabled="!canProceedToNext"
@@ -1998,19 +1956,17 @@ const canProceedToNext = computed(() => {
             // 第5步：要求选择项目
             return selectedItems.value.length > 0
         case 6:
-            // 第6步：项目设置，检查是否所有项目都已配置
+            // 第6步：项目设置，只要有项目数据就可以进入下一步
             if (!eventItems.value || eventItems.value.length === 0) {
+                console.log('第6步验证失败：没有项目数据')
                 return false
             }
-            // 检查是否所有项目都有基本配置
-            return eventItems.value.every(item => {
-                return item && 
-                       item.registration_fee !== undefined && 
-                       item.max_participants !== undefined && 
-                       item.allow_duplicate_registration !== undefined &&
-                       item.is_round_robin !== undefined &&
-                       item.group_size !== undefined
-            })
+            
+            console.log('第6步验证通过：有项目数据，可以进入下一步')
+            return true
+        case 7:
+            // 第7步：更多设置，总是可以进入下一步（完成）
+            return true
         default:
             return false
     }

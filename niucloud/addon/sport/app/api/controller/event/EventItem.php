@@ -100,20 +100,8 @@ class EventItem extends BaseApiController
             ['venue_type', ''],                     // 场地类型
         ]);
         
-        // 临时测试：直接返回测试数据，不调用服务层
-        \think\facade\Log::info('EventItem Controller Test: received_data=' . json_encode($data) . ', item_id=' . $id);
-        
-        // 返回测试数据
-        return success('TEST_UPDATE_SUCCESS', [
-            'test_data' => '接口测试成功',
-            'received_id' => $id,
-            'received_data' => $data,
-            'timestamp' => time()
-        ]);
-        
-        // 注释掉原来的服务层调用
-        // (new EventItemService())->updateItemSettings($id, $data);
-        // return success('UPDATE_SUCCESS');
+        (new EventItemService())->updateItemSettings($id, $data);
+        return success('UPDATE_SUCCESS');
     }
     
     /**
