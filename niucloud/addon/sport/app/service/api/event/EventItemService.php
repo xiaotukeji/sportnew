@@ -901,6 +901,8 @@ class EventItemService extends BaseApiService
         \think\facade\Log::info('batchAssignVenuesToItem 开始: itemId=' . $itemId . ', venue_ids=' . json_encode($data['venue_ids']));
         
         foreach ($data['venue_ids'] as $venueId) {
+            \think\facade\Log::info('处理场地ID: ' . $venueId . ', 赛事ID: ' . $item['event_id']);
+            
             // 验证场地是否存在且属于该赛事
             $venue_model = new \addon\sport\app\model\venue\SportVenue();
             $venue = $venue_model->where([
@@ -910,10 +912,15 @@ class EventItemService extends BaseApiService
             ])->find();
             
             if (!$venue) {
+                \think\facade\Log::warning('场地验证失败: venueId=' . $venueId . ', eventId=' . $item['event_id']);
                 continue; // 跳过无效场地
             }
             
+            \think\facade\Log::info('场地验证成功: venueId=' . $venueId . ', venueName=' . $venue['name']);
+            
             Db::transaction(function () use ($itemId, $venueId, $data) {
+                \think\facade\Log::info('开始事务处理: itemId=' . $itemId . ', venueId=' . $venueId);
+                
                 // 检查是否已经分配过该场地（包含已软删除记录），并加锁避免并发
                 $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
                 $exists = $assignment_model->where([
@@ -922,10 +929,13 @@ class EventItemService extends BaseApiService
                 ])->lock(true)->find();
 
                 if ($exists) {
+                    \think\facade\Log::info('场地分配已存在: exists=' . json_encode($exists));
                     if ((int)$exists['status'] === 1) {
+                        \think\facade\Log::info('场地分配已有效，跳过');
                         return; // 已有效分配
                     }
                     // 恢复软删除记录为有效
+                    \think\facade\Log::info('恢复软删除记录: id=' . $exists['id']);
                     $assignment_model->where('id', $exists['id'])->update([
                         'assignment_type' => $data['assignment_type'] ?? ($exists['assignment_type'] ?? 1),
                         'start_time' => $data['start_time'] ?? $exists['start_time'] ?? null,
@@ -951,9 +961,13 @@ class EventItemService extends BaseApiService
                     'update_time' => time()
                 ];
 
+                \think\facade\Log::info('准备创建场地分配记录: ' . json_encode($assignment_data));
+
                 try {
-                    $assignment_model->save($assignment_data);
+                    $result = $assignment_model->save($assignment_data);
+                    \think\facade\Log::info('场地分配记录创建成功: result=' . json_encode($result));
                 } catch (\Throwable $e) {
+                    \think\facade\Log::error('场地分配记录创建失败: ' . $e->getMessage());
                     if (strpos($e->getMessage(), '1062') !== false || strpos($e->getMessage(), '23000') !== false) {
                         $existsAgain = $assignment_model->where([
                             ['item_id', '=', $itemId],
