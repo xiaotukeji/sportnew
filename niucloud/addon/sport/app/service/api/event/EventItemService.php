@@ -898,6 +898,8 @@ class EventItemService extends BaseApiService
             throw new \core\exception\CommonException('请选择要分配的场地');
         }
         
+        \think\facade\Log::info('batchAssignVenuesToItem 开始: itemId=' . $itemId . ', venue_ids=' . json_encode($data['venue_ids']));
+        
         foreach ($data['venue_ids'] as $venueId) {
             // 验证场地是否存在且属于该赛事
             $venue_model = new \addon\sport\app\model\venue\SportVenue();

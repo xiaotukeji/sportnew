@@ -4056,10 +4056,19 @@ const saveItemSettings = async () => {
                 const itemId = item.sport_item_id || item.id
                 const selectedVenues = itemVenueAssignments.value[item.id] || []
                 
+                console.log(`=== 项目 ${item.name} 场地分配调试 ===`)
+                console.log('itemId:', itemId)
+                console.log('item.id:', item.id)
+                console.log('selectedVenues:', selectedVenues)
+                console.log('itemVenueAssignments.value:', itemVenueAssignments.value)
+                
                 if (selectedVenues.length > 0) {
                     console.log(`保存项目 ${item.name} 的场地分配:`, selectedVenues)
                     try {
-                        const venueIds = selectedVenues.map(venue => venue.id)
+                        // 修复：使用正确的字段名获取场地ID
+                        const venueIds = selectedVenues.map(venue => venue.venue_id || venue.id)
+                        console.log(`项目 ${item.name} 场地ID列表:`, venueIds)
+                        
                         const venueResponse = await batchAssignVenuesToItem(itemId, {
                             venue_ids: venueIds,
                             assignment_type: 2 // 共享模式
