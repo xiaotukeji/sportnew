@@ -4029,6 +4029,13 @@ const saveItemSettings = async () => {
             }
             
             console.log('保存数据:', saveData)
+            console.log('关键字段检查:', {
+                group_size: item.group_size,
+                venue_count: item.venue_count,
+                venue_type: item.venue_type,
+                registration_fee: item.registration_fee,
+                max_participants: item.max_participants
+            })
             
             // 调用接口保存
             const response = await updateItemSettings(saveData)
