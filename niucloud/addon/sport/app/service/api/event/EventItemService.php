@@ -200,13 +200,35 @@ class EventItemService extends BaseApiService
         $age_groups = json_decode($event_info['age_groups'] ?? '["不限年龄"]', true);
         $age_group_display = $event_info['age_group_display'] ?? 0;
         
-        // 删除原有的项目选择
-        (new SportItem())->where([
-            ['event_id', '=', $event_id]
-        ])->delete();
+        // 获取现有的项目记录（只获取启用状态的）
+        $existing_items = (new SportItem())->where([
+            ['event_id', '=', $event_id],
+            ['status', '=', 1]
+        ])->select()->toArray();
+        
+        $existing_base_item_ids = array_column($existing_items, 'base_item_id');
+        
+        // 找出需要删除的项目（不再选择的基础项目）
+        $items_to_delete = array_diff($existing_base_item_ids, $base_item_ids);
+        if (!empty($items_to_delete)) {
+            \think\facade\Log::info('SportItem 软删除项目: ' . json_encode($items_to_delete));
+            // 软删除不再需要的项目（而不是物理删除）
+            (new SportItem())->where([
+                ['event_id', '=', $event_id],
+                ['base_item_id', 'in', $items_to_delete]
+            ])->update([
+                'status' => 0, // 标记为禁用状态
+                'update_time' => time()
+            ]);
+        }
+        
+        // 找出需要添加的新项目
+        $items_to_add = array_diff($base_item_ids, $existing_base_item_ids);
+        
+        \think\facade\Log::info('SportItem 保存逻辑: 现有项目=' . json_encode($existing_base_item_ids) . ', 新选择=' . json_encode($base_item_ids) . ', 需删除=' . json_encode($items_to_delete) . ', 需添加=' . json_encode($items_to_add));
         
         // 添加新的项目选择
-        if (!empty($base_item_ids)) {
+        if (!empty($items_to_add)) {
             $insert_data = [];
             $base_items = (new SportBaseItem())->where([
                 ['id', 'in', $base_item_ids],
@@ -301,7 +323,8 @@ class EventItemService extends BaseApiService
             ->join('sport_base_item sbi', 'si.base_item_id = sbi.id')
             ->join('sport_category sc', 'sbi.category_id = sc.id')
             ->where([
-                ['si.event_id', '=', $event_id]
+                ['si.event_id', '=', $event_id],
+                ['si.status', '=', 1] // 只获取启用状态的项目
             ])
             ->field('si.id as sport_item_id, si.base_item_id, si.event_id, si.category_id, si.name as original_name, si.competition_type, si.gender_type, si.age_group, si.max_participants, si.min_participants, si.registration_fee, si.rules, si.equipment, si.venue_requirements, si.referee_requirements, si.rounds, si.allow_duplicate_registration, si.is_round_robin, si.group_size, si.venue_count, si.venue_type, si.sort, si.status, si.remark, si.create_time, si.update_time, sbi.name as base_item_name, sbi.competition_type as base_competition_type, sbi.gender_type as base_gender_type, sbi.remark as base_item_remark, sc.name as category_name')
             ->order('si.sort asc, si.id asc')
