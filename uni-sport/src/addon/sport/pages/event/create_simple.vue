@@ -620,19 +620,14 @@
             <view v-if="currentStep === 6" class="form-wrapper">
                 <view class="form-section">
                     <view class="section-title">
+                        <view class="title-left">
                         <text class="title-text">项目设置</text>
-                        <button class="save-settings-btn" @tap="saveItemSettings">
-                            <text class="btn-text">保存设置</text>
-                        </button>
+                            <text class="title-count">({{ groupedEventItems?.length || 0 }}大类 {{ eventItems?.length || 0 }}项)</text>
+                        </view>
         </view>
-                    <!-- <view class="section-subtitle">为每个比赛项目设置详细参数</view> -->
                     
                     <!-- 项目列表设置 -->
                     <view class="items-settings">
-                        <view class="section-title">
-                            <text class="title-text">比赛项目设置</text>
-                            <text class="title-count">({{ groupedEventItems?.length || 0 }}大类 {{ eventItems?.length || 0 }}项)</text>
-                        </view>
                         
                         <view v-if="eventItems && eventItems.length > 0" class="items-container">
                                                             <view 
@@ -666,7 +661,6 @@
                                             <view class="item-info">
                                                 <text class="item-name">{{ item?.name || '未知项目' }}</text>
                                                 <text class="item-category">{{ item?.category_name || '其他' }}</text>
-                                                <text class="item-id-info">ID: {{ item?.id }} (base: {{ item?.base_item_id }})</text>
                                             </view>
                                             <view class="item-status" :class="'status-' + (item?.is_configured ? 'configured' : 'pending')">
                                                 {{ item?.is_configured ? '已配置' : '待配置' }}
@@ -674,81 +668,140 @@
                                         </view>
                                         
                                         <view class="item-settings">
+                                            <!-- 第一组：基础设置 -->
+                                            <view class="settings-group">
+                                                <view class="group-content">
                                             <!-- 报名费设置 -->
                                             <view class="setting-item">
-                                                <text class="setting-label">报名费（元）</text>
+                                                        <view class="setting-header">
+                                                            <text class="setting-label">报名费：</text>
+                                                            <switch 
+                                                                :checked="item?.registration_fee_enabled" 
+                                                                :data-id="item?.id"
+                                                                data-field="registration_fee_enabled"
+                                                                @change="onItemSwitchChangeEvt"
+                                                            />
+                                                        </view>
+                                                        <text v-if="!item?.registration_fee_enabled" class="setting-tip">默认免费</text>
+                                                        <view v-if="item?.registration_fee_enabled" class="setting-input-container">
                                                 <input 
                                                     class="setting-input" 
                                                     type="digit" 
                                                     :value="getRegistrationFeeDisplayValue(item?.registration_fee)"
-                                                    placeholder="0表示免费"
+                                                                placeholder="请输入报名费"
                                                     :data-index="getItemGlobalIndex(groupIndex, index)"
                                                     @input="onRegistrationFeeInput"
                                                     @focus="onRegistrationFeeFocusEvt"
                                                     @blur="onRegistrationFeeBlurEvt"
                                                 />
+                                                            <text class="input-unit">元</text>
+                                                        </view>
                                             </view>
                                             
                                             <!-- 人数限制设置 -->
                                             <view class="setting-item">
-                                                <text class="setting-label">人数限制</text>
+                                                        <view class="setting-header">
+                                                <text class="setting-label">人数限制：</text>
+                                                            <switch 
+                                                                :checked="item?.max_participants_enabled" 
+                                                                :data-id="item?.id"
+                                                                data-field="max_participants_enabled"
+                                                                @change="onItemSwitchChangeEvt"
+                                                            />
+                                                        </view>
+                                                        <text v-if="!item?.max_participants_enabled" class="setting-tip">默认不限制</text>
+                                                        <view v-if="item?.max_participants_enabled" class="setting-input-container">
                                                 <input 
                                                     class="setting-input" 
                                                     type="number" 
                                                     :value="getMaxParticipantsDisplayValue(item?.max_participants)"
-                                                    placeholder="0表示不限制"
+                                                                placeholder="请输入人数限制"
                                                     :data-index="getItemGlobalIndex(groupIndex, index)"
                                                     @input="onMaxParticipantsInput"
                                                     @blur="onMaxParticipantsBlurEvt"
                                                 />
+                                                            <text class="input-unit">人</text>
+                                                        </view>
                                             </view>
                                             
+                                                    <!-- 每组人数设置 -->
+                                                    <view class="setting-item">
+                                                        <view class="setting-header">
+                                                            <text class="setting-label">每组人数：</text>
+                                                            <switch 
+                                                                :checked="item?.group_size_enabled" 
+                                                                :data-id="item?.id"
+                                                                data-field="group_size_enabled"
+                                                                @change="onItemSwitchChangeEvt"
+                                                            />
+                                                        </view>
+                                                        <text v-if="!item?.group_size_enabled" class="setting-tip">默认不分组</text>
+                                                        <view v-if="item?.group_size_enabled" class="setting-input-container">
+                                                            <input 
+                                                                class="setting-input" 
+                                                                type="number" 
+                                                                v-model.number="item.group_size"
+                                                                placeholder="请输入每组人数"
+                                                                @blur="item.group_size = Math.max(0, parseInt(item.group_size || 0) || 0)"
+                                                            />
+                                                            <text class="input-unit">人</text>
+                                                        </view>
+                                                    </view>
+                                                </view>
+                                            </view>
+                                            
+                                            <!-- 第二组：比赛设置 -->
+                                            <view class="settings-group">
+                                                <view class="group-content">
                                             <!-- 是否允许重复报名 -->
                                             <view class="setting-item">
-                                                <text class="setting-label">允许重复\n报名</text>
+                                                        <view class="setting-header">
+                                                            <text class="setting-label">允许重复报名：</text>
                                                 <switch 
                                                     :checked="item?.allow_duplicate_registration" 
                                                     :data-id="item?.id"
                                                     data-field="allow_duplicate_registration"
                                                     @change="onItemSwitchChangeEvt"
                                                 />
+                                                        </view>
+                                                        <text class="setting-tip">一人可报名多次</text>
                                             </view>
 
                                             <!-- 是否循环赛（小组） -->
                                             <view class="setting-item">
-                                                <text class="setting-label">循环赛\n(小组)</text>
+                                                        <view class="setting-header">
+                                                            <text class="setting-label">循环赛（小组）：</text>
                                                 <switch
                                                     :checked="item?.is_round_robin"
                                                     :data-id="item?.id"
                                                     data-field="is_round_robin"
                                                     @change="onItemSwitchChangeEvt"
                                                 />
+                                                        </view>
+                                                        <text class="setting-tip">小组循环赛</text>
                                             </view>
 
-                                            <!-- 每组人数（0表示不分组） -->
-                                            <view class="setting-item">
-                                                <text class="setting-label">每组人数</text>
-                                                <input 
-                                                    class="setting-input" 
-                                                    type="number" 
-                                                    v-model.number="item.group_size"
-                                                    placeholder="0表示不分组"
-                                                    @blur="item.group_size = Math.max(0, parseInt(item.group_size || 0) || 0)"
-                                                />
-                                                <text class="input-tip">0 表示不分组</text>
-                                            </view>
-                                            
-                                            <!-- 项目说明 -->
-                                            <view class="setting-item">
-                                                <text class="setting-label">项目说明</text>
-                                                <view class="textarea-container">
+                                                    <!-- 比赛说明 -->
+                                            <view class="setting-item remark-setting">
+                                                        <view class="remark-header">
+                                                            <text class="setting-label">比赛说明：</text>
+                                                            <switch 
+                                                                :checked="item?.remark_enabled" 
+                                                                :data-id="item?.id"
+                                                                data-field="remark_enabled"
+                                                                @change="onItemSwitchChangeEvt"
+                                                            />
+                                                        </view>
+                                                        <view v-if="item?.remark_enabled" class="remark-textarea-container">
                                                     <textarea 
                                                         class="setting-textarea" 
                                                         v-model="item.remark"
-                                                        placeholder="请输入项目说明..."
+                                                                placeholder="请输入比赛说明..."
                                                         maxlength="200"
                                                     ></textarea>
                                                     <text class="textarea-count">{{ (item?.remark || '').length }}/200</text>
+                                                        </view>
+                                                    </view>
                                                 </view>
                                             </view>
                                             
@@ -756,9 +809,11 @@
                                             <view class="venue-management">
                                                 <view class="venue-header">
                                                     <text class="venue-title">场地设备管理</text>
-                                                    <button class="add-venue-btn" @tap="showVenueModal(item?.id, group?.categoryName)">
-                                                        <text class="btn-text">{{ hasVenues ? '管理场地' : '添加场地' }}</text>
-                                                    </button>
+                                                    <view class="venue-actions">
+                                                        <button class="add-venue-btn" @tap="showVenueModal(item?.id, group?.categoryName)">
+                                                            <text class="btn-text">{{ hasVenues ? '管理场地' : '添加场地' }}</text>
+                                                        </button>
+                                                    </view>
                                                 </view>
                                                 
                                                 <!-- 场地选择（直接展示可用场地，支持多选与全选） -->
@@ -1702,7 +1757,7 @@ const initFormData = () => {
             
             return
         } catch (e) {
-            console.error('解析缓存数据失败:', e)
+            // 解析缓存数据失败
         }
     }
     
@@ -1780,7 +1835,7 @@ const saveFormDataToCache = () => {
         }
         uni.setStorageSync('sport_event_form_data', JSON.stringify(cacheData))
     } catch (e) {
-        console.error('保存表单数据到缓存失败:', e)
+        // 保存表单数据到缓存失败
     }
 }
 
@@ -1844,8 +1899,7 @@ const handleSubmit = async () => {
                     update_time: Date.now() / 1000 // 添加更新时间
                 }
                 
-                console.log('=== 第7步：只保存赛事设置 ===')
-                console.log('赛事设置数据:', eventSettingsData)
+                // 第7步：只保存赛事设置
                 
                 // 只更新赛事设置字段
                 result = await editEvent(eventId.value, eventSettingsData)
@@ -1860,9 +1914,9 @@ const handleSubmit = async () => {
                         event_id: eventId.value,
                         base_item_ids: selectedItems.value
                     })
-                    console.log('比赛项目更新成功:', selectedItems.value)
+                    // 比赛项目更新成功
                 } catch (error) {
-                    console.error('更新比赛项目失败:', error)
+                    // 更新比赛项目失败
                     uni.showToast({
                         title: '赛事更新成功，但项目更新失败',
                         icon: 'none'
@@ -1873,19 +1927,19 @@ const handleSubmit = async () => {
                 // 第6步时，保存项目设置
                 if (currentStep.value === 6 && eventItems.value && eventItems.value.length > 0) {
                     try {
-                        console.log('=== 第6步：开始保存项目设置 ===')
+                        // 第6步：开始保存项目设置
                         const settingsResult = await saveItemSettings()
                         if (settingsResult) {
-                            console.log('项目设置保存成功')
+                            // 项目设置保存成功
                         } else {
-                            console.error('项目设置保存失败')
+                            // 项目设置保存失败
                             uni.showToast({
                                 title: '赛事更新成功，但项目设置保存失败',
                                 icon: 'none'
                             })
                         }
                     } catch (error) {
-                        console.error('保存项目设置时出错:', error)
+                        // 保存项目设置时出错
                         uni.showToast({
                             title: '赛事更新成功，但项目设置保存失败',
                             icon: 'none'
@@ -1917,9 +1971,9 @@ const handleSubmit = async () => {
                         event_id: result.data.id,
                         base_item_ids: selectedItems.value
                     })
-                    console.log('比赛项目保存成功:', selectedItems.value)
+                    // 比赛项目保存成功
                 } catch (error) {
-                    console.error('保存比赛项目失败:', error)
+                    // 保存比赛项目失败
                     uni.showToast({
                         title: '比赛创建成功，但项目保存失败',
                         icon: 'none'
@@ -1930,19 +1984,19 @@ const handleSubmit = async () => {
             // 第6步时，保存项目设置
             if (currentStep.value === 6 && eventItems.value && eventItems.value.length > 0) {
                 try {
-                    console.log('=== 第6步：开始保存项目设置 ===')
+                    // 第6步：开始保存项目设置
                     const settingsResult = await saveItemSettings()
                     if (settingsResult) {
-                        console.log('项目设置保存成功')
+                        // 项目设置保存成功
                     } else {
-                        console.error('项目设置保存失败')
+                        // 项目设置保存失败
                         uni.showToast({
                             title: '比赛创建成功，但项目设置保存失败',
                             icon: 'none'
                     })
                     }
                 } catch (error) {
-                    console.error('保存项目设置时出错:', error)
+                    // 保存项目设置时出错
                     uni.showToast({
                         title: '比赛创建成功，但项目设置保存失败',
                         icon: 'none'
@@ -1967,7 +2021,7 @@ const handleSubmit = async () => {
         }
         
     } catch (error) {
-        console.error(isEditMode.value ? '保存修改失败:' : '创建比赛失败:', error)
+        // 保存修改失败或创建比赛失败
     } finally {
         submitLoading.value = false
     }
@@ -2016,11 +2070,11 @@ const canProceedToNext = computed(() => {
         case 6:
             // 第6步：项目设置，只要有项目数据就可以进入下一步
             if (!eventItems.value || eventItems.value.length === 0) {
-                console.log('第6步验证失败：没有项目数据')
+                // 第6步验证失败：没有项目数据
                 return false
             }
             
-            console.log('第6步验证通过：有项目数据，可以进入下一步')
+            // 第6步验证通过：有项目数据，可以进入下一步
             return true
         case 7:
             // 第7步：更多设置，总是可以进入下一步（完成）
@@ -2088,13 +2142,13 @@ const nextStep = async () => {
     if (currentStep.value === 6) {
         // 第6步特殊处理：保存项目设置并进入第7步
         try {
-            console.log('=== 第6步：点击下一步，开始保存项目设置 ===')
+            // 第6步：点击下一步，开始保存项目设置
             
             // 检查是否有项目设置需要保存
             if (eventItems.value && eventItems.value.length > 0) {
                 const settingsResult = await saveItemSettings()
                 if (settingsResult) {
-                    console.log('项目设置保存成功，进入第7步')
+                    // 项目设置保存成功，进入第7步
                     
                     // 保存成功后进入第7步
                     currentStep.value = 7
@@ -2108,7 +2162,7 @@ const nextStep = async () => {
                         duration: 1500
                     })
                 } else {
-                    console.error('项目设置保存失败')
+                    // 项目设置保存失败
                     uni.showToast({
                         title: '项目设置保存失败，请重试',
                         icon: 'none',
@@ -2117,14 +2171,14 @@ const nextStep = async () => {
                     return
                 }
             } else {
-                console.log('没有项目设置需要保存，直接进入第7步')
+                // 没有项目设置需要保存，直接进入第7步
                 currentStep.value = 7
                 if (currentStep.value > maxReachedStep.value) {
                     maxReachedStep.value = currentStep.value
                 }
             }
         } catch (error) {
-            console.error('第6步保存项目设置时出错:', error)
+            // 第6步保存项目设置时出错
             uni.showToast({
                 title: '保存失败，请重试',
                 icon: 'none',
@@ -2341,18 +2395,14 @@ const updateEndTimestamp = () => {
  * 选择地址
  */
 const chooseLocation = () => {
-    console.log('开始选择地址')
-    
     // #ifdef MP-WEIXIN
     // 检查是否支持隐私协议API
     if (typeof (global as any).wx !== 'undefined' && (global as any).wx.requirePrivacyAuthorize) {
         (global as any).wx.requirePrivacyAuthorize({
             success: () => {
-                console.log('隐私协议已同意，可以选择地址')
                 performChooseLocation()
             },
             fail: () => {
-                console.log('用户拒绝了隐私协议')
                 uni.showToast({
                     title: '需要同意隐私协议才能选择地址',
                     icon: 'none'
@@ -2366,7 +2416,6 @@ const chooseLocation = () => {
     // #endif
     
     // #ifdef H5
-    console.log('当前环境: H5')
     uni.showToast({
         title: 'H5环境暂不支持地图选择，请手动输入地址',
         icon: 'none'
@@ -2374,7 +2423,6 @@ const chooseLocation = () => {
     // #endif
     
     // #ifdef APP-PLUS
-    console.log('当前环境: APP')
     uni.showToast({
         title: 'APP环境暂不支持地图选择，请手动输入地址',
         icon: 'none'
@@ -2388,13 +2436,10 @@ const chooseLocation = () => {
 const performChooseLocation = () => {
     uni.chooseLocation({
         success: (res) => {
-            console.log('选择地址成功:', res)
-            
             // 保存经纬度
             if (res.latitude && res.longitude) {
                 formData.value.lat = res.latitude.toString()
                 formData.value.lng = res.longitude.toString()
-                console.log('经纬度保存:', { lat: formData.value.lat, lng: formData.value.lng })
             }
             
             // 保存地址信息
@@ -2411,26 +2456,18 @@ const performChooseLocation = () => {
             // 组合完整地址用于提交
             formData.value.full_address = locationName
             
-            console.log('地址信息保存:', {
-                location: formData.value.location,
-                full_address: formData.value.full_address
-            })
-            
             uni.showToast({
                 title: '地址选择成功',
                 icon: 'success'
             })
         },
         fail: (res) => {
-            console.error('选择地址失败:', res)
             if (res.errMsg && res.errMsg.includes('cancel')) {
-                console.log('用户取消选择地址')
                 return
             }
             
             let message = '选择地址失败'
             if (res.errMsg) {
-                console.log('错误信息:', res.errMsg)
                 if (res.errMsg.includes('auth deny') || res.errMsg.includes('unauthorized')) {
                     message = '请授权地理位置权限'
                 } else if (res.errMsg.includes('system permission denied')) {
@@ -2453,20 +2490,14 @@ const performChooseLocation = () => {
  * 赛事类型变化
  */
 const handleEventTypeChange = (value: number) => {
-    console.log('赛事类型变化:', value, '当前系列赛列表长度:', seriesList.value.length)
     formData.value.event_type = value
     if (value === 1) {
         formData.value.series_id = 0
-        console.log('选择独立赛事，清空系列赛ID')
     }
     // 如果选择系列赛事且还没有系列赛数据，加载系列赛列表
     if (value === 2) {
-        console.log('选择系列赛事')
         if (!seriesList.value.length) {
-            console.log('系列赛列表为空，开始加载...')
             loadSeriesList()
-        } else {
-            console.log('系列赛列表已存在，无需重新加载')
         }
     }
 }
@@ -2487,7 +2518,6 @@ const openOrganizerPicker = () => {
 }
 
 const openSeriesPicker = () => {
-    console.log('打开系列赛选择器, 系列赛列表:', seriesList.value)
     if (!seriesList.value.length) {
         uni.showToast({
             title: '暂无系列赛数据',
@@ -2497,7 +2527,6 @@ const openSeriesPicker = () => {
     }
     tempSeriesIndex.value = selectedSeriesIndex.value
     showSeriesPicker.value = true
-    console.log('显示系列赛选择器')
 }
 
 /**
@@ -2535,7 +2564,6 @@ const loadOrganizerList = async () => {
         const response: any = await getOrganizerList()
         organizerList.value = response.data || []
     } catch (error) {
-        console.error('加载主办方列表失败:', error)
         organizerList.value = []
     }
 }
@@ -2545,13 +2573,9 @@ const loadOrganizerList = async () => {
  */
 const loadSeriesList = async () => {
     try {
-        console.log('开始加载系列赛列表...')
         const response: any = await getEventSeriesList()
-        console.log('系列赛列表响应:', response)
         seriesList.value = response.data || []
-        console.log('系列赛列表加载完成:', seriesList.value.length, '条记录')
     } catch (error) {
-        console.error('加载系列赛列表失败:', error)
         seriesList.value = []
     }
 }
@@ -2568,7 +2592,6 @@ const onOrganizerTypeChange = (e: any) => {
     }
     
     organizerForm.value.organizer_type = newType
-    console.log('主办方类型已更新为:', newType)
 }
 
 /**
@@ -2580,11 +2603,9 @@ const chooseOrganizerImage = () => {
     if (typeof (global as any).wx !== 'undefined' && (global as any).wx.requirePrivacyAuthorize) {
         (global as any).wx.requirePrivacyAuthorize({
             success: () => {
-                console.log('隐私协议已同意，可以选择图片')
                 performChooseImage()
             },
             fail: () => {
-                console.log('用户拒绝了隐私协议')
                 uni.showToast({
                     title: '需要同意隐私协议才能选择图片',
                     icon: 'none'
@@ -2614,7 +2635,6 @@ const performChooseImage = () => {
             uploadOrganizerImageFile(res.tempFilePaths[0])
         },
         fail: (err) => {
-            console.error('选择图片失败:', err)
             let message = '选择图片失败'
             if (err.errMsg && err.errMsg.includes('privacy agreement')) {
                 message = '请在小程序管理后台配置隐私协议'
@@ -2693,7 +2713,6 @@ const addOrganizerConfirm = async () => {
         // 自动选中新添加的主办方
         if (result && result.data && result.data.id) {
             formData.value.organizer_id = result.data.id
-            console.log('自动选中新添加的主办方:', result.data.id)
         }
         
         // 关闭模态框并重置表单
@@ -2755,7 +2774,6 @@ const addSeriesConfirm = async () => {
         // 自动选中新添加的系列赛
         if (result && result.data && result.data.id) {
             formData.value.series_id = result.data.id
-            console.log('自动选中新添加的系列赛:', result.data.id)
         }
         
         // 关闭模态框并重置表单
@@ -2771,7 +2789,7 @@ const addSeriesConfirm = async () => {
             icon: 'success'
         })
     } catch (error) {
-        console.error('添加系列赛失败:', error)
+        // 添加系列赛失败
     }
 }
 
@@ -3096,45 +3114,14 @@ const loadEventData = async () => {
         
         // 加载赛事项目
         const itemsResponse: any = await getEventItems(eventId.value)
-        console.log('=== getEventItems接口原始返回值 ===')
-        console.log('完整响应:', itemsResponse)
-        console.log('响应数据:', itemsResponse.data)
-        
         const items = itemsResponse.data || []
-        console.log('解析后的项目数组:', items)
-        console.log('第一个项目原始数据:', JSON.stringify(items[0], null, 2))
-        console.log('=== getEventItems调试结束 ===')
-        
         selectedItems.value = items.map((item: any) => item.base_item_id || item.id)
         tempSelectedItems.value = [...selectedItems.value]
         
         // 更新步骤状态 - 编辑模式下允许访问所有步骤
         maxReachedStep.value = 7
         
-        // 等待主办方和系列赛列表加载完成后再设置显示名称
-        setTimeout(() => {
-            // 触发计算属性重新计算
-            console.log('主办方列表:', organizerList.value)
-            console.log('系列赛列表:', seriesList.value)
-            console.log('选中的主办方ID:', formData.value.organizer_id)
-            console.log('选中的系列赛ID:', formData.value.series_id)
-            
-            // 检查主办方和系列赛是否在列表中
-            const organizerExists = organizerList.value.some((org: any) => org.id === formData.value.organizer_id)
-            const seriesExists = seriesList.value.some((series: any) => series.id === formData.value.series_id)
-            
-            if (!organizerExists) {
-                console.warn('主办方不在列表中，可能需要重新选择')
-            }
-            if (!seriesExists && formData.value.event_type === 2) {
-                console.warn('系列赛不在列表中，可能需要重新选择')
-            }
-        }, 100)
-        
-        console.log('编辑模式：加载赛事数据成功', eventData)
-        
     } catch (error) {
-        console.error('加载赛事数据失败:', error)
         uni.showToast({
             title: '加载赛事数据失败',
             icon: 'none'
@@ -3753,18 +3740,18 @@ const removeCustomField = (key: string) => {
 // 项目设置相关函数
 const getCategoryColor = (categoryName: string) => {
     const colors = [
-        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
+        'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+        'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+        'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+        'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+        'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)'
     ]
     const index = categoryName.charCodeAt(0) % colors.length
     return colors[index]
 }
 
 const getCategoryBorderColor = (categoryName: string) => {
-    const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#fa709a']
+    const colors = ['#dee2e6', '#dee2e6', '#dee2e6', '#dee2e6', '#dee2e6']
     const index = categoryName.charCodeAt(0) % colors.length
     return colors[index]
 }
@@ -3774,7 +3761,7 @@ const onSyncSettings = async (categoryName: string) => {
     if (!group || group.items.length <= 1) return
     
     const firstItem = group.items[0]
-    const syncFields = ['registration_fee', 'max_participants', 'allow_duplicate_registration', 'is_round_robin', 'group_size', 'remark']
+    const syncFields = ['registration_fee', 'max_participants', 'allow_duplicate_registration', 'is_round_robin', 'group_size', 'remark', 'registration_fee_enabled', 'max_participants_enabled', 'group_size_enabled', 'remark_enabled']
     
     // 同步基本设置
     for (let i = 1; i < group.items.length; i++) {
@@ -4024,57 +4011,15 @@ const getCurrentProjectVenueTypeLabel = () => {
  */
 const saveItemSettings = async () => {
     if (!eventId.value || !eventItems.value || eventItems.value.length === 0) {
-        console.warn('无法保存项目设置：缺少赛事ID或项目数据')
-        console.warn('eventId:', eventId.value)
-        console.warn('eventItems:', eventItems.value)
         return false
     }
     
     try {
-        console.log('=== 开始保存项目设置 ===')
-        console.log('赛事ID:', eventId.value)
-        console.log('项目数量:', eventItems.value.length)
-        console.log('项目列表:', eventItems.value)
-        
-        // 打印每个项目的详细信息，包括sport_item.id
-        eventItems.value.forEach((item, index) => {
-            console.log(`=== 项目${index + 1}详细信息 ===`)
-            console.log('项目名称:', item.name)
-            console.log('项目分类:', item.category_name)
-            console.log('base_item_id (基础项目ID):', item.base_item_id)
-            console.log('sport_item.id (数据库记录ID):', item.id)
-            console.log('sport_item_id (映射后的ID):', item.sport_item_id)
-            console.log('项目完整数据:', item)
-            console.log('---')
-        })
-        
-        // 添加更详细的调试信息
-        console.log('=== 前端调试：eventItems数据结构 ===')
-        console.log('eventItems数组长度:', eventItems.value.length)
-        console.log('第一个项目对象的所有属性:', Object.keys(eventItems.value[0] || {}))
-        console.log('第一个项目的完整数据:', JSON.stringify(eventItems.value[0], null, 2))
-        console.log('=== 前端调试结束 ===')
-        
-        // 显示接口返回的原始数据
-        console.log('=== getEventItems接口原始返回值 ===')
-        console.log('所有项目的原始数据:')
-        eventItems.value.forEach((item, index) => {
-            console.log(`项目${index + 1}:`, JSON.stringify(item, null, 2))
-        })
-        console.log('=== 接口原始数据结束 ===')
-        
         // 保存每个项目的设置
         for (const item of eventItems.value) {
-            console.log('--- 保存项目 ---')
-            console.log('项目ID:', item.id)
-            console.log('项目名称:', item.name)
-            console.log('项目分类:', item.category_name)
-            console.log('项目ID:', item.id)
-            console.log('项目完整数据:', item)
-            
-            // 准备保存的数据 - 使用正确的sport_item.id
+            // 准备保存的数据
             const saveData = {
-                item_id: item.sport_item_id || item.id, // 优先使用sport_item_id，兼容旧版本
+                item_id: item.sport_item_id || item.id,
                 registration_fee: item.registration_fee || 0,
                 max_participants: item.max_participants || 0,
                 rounds: item.rounds || 0,
@@ -4086,66 +4031,32 @@ const saveItemSettings = async () => {
                 remark: item.remark || ''
             }
             
-            console.log('保存数据:', saveData)
-            console.log('关键字段检查:', {
-                group_size: item.group_size,
-                venue_count: item.venue_count,
-                venue_type: item.venue_type,
-                registration_fee: item.registration_fee,
-                max_participants: item.max_participants
-            })
-            
-            // 检查这些字段是否真的需要保存
-            console.log('字段保存必要性检查:', {
-                'group_size需要保存': item.group_size !== undefined && item.group_size !== null,
-                'venue_count需要保存': item.venue_count !== undefined && item.venue_count !== null,
-                'venue_type需要保存': item.venue_type !== undefined && item.venue_type !== null && item.venue_type !== ''
-            })
-            
             // 调用接口保存
-            const response = await updateItemSettings(saveData)
-            console.log('接口响应:', response)
+            const response: any = await updateItemSettings(saveData)
             
             // 检查响应状态
             if (response && (response.code === 200 || response.code === 1)) {
-                console.log(`项目 ${item.name} 保存成功`)
-                
                 // 保存场地分配
                 const itemId = item.sport_item_id || item.id
                 const selectedVenues = itemVenueAssignments.value[item.id] || []
                 
-                console.log(`=== 项目 ${item.name} 场地分配调试 ===`)
-                console.log('itemId:', itemId)
-                console.log('item.id:', item.id)
-                console.log('selectedVenues:', selectedVenues)
-                console.log('itemVenueAssignments.value:', itemVenueAssignments.value)
-                
                 if (selectedVenues.length > 0) {
-                    console.log(`保存项目 ${item.name} 的场地分配:`, selectedVenues)
                     try {
-                        // 修复：使用正确的字段名获取场地ID
                         const venueIds = selectedVenues.map(venue => venue.venue_id || venue.id)
-                        console.log(`项目 ${item.name} 场地ID列表:`, venueIds)
                         
-                        const venueResponse = await batchAssignVenuesToItem(itemId, {
+                        await batchAssignVenuesToItem(itemId, {
                             venue_ids: venueIds,
                             assignment_type: 2 // 共享模式
                         })
-                        console.log(`项目 ${item.name} 场地分配保存结果:`, venueResponse)
                     } catch (error) {
-                        console.error(`项目 ${item.name} 场地分配保存失败:`, error)
-                        // 场地分配失败不影响整体保存，只记录错误
+                        // 场地分配失败不影响整体保存
                     }
-                } else {
-                    console.log(`项目 ${item.name} 没有选择场地`)
                 }
             } else {
-                console.error(`项目 ${item.name} 保存失败:`, response)
                 throw new Error(`项目 ${item.name} 保存失败: ${response?.msg || '未知错误'}`)
             }
         }
         
-        console.log('=== 所有项目设置保存成功 ===')
         uni.showToast({
             title: '项目设置已保存',
             icon: 'success',
@@ -4153,12 +4064,7 @@ const saveItemSettings = async () => {
         })
         
         return true
-    } catch (error) {
-        console.error('=== 保存项目设置失败 ===')
-        console.error('错误详情:', error)
-        console.error('错误类型:', typeof error)
-        console.error('错误消息:', error?.message || error?.msg || error)
-        
+    } catch (error: any) {
         let errorMessage = '保存项目设置失败'
         if (error && error.msg) {
             errorMessage = error.msg
@@ -4179,7 +4085,6 @@ const saveItemSettings = async () => {
 const getAvailableVenuesForItem = (itemId: number) => {
     // 确保venues.value是数组
     if (!Array.isArray(venues.value)) {
-        console.warn('venues.value is not an array:', venues.value)
         return []
     }
 
@@ -4187,12 +4092,12 @@ const getAvailableVenuesForItem = (itemId: number) => {
     const currentItem = eventItems.value.find((it: any) => it.id === itemId)
     const targetVenueType = currentItem ? (currentItem.venue_type || mapCategoryToVenueType(currentItem.category_name)) : ''
 
-    // 共享模式：所有场地都可以选择，不再排他（与item-settings.vue保持一致）
+    // 共享模式：所有场地都可以选择，不再排他
     return venues.value.filter(venue => {
         if (!venue || !venue.id) return false
         // 类型匹配：若设置了目标类型，则要求 venue.venue_type === 目标类型
         if (targetVenueType && venue.venue_type && venue.venue_type !== targetVenueType) return false
-        return true // 所有匹配类型的场地都可以选择
+        return true
     })
 }
 
@@ -4214,7 +4119,6 @@ const toggleVenueSelection = (itemId: number, venueId: number) => {
     if (existingIndex > -1) {
         // 取消选择：从已分配列表中移除
         assignments.splice(existingIndex, 1)
-        console.log(`取消选择场地 ${venueId}，项目 ${itemId}`)
     } else {
         // 选择场地：添加到已分配列表
         const venue = venues.value.find(v => v.id === venueId)
@@ -4228,11 +4132,8 @@ const toggleVenueSelection = (itemId: number, venueId: number) => {
                 assignment_type: 2 // 共享模式
             }
             assignments.push(assignmentData)
-            console.log(`选择场地 ${venue.name} (${venueId})，项目 ${itemId}`)
         }
     }
-    
-    console.log(`项目 ${itemId} 当前已分配场地:`, assignments)
 }
 
 const isAllVenuesSelected = (itemId: number) => {
@@ -4357,7 +4258,12 @@ const initEventItems = async () => {
             remark: '',
             venue_type: mapCategoryToVenueType(categoryName), // 根据分类自动设置场地类型
             venue_count: 0,
-            is_configured: false
+            is_configured: false,
+            // 新增的开关字段，默认都是关闭状态
+            registration_fee_enabled: false,
+            max_participants_enabled: false,
+            group_size_enabled: false,
+            remark_enabled: false
         }
     })
     
@@ -4384,32 +4290,22 @@ const loadItemVenueAssignments = async () => {
         return
     }
     
-    console.log('=== 开始加载项目场地分配 ===')
-    
     for (const item of eventItems.value) {
         const itemId = item.sport_item_id || item.id
-        console.log(`加载项目 ${item.name} (ID: ${itemId}) 的场地分配`)
         
         try {
-            const response = await apiGetItemVenues(itemId)
-            console.log(`项目 ${item.name} 场地分配接口返回:`, response)
+            const response: any = await apiGetItemVenues(itemId)
             
             if (response && response.data && Array.isArray(response.data)) {
                 // 将已分配的场地存储到 itemVenueAssignments 中
                 itemVenueAssignments.value[item.id] = response.data
-                console.log(`项目 ${item.name} 已分配场地:`, response.data)
             } else {
                 itemVenueAssignments.value[item.id] = []
-                console.log(`项目 ${item.name} 没有已分配场地`)
             }
         } catch (error) {
-            console.error(`加载项目 ${item.name} 场地分配失败:`, error)
             itemVenueAssignments.value[item.id] = []
         }
     }
-    
-    console.log('=== 项目场地分配加载完成 ===')
-    console.log('itemVenueAssignments:', itemVenueAssignments.value)
 }
 
 // 获取项目分类名称
@@ -4545,8 +4441,8 @@ const addNewVenue = async () => {
                 return
             }
             
-            const startNum = parseInt(batchVenue.value.startNumber) || 1
-            const endNum = parseInt(batchVenue.value.endNumber) || 10
+            const startNum = parseInt(String(batchVenue.value.startNumber)) || 1
+            const endNum = parseInt(String(batchVenue.value.endNumber)) || 10
             
             if (startNum > endNum) {
                 uni.showToast({
@@ -4566,7 +4462,7 @@ const addNewVenue = async () => {
             }
             
             // 生成不冲突的编码前缀
-            const basePrefix = generateVenueCodePrefix(newVenue.value.venue_type)
+            const basePrefix = generateVenueCodePrefix(String(newVenue.value.venue_type))
             const existingCodes = (venues.value || []).map((v: any) => v.venue_code)
             let codePrefix = basePrefix
             let suffix = 1
@@ -4606,7 +4502,7 @@ const addNewVenue = async () => {
             
             // 自动生成场地编码（如果用户没有填写）
             if (!newVenue.value.venue_code) {
-                const prefix = generateVenueCodePrefix(newVenue.value.venue_type)
+                const prefix = generateVenueCodePrefix(String(newVenue.value.venue_type))
                 let suffix = 1
                 const existingCodes = (venues.value || []).map((v: any) => v.venue_code)
                 let candidate = `${prefix}_${suffix}`
@@ -4667,9 +4563,7 @@ const addNewVenue = async () => {
             endNumber: 10
         }
         
-    } catch (error) {
-        console.error('添加场地失败:', error)
-        
+    } catch (error: any) {
         // 处理具体的错误信息
         let errorMessage = '添加失败'
         if (error && error.msg) {
@@ -4732,7 +4626,7 @@ const deleteVenue = async (venueId: number | string) => {
 
 <style lang="scss" scoped>
 .flex-between { display: flex; align-items: center; justify-content: space-between; }
-.selected-count { color:#667eea; font-size:24rpx; }
+.selected-count { color:#4caf50; font-size:24rpx; }
 .required-tip { color:#ff4757; font-size:22rpx; font-weight:bold; }
 .required-tip::before { content:'* '; }
 
@@ -4750,7 +4644,7 @@ const deleteVenue = async (venueId: number | string) => {
     background-color: #f6f8ff;
 }
 .signup-chip.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
     color: #fff;
     border-color: transparent;
 }
@@ -4828,9 +4722,9 @@ const deleteVenue = async (venueId: number | string) => {
             }
             
             &.active .step-circle {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
                 color: white;
-                box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+                box-shadow: 0 4rpx 12rpx rgba(255, 107, 53, 0.3);
             }
             
             &.completed .step-circle {
@@ -4862,7 +4756,7 @@ const deleteVenue = async (venueId: number | string) => {
             &.active .step-title-container {
                 .step-title-line1,
                 .step-title-line2 {
-                color: #667eea;
+                color: #ff6b35;
                 font-weight: bold;
                 }
             }
@@ -4923,30 +4817,6 @@ const deleteVenue = async (venueId: number | string) => {
                 color: #333;
             }
             
-            .save-settings-btn {
-                height: 56rpx;
-                padding: 0 24rpx;
-                background: linear-gradient(135deg, #007aff, #00d4ff);
-                color: white;
-                border-radius: 8rpx;
-                border: none;
-                font-size: 24rpx;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 2rpx 8rpx rgba(0, 122, 255, 0.3);
-                transition: all 0.2s ease;
-                
-                &:active {
-                    transform: scale(0.95);
-                    box-shadow: 0 1rpx 4rpx rgba(0, 122, 255, 0.5);
-                }
-                
-                .btn-text {
-                    font-size: 24rpx;
-                    font-weight: bold;
-                }
-            }
         }
     }
 }
@@ -4967,7 +4837,7 @@ const deleteVenue = async (venueId: number | string) => {
     
     .retry-btn {
         padding: 20rpx 40rpx;
-        background-color: #007aff;
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
         color: white;
         border-radius: 10rpx;
         border: none;
@@ -4995,7 +4865,7 @@ const deleteVenue = async (venueId: number | string) => {
                 transition: all 0.3s ease;
                 
                 &.active {
-                    background-color: #007aff;
+                    background: linear-gradient(135deg, #ff6b35, #f7931e);
                     
                     .tab-text {
                         color: white;
@@ -5070,8 +4940,8 @@ const deleteVenue = async (venueId: number | string) => {
                 transition: all 0.3s ease;
                 
                 &.selected {
-                    background-color: #e3f2fd;
-                    border: 2rpx solid #2196f3;
+                    background-color: #f1f8e9;
+                    border: 2rpx solid #4caf50;
                 }
                 
                 .item-content {
@@ -5090,7 +4960,7 @@ const deleteVenue = async (venueId: number | string) => {
                         
                         .icon-check {
                             font-size: 24rpx;
-                            color: #2196f3;
+                            color: #4caf50;
                         }
                     }
                 }
@@ -5170,7 +5040,7 @@ const deleteVenue = async (venueId: number | string) => {
         align-items: center;
         gap: 8rpx;
         padding: 16rpx 24rpx;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
         border-radius: 12rpx;
         
         .location-icon {
@@ -5226,7 +5096,7 @@ picker {
     }
     
     .tip-link {
-        color: #007aff;
+        color: #ff6b35;
         text-decoration: underline;
     }
 }
@@ -5261,13 +5131,13 @@ picker {
             justify-content: center;
             
             &.active {
-                border-color: #007aff;
+                border-color: #ff6b35;
             }
             
             .radio-dot {
                 width: 16rpx;
                 height: 16rpx;
-                background-color: #007aff;
+                background: linear-gradient(135deg, #ff6b35, #f7931e);
                 border-radius: 50%;
             }
         }
@@ -5309,10 +5179,10 @@ picker {
         justify-content: center;
         gap: 8rpx;
         padding: 20rpx;
-        border: 2rpx dashed #007aff;
+        border: 2rpx dashed #ff6b35;
         border-radius: 12rpx;
-        color: #007aff;
-        background-color: #f8faff;
+        color: #ff6b35;
+        background-color: #fff5f0;
         
         .add-icon {
             font-size: 28rpx;
@@ -5340,7 +5210,7 @@ picker {
             color: #999;
             
             &.selected {
-                color: #007aff;
+                color: #ff6b35;
             }
         }
         
@@ -5391,40 +5261,72 @@ picker {
         flex: 1;
         height: 88rpx;
         border: none;
-        border-radius: 44rpx;
+        border-radius: 12rpx;
         font-size: 32rpx;
         font-weight: bold;
         display: flex;
         align-items: center;
         justify-content: center;
         transition: all 0.3s ease;
+        box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
         
         &.prev-btn {
-            background-color: #f8f8f8;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
             color: #666;
+            border: 2rpx solid #d0d0d0;
+            
+            &:active {
+                transform: translateY(2rpx);
+                box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+            }
         }
         
         &.next-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
             color: white;
+            border: 2rpx solid #e55a2b;
+            
+            &:active {
+                transform: translateY(2rpx);
+                box-shadow: 0 2rpx 8rpx rgba(255, 107, 53, 0.3);
+            }
             
             &.disabled {
-                background: #ccc;
+                background: linear-gradient(135deg, #ccc 0%, #aaa 100%);
                 color: #999;
+                border: 2rpx solid #bbb;
+                box-shadow: none;
+                
+                &:active {
+                    transform: none;
+                }
             }
         }
         
         &.submit-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
             color: white;
+            border: 2rpx solid #e63946;
+            
+            &:active {
+                transform: translateY(2rpx);
+                box-shadow: 0 2rpx 8rpx rgba(255, 71, 87, 0.3);
+            }
             
             &.loading {
-                opacity: 0.7;
+                opacity: 0.8;
+                transform: none;
             }
             
             &:disabled {
-                background: #ccc;
+                background: linear-gradient(135deg, #ccc 0%, #aaa 100%);
                 color: #999;
+                border: 2rpx solid #bbb;
+                box-shadow: none;
+                
+                &:active {
+                    transform: none;
+                }
             }
         }
     }
@@ -5557,7 +5459,7 @@ picker {
     .picker-cancel,
     .picker-confirm {
         font-size: 28rpx;
-        color: #007aff;
+        color: #ff6b35;
         cursor: pointer;
     }
     
@@ -5722,7 +5624,7 @@ picker {
         }
         
         .add-link {
-            color: #007aff;
+            color: #ff6b35;
             font-size: 28rpx;
         }
     }
@@ -5764,15 +5666,28 @@ picker {
                     padding: 8rpx 16rpx;
                     border-radius: 8rpx;
                     font-size: 24rpx;
+                    border: none;
+                    font-weight: 500;
+                    transition: all 0.2s ease;
                     
                     &.edit {
-                        background-color: #e3f2fd;
-                        color: #2196f3;
+                        background: linear-gradient(135deg, #fff5f0 0%, #ffe0d6 100%);
+                        color: #ff6b35;
+                        border: 1rpx solid #ffb366;
+                        
+                        &:active {
+                            transform: translateY(1rpx);
+                        }
                     }
                     
                     &.delete {
-                        background-color: #ffebee;
-                        color: #f44336;
+                        background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+                        color: #d32f2f;
+                        border: 1rpx solid #ef9a9a;
+                        
+                        &:active {
+                            transform: translateY(1rpx);
+                        }
                     }
                 }
             }
@@ -5783,7 +5698,7 @@ picker {
             text-align: center;
             
             .add-text {
-                color: #007aff;
+                color: #ff6b35;
                 font-size: 28rpx;
             }
         }
@@ -5803,7 +5718,7 @@ picker {
     }
     
     .add-link {
-        color: #007aff;
+        color: #ff6b35;
         font-size: 28rpx;
     }
 }
@@ -5822,8 +5737,15 @@ picker {
             padding: 8rpx 16rpx;
             border-radius: 8rpx;
             font-size: 24rpx;
-            background-color: #ffebee;
-            color: #f44336;
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            color: #d32f2f;
+            border: 1rpx solid #ef9a9a;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            
+            &:active {
+                transform: translateY(1rpx);
+            }
         }
     }
 }
@@ -5836,7 +5758,7 @@ picker {
     margin-top: 16rpx;
     
     .add-text {
-        color: #007aff;
+        color: #ff6b35;
         font-size: 28rpx;
     }
 }
@@ -5853,7 +5775,7 @@ picker {
     }
     
     .add-link {
-        color: #007aff;
+        color: #ff6b35;
         font-size: 28rpx;
     }
 }
@@ -5883,8 +5805,8 @@ picker {
     cursor: pointer;
     
     &.active {
-        border-color: #007aff;
-        background-color: #007aff;
+        border-color: #ff6b35;
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
         color: white;
     }
 }
@@ -5903,7 +5825,7 @@ picker {
     cursor: pointer;
     
     &.expanded {
-        border-color: #007aff;
+        border-color: #ff6b35;
     }
 }
 
@@ -5974,8 +5896,8 @@ picker {
     cursor: pointer;
     
     &.selected {
-        border-color: #007aff;
-        background-color: #e3f2fd;
+        border-color: #4caf50;
+        background-color: #f1f8e9;
     }
 }
 
@@ -5992,7 +5914,7 @@ picker {
 
 .selected-icon {
     font-size: 24rpx;
-    color: #007aff;
+    color: #4caf50;
 }
 
 .selected-info {
@@ -6143,7 +6065,7 @@ picker {
 .custom-field-row .btn-secondary {
     flex-shrink: 0;
     padding: 16rpx 24rpx;
-    background-color: #667eea;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
     color: white;
     border: none;
     border-radius: 8rpx;
@@ -6155,11 +6077,35 @@ picker {
 }
 
 // 项目设置样式
+.section-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32rpx;
+}
+
 .items-settings {
     background-color: white;
-    margin: 0 32rpx 20rpx;
-    border-radius: 16rpx;
-    padding: 32rpx;
+    margin: 0 0 16rpx 0;
+    border-radius: 12rpx;
+    padding: 20rpx;
+    
+    .title-left {
+        display: flex;
+        align-items: center;
+        
+        .title-text {
+            font-size: 36rpx;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .title-count {
+            font-size: 28rpx;
+            color: #666;
+            margin-left: 16rpx;
+        }
+    }
     
             .section-title {
             margin-bottom: 32rpx;
@@ -6191,11 +6137,12 @@ picker {
     
     .items-container {
         .category-group {
-            margin-bottom: 32rpx;
-            background-color: white;
-            border-radius: 16rpx;
-            padding: 20rpx;
-            box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+            margin-bottom: 16rpx;
+            background: #f8f9fa;
+            border-radius: 8rpx;
+            padding: 8rpx;
+            border: 1rpx solid rgba(200, 200, 200, 0.3);
+            box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.05);
             
             &:last-child {
                 margin-bottom: 0;
@@ -6205,10 +6152,11 @@ picker {
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                margin-bottom: 20rpx;
-                padding: 20rpx 24rpx;
+                margin-bottom: 8rpx;
+                padding: 16rpx 20rpx;
                 border-radius: 12rpx;
-                box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
+                background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+                box-shadow: 0 2rpx 8rpx rgba(52, 152, 219, 0.2);
                 
                 .category-info {
                     display: flex;
@@ -6216,20 +6164,18 @@ picker {
                     flex: 1;
                     
                     .category-name {
-                        font-size: 34rpx;
-                        font-weight: bold;
-                        color: white;
-                        text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.3);
+                        font-size: 32rpx !important;
+                        font-weight: 600 !important;
+                        color: #333 !important;
                     }
                     
                     .category-count {
-                        font-size: 24rpx;
-                        color: rgba(255, 255, 255, 0.9);
-                        background-color: rgba(255, 255, 255, 0.25);
-                        padding: 8rpx 16rpx;
-                        border-radius: 20rpx;
+                        font-size: 26rpx !important;
+                        color: #333 !important;
+                        background: rgba(255, 255, 255, 0.8) !important;
+                        padding: 6rpx 14rpx;
+                        border-radius: 16rpx;
                         font-weight: 500;
-                        backdrop-filter: blur(10rpx);
                         margin-left: 16rpx;
                     }
                 }
@@ -6241,7 +6187,7 @@ picker {
                     .sync-btn {
                         height: 48rpx;
                         padding: 0 20rpx;
-                        background: linear-gradient(135deg, #007aff, #00d4ff);
+                        background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
                         color: white;
                         border-radius: 8rpx;
                         border: none;
@@ -6249,17 +6195,16 @@ picker {
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        box-shadow: 0 2rpx 8rpx rgba(0, 122, 255, 0.3);
-                        transition: all 0.2s ease;
-                        position: relative;
+                        box-shadow: 0 2rpx 6rpx rgba(255, 107, 53, 0.3);
+                        transition: all 0.3s ease;
                         
                         &:active {
-                            transform: scale(0.95);
-                            box-shadow: 0 1rpx 4rpx rgba(0, 122, 255, 0.5);
+                            transform: translateY(1rpx);
+                            box-shadow: 0 1rpx 3rpx rgba(255, 107, 53, 0.4);
                         }
                         
                         &:hover {
-                            box-shadow: 0 4rpx 16rpx rgba(0, 122, 255, 0.4);
+                            box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.15);
                         }
                         
                         // 添加同步图标提示
@@ -6279,17 +6224,18 @@ picker {
             
             .group-items {
                 .item-card {
-                    background-color: #f8f9fa;
-                    border-radius: 12rpx;
-                    padding: 20rpx;
-                    margin-bottom: 16rpx;
-                    border: 1rpx solid #e9ecef;
-                    border-left: 4rpx solid;
+                    background-color: white;
+                    border-radius: 6rpx;
+                    padding: 12rpx;
+                    margin-bottom: 8rpx;
+                    border: 1rpx solid rgba(200, 200, 200, 0.2);
+                    border-left: 2rpx solid;
                     transition: all 0.3s ease;
+                    box-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.04);
                     
                     &:hover {
-                        transform: translateY(-2rpx);
-                        box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
+                        transform: translateY(-1rpx);
+                        box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.08);
                     }
                     
                     &:last-child {
@@ -6315,21 +6261,12 @@ picker {
                             
                             .item-category {
                                 font-size: 24rpx;
-                                color: #007aff;
-                                background-color: #e3f2fd;
+                                color: #4caf50;
+                                background-color: #f1f8e9;
                                 padding: 4rpx 12rpx;
                                 border-radius: 12rpx;
                             }
                             
-                            .item-id-info {
-                                font-size: 20rpx;
-                                color: #999;
-                                margin-top: 4rpx;
-                                font-family: monospace;
-                                background-color: #f5f5f5;
-                                padding: 2rpx 8rpx;
-                                border-radius: 8rpx;
-                            }
                         }
                         
                         .item-status {
@@ -6352,82 +6289,150 @@ picker {
                     }
                     
                     .item-settings {
-                        .setting-item {
-                            display: flex;
-                            align-items: center;
-                            margin-bottom: 20rpx;
+                        padding: 0;
+                        margin: 0 0 16rpx 0;
+                        background-color: transparent;
+                    }
+                    
+                    .settings-group {
+                        margin-bottom: 16rpx;
+                        background: #f8f9fa;
+                        border-radius: 12rpx;
+                        border: 1rpx solid rgba(200, 200, 200, 0.3);
+                        box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.05);
+                        overflow: hidden;
+                        
+                        &:last-child {
+                            margin-bottom: 0;
+                        }
+                    }
+                    
+                    .group-header {
+                        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+                        padding: 16rpx 20rpx;
+                        border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
+                    }
+                    
+                    .group-title {
+                        font-size: 28rpx;
+                        font-weight: 600;
+                        color: white;
+                    }
+                    
+                    .group-content {
+                        padding: 16rpx;
+                    }
+                    
+                         .setting-item {
+                        margin-bottom: 16rpx;
                             
                             &:last-child {
                                 margin-bottom: 0;
+                        }
+                    }
+                    
+                    .setting-header {
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 8rpx;
+                        flex-wrap: wrap;
                             }
                             
-                            .setting-label {
-                                width: 160rpx;
-                                font-size: 28rpx;
+                             .setting-label {
+                        font-size: 26rpx;
                                 color: #333;
-                                flex-shrink: 0;
-                                white-space: pre-line; /* 支持换行 */
-                                line-height: 1.4;
+                        font-weight: 500;
+                        text-align: right;
+                        width: 200rpx;
+                        margin-right: 16rpx;
+                        flex-shrink: 0;
+                    }
+                    
+                    .setting-input-container {
+                        display: flex;
+                        align-items: center;
+                        gap: 8rpx;
+                        margin-left: 16rpx;
                             }
                             
                             .setting-input {
-                                flex: 1;
-                                height: 80rpx;
-                                padding: 0 24rpx;
+                                width: 120rpx;
+                        height: 48rpx;
+                        padding: 0 12rpx;
                                 border: 1rpx solid #e0e0e0;
                                 border-radius: 8rpx;
-                                font-size: 28rpx;
-                                color: #333;
+                        font-size: 26rpx;
                                 background-color: white;
-                                z-index: 1; /* 设置较低的z-index */
                                 
                                 &:focus {
-                                    border-color: #007aff;
-                                    z-index: 10; /* 聚焦时稍微提升，但不超过按钮 */
+                            border-color: #4caf50;
+                            outline: none;
                                 }
                             }
 
-                            .input-tip {
-                                margin-left: 12rpx;
+                    .input-unit {
                                 font-size: 24rpx;
-                                color: #999;
-                                flex-shrink: 0;
+                        color: #666;
+                        min-width: 32rpx;
                             }
                             
-                            .textarea-container {
-                                flex: 1;
-                                position: relative;
+                    .setting-textarea-container {
+                        margin-top: 8rpx;
+                        width: 100%;
+                        display: block;
+                        clear: both;
+                        margin-left: 0;
+                        margin-right: 0;
+                        flex-basis: 100%;
                             }
+                    
+                    .remark-setting {
+                        display: block !important;
+                    }
+                    
+                    .remark-header {
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 8rpx;
+                    }
+                    
+                    .remark-textarea-container {
+                        display: block !important;
+                        width: calc(100% - 32rpx) !important;
+                        margin: 16rpx 16rpx 0 0 !important;
+                        clear: both !important;
+                    }
+                    
+                    .setting-tip {
+                        font-size: 24rpx;
+                        color: #999;
+                        margin-left: 16rpx;
+                        margin-top: 4rpx;
+                        display: block;
+                    }
                             
                             .setting-textarea {
                                 width: 100%;
-                                min-height: 120rpx;
-                                padding: 20rpx;
-                                padding-bottom: 60rpx; /* 为字数统计留出空间 */
+                        min-height: 80rpx;
+                        padding: 12rpx 16rpx;
                                 border: 1rpx solid #e0e0e0;
                                 border-radius: 8rpx;
-                                font-size: 28rpx;
-                                color: #333;
+                        font-size: 26rpx;
                                 background-color: white;
-                                line-height: 1.5;
-                                box-sizing: border-box;
-                                z-index: 1; /* 设置较低的z-index */
+                        resize: none;
                                 
                                 &:focus {
-                                    border-color: #007aff;
-                                    z-index: 10; /* 聚焦时稍微提升，但不超过按钮 */
+                            border-color: #4caf50;
+                            outline: none;
                                 }
                             }
                             
                             .textarea-count {
-                                position: absolute;
-                                right: 20rpx;
-                                bottom: 20rpx;
-                                font-size: 24rpx;
+                        display: block;
+                        text-align: right;
+                        font-size: 22rpx;
                                 color: #999;
-                                pointer-events: none; /* 防止点击字数统计影响textarea */
-                            }
-                        }
+                        margin-top: 4rpx;
                     }
                 }
             }
@@ -6452,10 +6457,15 @@ picker {
                     color: #333;
                 }
                 
+                .venue-actions {
+                    display: flex;
+                    align-items: center;
+                }
+                
                 .add-venue-btn {
                     height: 48rpx; /* 比文字略高，整体更紧凑 */
                     padding: 0 20rpx; /* 去除上下内边距，改为定高 */
-                    background-color: #007aff;
+                    background: linear-gradient(135deg, #ff6b35, #f7931e);
                     color: white;
                     border-radius: 8rpx;
                     border: none;
@@ -6489,11 +6499,11 @@ picker {
                 
                 .venue-type-tip {
                     font-size: 22rpx;
-                    color: #007aff;
-                    background: rgba(0, 122, 255, 0.1);
+                    color: #ff6b35;
+                    background: rgba(255, 107, 53, 0.1);
                     padding: 6rpx 12rpx;
                     border-radius: 16rpx;
-                    border: 1rpx solid rgba(0, 122, 255, 0.2);
+                    border: 1rpx solid rgba(255, 107, 53, 0.2);
                 }
 
                 .venue-selector-list {
@@ -6517,16 +6527,16 @@ picker {
                             position: relative;
                             
                             &:hover {
-                                background-color: #e6f3ff;
-                                border-color: #007aff;
+                                background-color: #fff5f0;
+                                border-color: #ff6b35;
                             }
                             
                             &.selected {
-                                background: linear-gradient(135deg, #e6f3ff, #f0f8ff);
-                                border-color: #007aff;
-                                color: #007aff;
+                                background: linear-gradient(135deg, #f1f8e9, #e8f5e8);
+                                border-color: #4caf50;
+                                color: #4caf50;
                                 font-weight: bold;
-                                box-shadow: 0 2rpx 8rpx rgba(0, 122, 255, 0.15);
+                                box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.15);
                             }
                             .select-text {
                                 font-size: 26rpx;
@@ -6556,16 +6566,16 @@ picker {
                         }
                         
                         &.selected {
-                            background: linear-gradient(135deg, #e6f3ff, #f0f8ff);
-                            border-color: #007aff;
-                            box-shadow: 0 2rpx 8rpx rgba(0, 122, 255, 0.15);
+                            background: linear-gradient(135deg, #f1f8e9, #e8f5e8);
+                            border-color: #4caf50;
+                            box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.15);
                             
                             .option-text { 
-                                color: #007aff; 
+                                color: #4caf50; 
                                 font-weight: bold;
                             }
                             .venue-code { 
-                                color: #007aff; 
+                                color: #4caf50; 
                             }
                         }
 
@@ -6584,7 +6594,7 @@ picker {
                         .selected-mark {
                             width: 32rpx;
                             height: 32rpx;
-                            background-color: #007aff;
+                            background: linear-gradient(135deg, #4caf50, #66bb6a);
                             border-radius: 50%;
                             display: flex;
                             align-items: center;
@@ -6865,19 +6875,31 @@ picker {
 
 .action-btn {
     padding: 12rpx 24rpx;
-    border-radius: 6rpx;
+    border-radius: 8rpx;
     font-size: 24rpx;
     border: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
 .edit-btn {
-    background: #f0f0f0;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
     color: #333;
+    border: 1rpx solid #d0d0d0;
+    
+    &:active {
+        transform: translateY(1rpx);
+    }
 }
 
 .delete-btn {
-    background: #ff4757;
+    background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
     color: #fff;
+    border: 1rpx solid #e63946;
+    
+    &:active {
+        transform: translateY(1rpx);
+    }
 }
 
 .action-text {
@@ -6916,7 +6938,7 @@ picker {
 }
 
 .card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
     padding: 32rpx;
     color: white;
     position: relative;
