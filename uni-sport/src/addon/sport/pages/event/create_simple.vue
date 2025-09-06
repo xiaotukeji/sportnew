@@ -921,6 +921,26 @@
                     </view>
                 </view>
                 
+                <!-- 协办单位管理卡片 -->
+                <view class="settings-card">
+                    <view class="card-header">
+                        <view class="card-icon">🤝</view>
+                        <view class="card-title">协办单位管理</view>
+                        <view class="card-subtitle">管理赛事的协办单位、赞助商和支持单位</view>
+                    </view>
+                    <view class="card-content">
+                        <view class="co-organizer-section">
+                            <view class="section-info">
+                                <text class="info-text">添加协办单位、赞助商或支持单位，丰富赛事信息</text>
+                            </view>
+                            <button class="manage-btn" @tap="handleShowCoOrganizerManager">
+                                <text class="manage-icon">👥</text>
+                                <text class="manage-text">管理协办单位</text>
+                            </button>
+                        </view>
+                    </view>
+                </view>
+                
                 <!-- 功能设置卡片（预留） -->
                 <view class="settings-card">
                     <view class="card-header">
@@ -1367,6 +1387,14 @@
             </view>
         </view>
     </view>
+    
+    <!-- 协办单位管理弹窗 -->
+    <CoOrganizerManager 
+        :visible="showCoOrganizerManager"
+        :event-id="eventId"
+        @close="onCoOrganizerManagerClose"
+        @refresh="onCoOrganizerManagerRefresh"
+    />
 </template>
 
 <script setup lang="ts">
@@ -1388,6 +1416,7 @@ import {
     saveEventItems,
     updateItemSettings
 } from '@/addon/sport/api/event'
+import CoOrganizerManager from '@/addon/sport/components/CoOrganizerManager.vue'
 
 // 登录检查
 const { requireLogin } = useLoginCheck()
@@ -1544,6 +1573,9 @@ const eventSettings = ref({
     show_participant_count: true,
     show_progress: true
 })
+
+// 协办单位管理
+const showCoOrganizerManager = ref(false)
 
 // 场馆设备管理相关数据
 const venues = ref<any[]>([])
@@ -4183,6 +4215,27 @@ const onShowParticipantCountChange = (e: any) => {
 
 const onShowProgressChange = (e: any) => {
     eventSettings.value.show_progress = e.detail.value
+}
+
+// 协办单位管理相关方法
+const handleShowCoOrganizerManager = () => {
+    if (!eventId.value) {
+        uni.showToast({
+            title: '请先保存赛事基本信息',
+            icon: 'none'
+        })
+        return
+    }
+    showCoOrganizerManager.value = true
+}
+
+const onCoOrganizerManagerClose = () => {
+    showCoOrganizerManager.value = false
+}
+
+const onCoOrganizerManagerRefresh = () => {
+    // 协办单位数据刷新后的回调
+    // 可以在这里添加刷新逻辑，比如重新加载赛事信息等
 }
 
 // 计算属性
@@ -7023,5 +7076,49 @@ picker {
     padding: 16rpx 32rpx;
     border-radius: 20rpx;
     display: inline-block;
+}
+
+/* 协办单位管理样式 */
+.co-organizer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24rpx;
+}
+
+.section-info {
+    .info-text {
+        font-size: 26rpx;
+        color: #666;
+        line-height: 1.5;
+    }
+}
+
+.manage-btn {
+    width: 100%;
+    height: 80rpx;
+    background: linear-gradient(135deg, #ff6b35, #f7931e);
+    color: white;
+    border: none;
+    border-radius: 12rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28rpx;
+    font-weight: 600;
+    box-shadow: 0 4rpx 12rpx rgba(255, 107, 53, 0.3);
+    
+    &:active {
+        transform: translateY(2rpx);
+        box-shadow: 0 2rpx 8rpx rgba(255, 107, 53, 0.3);
+    }
+}
+
+.manage-icon {
+    margin-right: 12rpx;
+    font-size: 32rpx;
+}
+
+.manage-text {
+    font-size: 28rpx;
 }
 </style> 
