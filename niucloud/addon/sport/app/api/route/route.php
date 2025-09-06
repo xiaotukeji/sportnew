@@ -125,6 +125,29 @@ Route::group('sport', function() {
     
     // 添加系列赛
     Route::post('event-series', 'addon\sport\app\api\controller\series\EventSeries@add');
+    
+    /***************************************************** 协办单位管理 ****************************************************/
+    
+    // 获取赛事协办单位列表
+    Route::get('event/:event_id/co-organizers', 'addon\sport\app\api\controller\co_organizer\CoOrganizer@index');
+    
+    // 添加协办单位
+    Route::post('co-organizer', 'addon\sport\app\api\controller\co_organizer\CoOrganizer@add');
+    
+    // 更新协办单位
+    Route::put('co-organizer/:id', 'addon\sport\app\api\controller\co_organizer\CoOrganizer@edit');
+    
+    // 删除协办单位
+    Route::delete('co-organizer/:id', 'addon\sport\app\api\controller\co_organizer\CoOrganizer@delete');
+    
+    // 批量删除协办单位
+    Route::delete('co-organizer/batch', 'addon\sport\app\api\controller\co_organizer\CoOrganizer@batchDelete');
+    
+    // 获取协办单位详情
+    Route::get('co-organizer/:id', 'addon\sport\app\api\controller\co_organizer\CoOrganizer@info');
+    
+    // 更新协办单位排序
+    Route::put('co-organizer/sort', 'addon\sport\app\api\controller\co_organizer\CoOrganizer@updateSort');
 
 })->middleware(ApiChannel::class)
     ->middleware(ApiCheckToken::class, true) //表示验证登录
