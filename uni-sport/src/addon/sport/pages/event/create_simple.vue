@@ -624,7 +624,7 @@
                         <button class="save-settings-btn" @tap="saveItemSettings">
                             <text class="btn-text">保存设置</text>
                         </button>
-                    </view>
+        </view>
                     <!-- <view class="section-subtitle">为每个比赛项目设置详细参数</view> -->
                     
                     <!-- 项目列表设置 -->
@@ -810,51 +810,92 @@
                             <text class="empty-tip">请先添加比赛项目</text>
                         </view>
                     </view>
-                    
-                                </view>
+                </view>
             </view>
-        </view>
+        
         
         <!-- 第7步：更多设置 -->
         <view v-if="currentStep === 7" class="form-wrapper">
             <view class="form-section">
-                <view class="section-title">更多设置</view>
-                <view class="section-subtitle">配置赛事的显示和功能选项</view>
-                
-                <!-- 赛事级别设置 -->
-                <view class="event-settings">
-                    <view class="settings-form">
+                <!-- 显示设置卡片 -->
+                <view class="settings-card">
+                    <view class="card-header">
+                        <view class="card-icon">👁️</view>
+                        <view class="card-title">显示设置</view>
+                        <view class="card-subtitle">控制赛事信息的显示方式</view>
+                    </view>
+                    <view class="card-content">
                         <!-- 显示年龄组 -->
-                        <view class="form-item">
-                            <text class="item-label">显示年龄组</text>
+                        <view class="setting-item">
+                            <view class="setting-info">
+                                <text class="setting-label">显示年龄组</text>
+                                <text class="setting-desc">在赛事页面显示参赛者的年龄组信息</text>
+                            </view>
                             <switch 
                                 :checked="eventSettings.age_group_display" 
                                 @change="onAgeGroupDisplayChange"
+                                class="setting-switch"
                             />
                         </view>
                         
                         <!-- 显示报名人数 -->
-                        <view class="form-item">
-                            <text class="item-label">显示报名人数</text>
+                        <view class="setting-item">
+                            <view class="setting-info">
+                                <text class="setting-label">显示报名人数</text>
+                                <text class="setting-desc">实时显示各项目的报名人数统计</text>
+                            </view>
                             <switch 
                                 :checked="eventSettings.show_participant_count" 
                                 @change="onShowParticipantCountChange"
+                                class="setting-switch"
                             />
                         </view>
                         
                         <!-- 显示比赛进度 -->
-                        <view class="form-item">
-                            <text class="item-label">显示比赛进度</text>
+                        <view class="setting-item">
+                            <view class="setting-info">
+                                <text class="setting-label">显示比赛进度</text>
+                                <text class="setting-desc">显示比赛进行状态和完成进度</text>
+                            </view>
                             <switch 
                                 :checked="eventSettings.show_progress" 
                                 @change="onShowProgressChange"
+                                class="setting-switch"
                             />
+                        </view>
+                    </view>
+                </view>
+                
+                <!-- 功能设置卡片（预留） -->
+                <view class="settings-card">
+                    <view class="card-header">
+                        <view class="card-icon">⚙️</view>
+                        <view class="card-title">功能设置</view>
+                        <view class="card-subtitle">配置赛事的特殊功能选项</view>
+                    </view>
+                    <view class="card-content">
+                        <view class="coming-soon">
+                            <text class="coming-soon-text">更多功能即将上线...</text>
+                        </view>
+                    </view>
+                </view>
+                
+                <!-- 高级设置卡片（预留） -->
+                <view class="settings-card">
+                    <view class="card-header">
+                        <view class="card-icon">🔧</view>
+                        <view class="card-title">高级设置</view>
+                        <view class="card-subtitle">专业用户的高级配置选项</view>
+                    </view>
+                    <view class="card-content">
+                        <view class="coming-soon">
+                            <text class="coming-soon-text">高级功能开发中...</text>
                         </view>
                     </view>
                 </view>
             </view>
         </view>
-
+    </view>
         <!-- 底部操作栏 -->
         <view class="bottom-actions">
             <button 
@@ -1793,7 +1834,23 @@ const handleSubmit = async () => {
         let result: any
         
         if (isEditMode.value) {
-            // 编辑模式：更新赛事
+            // 编辑模式：根据当前步骤决定保存内容
+            if (currentStep.value === 7) {
+                // 第7步：只保存赛事设置（显示设置）
+                const eventSettingsData = {
+                    age_group_display: eventSettings.value.age_group_display ? 1 : 0,
+                    show_participant_count: eventSettings.value.show_participant_count ? 1 : 0,
+                    show_progress: eventSettings.value.show_progress ? 1 : 0,
+                    update_time: Date.now() / 1000 // 添加更新时间
+                }
+                
+                console.log('=== 第7步：只保存赛事设置 ===')
+                console.log('赛事设置数据:', eventSettingsData)
+                
+                // 只更新赛事设置字段
+                result = await editEvent(eventId.value, eventSettingsData)
+            } else {
+                // 其他步骤：保存完整数据（创建模式或编辑模式的其他步骤）
             result = await editEvent(eventId.value, submitData)
             
             // 更新比赛项目
@@ -1810,29 +1867,30 @@ const handleSubmit = async () => {
                         title: '赛事更新成功，但项目更新失败',
                         icon: 'none'
                     })
+                    }
                 }
-            }
-            
-            // 第6步时，保存项目设置
-            if (currentStep.value === 6 && eventItems.value && eventItems.value.length > 0) {
-                try {
-                    console.log('=== 第6步：开始保存项目设置 ===')
-                    const settingsResult = await saveItemSettings()
-                    if (settingsResult) {
-                        console.log('项目设置保存成功')
-                    } else {
-                        console.error('项目设置保存失败')
+                
+                // 第6步时，保存项目设置
+                if (currentStep.value === 6 && eventItems.value && eventItems.value.length > 0) {
+                    try {
+                        console.log('=== 第6步：开始保存项目设置 ===')
+                        const settingsResult = await saveItemSettings()
+                        if (settingsResult) {
+                            console.log('项目设置保存成功')
+                        } else {
+                            console.error('项目设置保存失败')
+                            uni.showToast({
+                                title: '赛事更新成功，但项目设置保存失败',
+                                icon: 'none'
+                            })
+                        }
+                    } catch (error) {
+                        console.error('保存项目设置时出错:', error)
                         uni.showToast({
                             title: '赛事更新成功，但项目设置保存失败',
                             icon: 'none'
                         })
                     }
-                } catch (error) {
-                    console.error('保存项目设置时出错:', error)
-                    uni.showToast({
-                        title: '赛事更新成功，但项目设置保存失败',
-                        icon: 'none'
-                    })
                 }
             }
             
@@ -3051,7 +3109,7 @@ const loadEventData = async () => {
         tempSelectedItems.value = [...selectedItems.value]
         
         // 更新步骤状态 - 编辑模式下允许访问所有步骤
-        maxReachedStep.value = 5
+        maxReachedStep.value = 7
         
         // 等待主办方和系列赛列表加载完成后再设置显示名称
         setTimeout(() => {
@@ -6834,5 +6892,114 @@ picker {
 .empty-text {
     font-size: 28rpx;
     color: #999;
+}
+
+/* 第7步卡片样式 */
+.settings-card {
+    background: #fff;
+    margin: 0 32rpx 24rpx 32rpx;
+    border-radius: 20rpx;
+    box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    border: 1rpx solid #f0f0f0;
+}
+
+/* 第7步特殊样式 - 紧贴顶部 */
+.form-wrapper .settings-card:first-child {
+    margin-top: 0 !important;
+}
+
+/* 第7步整体样式调整 */
+.form-wrapper:has(.settings-card) {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 32rpx;
+    color: white;
+    position: relative;
+}
+
+.card-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1rpx;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.card-icon {
+    font-size: 40rpx;
+    margin-bottom: 12rpx;
+}
+
+.card-title {
+    font-size: 32rpx;
+    font-weight: bold;
+    margin-bottom: 8rpx;
+}
+
+.card-subtitle {
+    font-size: 24rpx;
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+.card-content {
+    padding: 32rpx;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24rpx 0;
+    border-bottom: 1rpx solid #f5f5f5;
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-info {
+    flex: 1;
+    margin-right: 24rpx;
+}
+
+.setting-label {
+    display: block;
+    font-size: 30rpx;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 8rpx;
+}
+
+.setting-desc {
+    display: block;
+    font-size: 24rpx;
+    color: #666;
+    line-height: 1.4;
+}
+
+.setting-switch {
+    transform: scale(1.1);
+}
+
+.coming-soon {
+    text-align: center;
+    padding: 60rpx 0;
+}
+
+.coming-soon-text {
+    font-size: 28rpx;
+    color: #999;
+    background: #f8f9fa;
+    padding: 16rpx 32rpx;
+    border-radius: 20rpx;
+    display: inline-block;
 }
 </style> 

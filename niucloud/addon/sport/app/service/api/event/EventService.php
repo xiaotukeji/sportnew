@@ -173,11 +173,13 @@ class EventService extends BaseApiService
         // 验证赛事是否存在且属于当前用户
         $this->checkEventPermission($id);
         
-        // 验证主办方是否属于当前用户
-        $this->checkOrganizerPermission($data['organizer_id']);
+        // 验证主办方是否属于当前用户（只在传入organizer_id时验证）
+        if (isset($data['organizer_id'])) {
+            $this->checkOrganizerPermission($data['organizer_id']);
+        }
         
-        // 如果是系列赛，验证系列赛是否属于当前用户
-        if ($data['event_type'] == 2 && !empty($data['series_id'])) {
+        // 如果是系列赛，验证系列赛是否属于当前用户（只在传入相关字段时验证）
+        if (isset($data['event_type']) && $data['event_type'] == 2 && !empty($data['series_id'])) {
             $this->checkSeriesPermission($data['series_id']);
         }
         
