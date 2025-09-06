@@ -15,7 +15,10 @@ export const CO_ORGANIZER_TYPES = {
 export const CO_ORGANIZER_TYPE_TEXTS = {
     [CO_ORGANIZER_TYPES.CO_ORGANIZER]: '协办单位',
     [CO_ORGANIZER_TYPES.SPONSOR]: '赞助商',
-    [CO_ORGANIZER_TYPES.SUPPORT]: '支持单位'
+    [CO_ORGANIZER_TYPES.SUPPORT]: '支持单位',
+    11: '赞助商',  // 兼容旧数据
+    12: '赞助商',  // 兼容旧数据
+    13: '赞助商',  // 兼容旧数据
 } as const
 
 /**

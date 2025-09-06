@@ -236,7 +236,17 @@ const handleEdit = (item: CoOrganizerItem) => {
     isEdit.value = true
     editingItem.value = item
     formData.value = { ...item }
-    typeIndex.value = (item.organizer_type || 1) - 1
+    
+    // 处理类型索引，兼容旧数据
+    let typeIndexValue = 0
+    if (item.organizer_type === 1 || item.organizer_type === 11) {
+        typeIndexValue = 0  // 协办单位
+    } else if (item.organizer_type === 2 || item.organizer_type === 12) {
+        typeIndexValue = 1  // 赞助商
+    } else if (item.organizer_type === 3 || item.organizer_type === 13) {
+        typeIndexValue = 2  // 支持单位
+    }
+    typeIndex.value = typeIndexValue
     showForm.value = true
 }
 

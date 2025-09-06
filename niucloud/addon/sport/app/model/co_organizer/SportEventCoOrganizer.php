@@ -75,7 +75,10 @@ class SportEventCoOrganizer extends BaseModel
         $types = [
             1 => '协办单位',
             2 => '赞助商',
-            3 => '支持单位'
+            3 => '支持单位',
+            11 => '赞助商',  // 兼容旧数据
+            12 => '赞助商',  // 兼容旧数据
+            13 => '赞助商',  // 兼容旧数据
         ];
         return $types[$data['organizer_type']] ?? '未知';
     }
