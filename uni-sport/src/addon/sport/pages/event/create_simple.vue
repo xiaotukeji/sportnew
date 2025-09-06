@@ -933,6 +933,28 @@
                             <view class="section-info">
                                 <text class="info-text">添加协办单位、赞助商或支持单位，丰富赛事信息</text>
                             </view>
+                            
+                            <!-- 协办单位列表 -->
+                            <view v-if="coOrganizerList.length > 0" class="co-organizer-list">
+                                <view 
+                                    v-for="(item, index) in coOrganizerList" 
+                                    :key="item.id || index"
+                                    class="co-organizer-item"
+                                >
+                                    <view class="item-content">
+                                        <view class="item-header">
+                                            <view class="item-name">{{ item.organizer_name }}</view>
+                                            <view class="item-type">{{ item.organizer_type_text || getCoOrganizerTypeText(item.organizer_type) }}</view>
+                                        </view>
+                                    </view>
+                                </view>
+                            </view>
+                            
+                            <!-- 空状态 -->
+                            <view v-else class="empty-state">
+                                <text class="empty-text">暂无协办单位</text>
+                            </view>
+                            
                             <button class="manage-btn" @tap="handleShowCoOrganizerManager">
                                 <text class="manage-icon">👥</text>
                                 <text class="manage-text">管理协办单位</text>
@@ -1416,6 +1438,7 @@ import {
     saveEventItems,
     updateItemSettings
 } from '@/addon/sport/api/event'
+import { getCoOrganizerList, CO_ORGANIZER_TYPE_TEXTS } from '@/addon/sport/api/co_organizer'
 import CoOrganizerManager from '@/addon/sport/components/CoOrganizerManager.vue'
 
 // 登录检查
@@ -1576,6 +1599,7 @@ const eventSettings = ref({
 
 // 协办单位管理
 const showCoOrganizerManager = ref(false)
+const coOrganizerList = ref<any[]>([])
 
 // 场馆设备管理相关数据
 const venues = ref<any[]>([])
@@ -2852,10 +2876,6 @@ const removeGroup = (index: number) => {
 }
 
 // 协办方处理
-const getCoOrganizerTypeText = (type: number) => {
-    const option = coOrganizerTypeOptions.find(item => item.value === type)
-    return option ? option.label : '未知类型'
-}
 
 const addCoOrganizer = () => {
     editingCoOrganizerIndex.value = -1
@@ -3149,6 +3169,9 @@ const loadEventData = async () => {
         const items = itemsResponse.data || []
         selectedItems.value = items.map((item: any) => item.base_item_id || item.id)
         tempSelectedItems.value = [...selectedItems.value]
+        
+        // 加载协办单位列表
+        await loadCoOrganizerList()
         
         // 更新步骤状态 - 编辑模式下允许访问所有步骤
         maxReachedStep.value = 7
@@ -4235,7 +4258,30 @@ const onCoOrganizerManagerClose = () => {
 
 const onCoOrganizerManagerRefresh = () => {
     // 协办单位数据刷新后的回调
-    // 可以在这里添加刷新逻辑，比如重新加载赛事信息等
+    loadCoOrganizerList()
+}
+
+// 获取协办单位类型文本
+const getCoOrganizerTypeText = (type: number) => {
+    return CO_ORGANIZER_TYPE_TEXTS[type as keyof typeof CO_ORGANIZER_TYPE_TEXTS] || '未知'
+}
+
+// 加载协办单位列表
+const loadCoOrganizerList = async () => {
+    if (!eventId.value) return
+    
+    try {
+        const response: any = await getCoOrganizerList(eventId.value)
+        coOrganizerList.value = response.data || []
+        console.log('协办单位列表数据:', coOrganizerList.value)
+        console.log('CO_ORGANIZER_TYPE_TEXTS:', CO_ORGANIZER_TYPE_TEXTS)
+        if (coOrganizerList.value.length > 0) {
+            console.log('第一个协办单位的类型:', coOrganizerList.value[0].organizer_type, typeof coOrganizerList.value[0].organizer_type)
+        }
+    } catch (error) {
+        console.error('加载协办单位列表失败:', error)
+        coOrganizerList.value = []
+    }
 }
 
 // 计算属性
@@ -7120,5 +7166,72 @@ picker {
 
 .manage-text {
     font-size: 28rpx;
+}
+
+/* 协办单位列表样式 */
+.co-organizer-list {
+    margin-bottom: 24rpx;
+}
+
+.co-organizer-item {
+    background: #f8f9fa;
+    border-radius: 12rpx;
+    padding: 20rpx;
+    margin-bottom: 16rpx;
+    border-left: 4rpx solid #ff6b35;
+}
+
+.item-content {
+    .item-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8rpx;
+    }
+    
+    .item-name {
+        font-size: 28rpx;
+        font-weight: 600;
+        color: #333;
+        margin-right: 16rpx;
+    }
+    
+    .item-type {
+        padding: 4rpx 12rpx;
+        background: #ff6b35;
+        color: white;
+        border-radius: 8rpx;
+        font-size: 22rpx;
+    }
+    
+    .item-contact {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8rpx;
+    }
+    
+    .contact-name, .contact-phone {
+        font-size: 24rpx;
+        color: #666;
+        margin-right: 16rpx;
+    }
+    
+    .item-remark {
+        .remark-text {
+            font-size: 22rpx;
+            color: #999;
+            line-height: 1.4;
+        }
+    }
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40rpx 0;
+    margin-bottom: 24rpx;
+}
+
+.empty-text {
+    color: #999;
+    font-size: 26rpx;
 }
 </style> 

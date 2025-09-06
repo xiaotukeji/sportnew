@@ -55,6 +55,11 @@
                         </view>
                     </view>
                 </view>
+                
+                <!-- 主弹窗底部按钮 -->
+                <view class="popup-actions">
+                    <button class="popup-confirm-btn" @tap="handleClose">确定</button>
+                </view>
             </view>
         </view>
         
@@ -351,6 +356,23 @@ const handleSubmit = async () => {
         padding: 32rpx;
         max-height: 60vh;
         overflow-y: auto;
+    }
+    
+    .popup-actions {
+        padding: 24rpx 32rpx;
+        border-top: 1rpx solid #e0e0e0;
+        background: #f8f9fa;
+    }
+    
+    .popup-confirm-btn {
+        width: 100%;
+        height: 80rpx;
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        color: white;
+        border: none;
+        border-radius: 12rpx;
+        font-size: 28rpx;
+        font-weight: 600;
     }
     
     .add-section {
