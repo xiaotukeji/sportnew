@@ -113,18 +113,22 @@ class EventService extends BaseApiService
      */
     public function add(array $data)
     {
+        $step = $data['step'] ?? 1;
+        
         // 验证主办方是否属于当前用户
-        $this->checkOrganizerPermission($data['organizer_id']);
+        if (isset($data['organizer_id']) && !empty($data['organizer_id'])) {
+            $this->checkOrganizerPermission($data['organizer_id']);
+        }
         
         // 如果是系列赛，验证系列赛是否属于当前用户
-        if ($data['event_type'] == 2 && !empty($data['series_id'])) {
+        if (isset($data['event_type']) && $data['event_type'] == 2 && !empty($data['series_id'])) {
             $this->checkSeriesPermission($data['series_id']);
         }
         
         // 提取自定义分组和比赛项目数据
         $custom_groups = $data['custom_groups'] ?? [];
         $base_item_ids = $data['base_item_ids'] ?? [];
-        unset($data['custom_groups'], $data['base_item_ids']);
+        unset($data['custom_groups'], $data['base_item_ids'], $data['step']);
         
         // 处理报名字段配置
         if (isset($data['signup_fields']) && is_array($data['signup_fields'])) {
@@ -179,11 +183,13 @@ class EventService extends BaseApiService
      */
     public function edit(int $id, array $data)
     {
+        $step = $data['step'] ?? 1;
+        
         // 验证赛事是否存在且属于当前用户
         $this->checkEventPermission($id);
         
         // 验证主办方是否属于当前用户（只在传入organizer_id时验证）
-        if (isset($data['organizer_id'])) {
+        if (isset($data['organizer_id']) && !empty($data['organizer_id'])) {
             $this->checkOrganizerPermission($data['organizer_id']);
         }
         
@@ -199,7 +205,7 @@ class EventService extends BaseApiService
         
         // 处理号码牌设置
         $number_plate_settings = $data['number_plate_settings'] ?? null;
-        unset($data['number_plate_settings']);
+        unset($data['number_plate_settings'], $data['step']);
         
         $data['update_time'] = time();
         

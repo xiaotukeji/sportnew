@@ -2196,6 +2196,7 @@ const handleSubmit = async () => {
                 // 从选中的主办方获取organizer_type
                 const selectedOrganizer = organizerList.value.find((item: any) => item.id === formData.value.organizer_id)
                 const finalSettingsData = {
+                    step: 7, // 第7步：最终设置
                     // 主办方类型
                     organizer_type: selectedOrganizer?.organizer_type || 1,
                     // 显示设置
@@ -2452,6 +2453,7 @@ const nextStep = async () => {
             
             // 准备基础赛事数据
             const basicEventData = {
+                step: 1, // 第1步：基础信息
                 name: formData.value.name.trim(),
                 organizer_id: formData.value.organizer_id,
                 event_type: formData.value.event_type,
@@ -2592,6 +2594,7 @@ const nextStep = async () => {
                 
                 // 更新赛事地点信息
                 const locationData = {
+                    step: 2, // 第2步：地点信息
                     location: formData.value.location,
                     location_detail: finalLocationDetail,
                     address_detail: formData.value.address_detail,
@@ -2631,6 +2634,7 @@ const nextStep = async () => {
                 
                 // 更新赛事时间信息
                 const timeData = {
+                    step: 3, // 第3步：时间信息
                     start_time: formData.value.start_time,
                     end_time: formData.value.end_time,
                     registration_start_time: formData.value.registration_start_time || '',
@@ -2682,6 +2686,7 @@ const nextStep = async () => {
             try {
                 // 保存报名字段设置
                 const signupData = {
+                    step: 4, // 第4步：报名设置
                     signup_fields: formData.value.signup_fields
                 }
                 
@@ -3819,25 +3824,7 @@ onMounted(() => {
         })
     }
 
-    // 处理输入框文本对齐
-    setTimeout(() => {
-        const inputs = document.querySelectorAll('.form-input, .form-input.with-bg')
-        inputs.forEach((input: any) => {
-            input.addEventListener('input', function(this: any) {
-                if (this.value) {
-                    this.style.textAlign = 'left'
-                } else {
-                    this.style.textAlign = 'center'
-                }
-            })
-            
-            input.addEventListener('blur', function(this: any) {
-                if (!this.value) {
-                    this.style.textAlign = 'center'
-                }
-            })
-        })
-    }, 100)
+    // 注意：uni-app不支持直接操作DOM，文本对齐通过CSS处理
 })
 
 // 表单数据
@@ -6749,6 +6736,10 @@ picker {
     text-align: center;
 }
 
+.custom-field-row .form-input:focus {
+    text-align: left;
+}
+
 .custom-field-row .btn-secondary {
     flex-shrink: 0;
     padding: 16rpx 24rpx;
@@ -7458,6 +7449,10 @@ picker {
     text-align: center;
 }
 
+.form-input:focus {
+    text-align: left;
+}
+
 .form-input::placeholder {
     text-align: center;
     color: #999;
@@ -7484,6 +7479,10 @@ picker {
     padding: 0 20rpx;
     line-height: 88rpx;
     text-align: center;
+}
+
+.form-input.with-bg:focus {
+    text-align: left;
 }
 
 .form-input.with-bg::placeholder {
@@ -8017,6 +8016,10 @@ picker {
     margin-bottom: 16rpx;
     line-height: 88rpx;
     text-align: center;
+}
+
+.number-input-section .form-input:focus {
+    text-align: left;
 }
 
 .number-input-section .form-input::placeholder {

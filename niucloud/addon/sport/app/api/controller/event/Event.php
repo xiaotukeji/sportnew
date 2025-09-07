@@ -55,6 +55,7 @@ class Event extends BaseApiController
     public function add()
     {
         $data = $this->request->params([
+            ['step', 1],               // 步骤：1基础信息 2地点信息 3时间信息 4报名设置 5项目选择 6项目设置 7最终设置
             ['name', ''],              // 赛事名称
             ['location', ''],          // 举办地点
             ['location_detail', ''],   // 完整地址
@@ -80,8 +81,8 @@ class Event extends BaseApiController
             ['remark', ''],            // 备注
         ]);
 
-        // 验证必填字段
-        $this->validate($data, 'addon\sport\app\validate\sport_event\SportEvent.add');
+        // 根据步骤验证必填字段
+        $this->validateStepData($data);
         
         $id = (new EventService())->add($data);
         return success('ADD_SUCCESS', ['id' => $id]);
@@ -95,6 +96,7 @@ class Event extends BaseApiController
     public function edit(int $id)
     {
         $data = $this->request->params([
+            ['step', 1],               // 步骤：1基础信息 2地点信息 3时间信息 4报名设置 5项目选择 6项目设置 7最终设置
             ['name', ''],              // 赛事名称
             ['location', ''],          // 举办地点
             ['location_detail', ''],   // 完整地址
@@ -120,8 +122,8 @@ class Event extends BaseApiController
             ['remark', ''],            // 备注
         ]);
 
-        // 验证必填字段
-        $this->validate($data, 'addon\sport\app\validate\sport_event\SportEvent.edit');
+        // 根据步骤验证必填字段
+        $this->validateStepData($data);
         
         (new EventService())->edit($id, $data);
         return success('EDIT_SUCCESS');
@@ -399,5 +401,77 @@ class Event extends BaseApiController
     {
         (new \addon\sport\app\service\api\number_plate\NumberPlateService())->cancelNumberAssignment($id, $assignmentId);
         return success('CANCEL_SUCCESS');
+    }
+
+    /**
+     * 根据步骤验证数据
+     * @param array $data
+     * @throws \core\exception\CommonException
+     */
+    private function validateStepData(array $data)
+    {
+        $step = $data['step'] ?? 1;
+        
+        switch ($step) {
+            case 1: // 基础信息
+                if (empty($data['name'])) {
+                    throw new \core\exception\CommonException('请输入赛事名称');
+                }
+                if (empty($data['organizer_id'])) {
+                    throw new \core\exception\CommonException('请选择主办方');
+                }
+                break;
+                
+            case 2: // 地点信息
+                if (empty($data['location'])) {
+                    throw new \core\exception\CommonException('请选择举办地点');
+                }
+                if (empty($data['address_detail'])) {
+                    throw new \core\exception\CommonException('请输入详细地址');
+                }
+                break;
+                
+            case 3: // 时间信息
+                if (empty($data['start_time']) || $data['start_time'] <= 0) {
+                    throw new \core\exception\CommonException('请选择开始时间');
+                }
+                if (empty($data['end_time']) || $data['end_time'] <= 0) {
+                    throw new \core\exception\CommonException('请选择结束时间');
+                }
+                if ($data['start_time'] >= $data['end_time']) {
+                    throw new \core\exception\CommonException('结束时间必须大于开始时间');
+                }
+                break;
+                
+            case 4: // 报名设置
+                if (empty($data['signup_fields']) || !is_array($data['signup_fields'])) {
+                    throw new \core\exception\CommonException('请至少选择一个报名字段');
+                }
+                $requiredFields = array_filter($data['signup_fields'], function($field) {
+                    return $field['required'] ?? false;
+                });
+                if (count($data['signup_fields']) < 3 && count($requiredFields) !== count($data['signup_fields'])) {
+                    throw new \core\exception\CommonException('请将所有选择的字段设为必填');
+                }
+                if (count($data['signup_fields']) >= 3 && count($requiredFields) === 0) {
+                    throw new \core\exception\CommonException('请至少设置一个必填字段');
+                }
+                break;
+                
+            case 5: // 项目选择
+                // 项目选择步骤通常不需要特殊验证，因为可能没有选择项目
+                break;
+                
+            case 6: // 项目设置
+                // 项目设置步骤的验证在项目设置服务中处理
+                break;
+                
+            case 7: // 最终设置
+                // 最终设置步骤通常不需要特殊验证，主要是保存显示设置和号码牌设置
+                break;
+                
+            default:
+                throw new \core\exception\CommonException('无效的步骤参数');
+        }
     }
 } 
