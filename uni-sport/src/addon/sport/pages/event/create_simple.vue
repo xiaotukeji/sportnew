@@ -3689,13 +3689,9 @@ onMounted(() => {
         const currentPage = pages[pages.length - 1] as any
         const options = currentPage.options || {}
         
-        // 加载基础数据
-        loadOrganizerList()
-        loadSeriesList()
-        
         // 检查是否为编辑模式
         if (options.id && options.mode === 'edit') {
-            // 编辑模式：清空所有数据，加载现有赛事数据
+            // 编辑模式：先加载基础数据，再加载赛事数据
             isEditMode.value = true
             eventId.value = parseInt(options.id)
             
@@ -3742,15 +3738,27 @@ onMounted(() => {
             updateStartTimestamp()
             updateEndTimestamp()
             
-            // 等待基础数据加载完成后再加载赛事数据
-            setTimeout(() => {
+            // 先加载基础数据，再加载赛事数据
+            Promise.all([
+                loadOrganizerList(),
+                loadSeriesList()
+            ]).then(() => {
+                // 基础数据加载完成后，再加载赛事数据
                 loadEventData()
-            }, 500)
+            }).catch((error) => {
+                console.error('加载基础数据失败:', error)
+                // 即使基础数据加载失败，也尝试加载赛事数据
+                loadEventData()
+            })
             
         } else {
             // 创建模式：先清空数据，然后读取缓存（如果有）
             isEditMode.value = false
             eventId.value = 0
+            
+            // 加载基础数据
+            loadOrganizerList()
+            loadSeriesList()
             
             // 清空表单数据
             formData.value = {
