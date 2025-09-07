@@ -2451,35 +2451,55 @@ const nextStep = async () => {
                 return
             }
             
-            // 准备基础赛事数据 - 只传递第1步需要的字段
+            // 第1步：只提交基础信息相关字段
             const basicEventData: any = {
-                step: 1, // 第1步：基础信息
+                step: 1, // 第1步标识
                 name: formData.value.name.trim(),
-                organizer_id: formData.value.organizer_id,
-                event_type: formData.value.event_type,
-                year: formData.value.year
+                organizer_id: formData.value.organizer_id
             }
             
-            // 调试信息
-            console.log('第1步提交数据:', basicEventData)
-            console.log('formData.organizer_id:', formData.value.organizer_id)
-            
-            // 只在有值时添加 series_id
-            if (formData.value.series_id && formData.value.series_id > 0) {
+            // 只在是系列赛且有选择系列赛时才添加相关字段
+            if (formData.value.event_type === 2 && formData.value.series_id && formData.value.series_id > 0) {
+                basicEventData.event_type = formData.value.event_type
                 basicEventData.series_id = formData.value.series_id
+            } else if (formData.value.event_type === 1) {
+                // 独立赛事
+                basicEventData.event_type = formData.value.event_type
             }
+            
+            // 详细调试信息
+            console.log('=== 第1步调试信息 ===')
+            console.log('formData原始数据:', formData.value)
+            console.log('第1步提交数据:', basicEventData)
+            console.log('比赛名称:', formData.value.name)
+            console.log('主办方ID:', formData.value.organizer_id)
+            console.log('赛事类型:', formData.value.event_type)
+            console.log('年份:', formData.value.year)
+            console.log('==================')
             
             if (isEditMode.value) {
                 // 编辑模式：更新现有赛事的基础信息
                 // 注意：编辑模式下只更新传入的字段，不覆盖其他字段
-                const result = await editEvent(eventId.value, basicEventData)
-                console.log('第1步保存结果:', result)
-                if (result) {
+                try {
+                    const result: any = await editEvent(eventId.value, basicEventData)
+                    console.log('第1步保存结果:', result)
+                    if (result && result.debug) {
+                        console.log('后端调试信息:', result.debug)
+                    }
+                    if (result) {
+                        uni.showToast({
+                            title: '基础信息已保存',
+                            icon: 'success',
+                            duration: 1500
+                        })
+                    }
+                } catch (error) {
+                    console.error('第1步保存失败:', error)
                     uni.showToast({
-                        title: '基础信息已保存',
-                        icon: 'success',
-                        duration: 1500
+                        title: '保存失败，请重试',
+                        icon: 'none'
                     })
+                    return
                 }
             } else {
                 // 新建模式：创建新赛事
@@ -2602,17 +2622,32 @@ const nextStep = async () => {
                     finalLocationDetail += (finalLocationDetail ? ' ' : '') + formData.value.address_detail
                 }
                 
-                // 更新赛事地点信息 - 只传递地址相关字段
-                const locationData = {
-                    step: 2, // 第2步：地点信息
+                // 第2步：只提交地址相关字段
+                const locationData: any = {
+                    step: 2, // 第2步标识
                     location: formData.value.location,
-                    location_detail: finalLocationDetail,
-                    address_detail: formData.value.address_detail,
-                    latitude: formData.value.lat ? parseFloat(formData.value.lat) : null,
-                    longitude: formData.value.lng ? parseFloat(formData.value.lng) : null
+                    address_detail: formData.value.address_detail
                 }
                 
+                // 只在有值时添加完整地址和经纬度
+                if (finalLocationDetail) {
+                    locationData.location_detail = finalLocationDetail
+                }
+                if (formData.value.lat) {
+                    locationData.latitude = parseFloat(formData.value.lat)
+                }
+                if (formData.value.lng) {
+                    locationData.longitude = parseFloat(formData.value.lng)
+                }
+                
+                // 详细调试信息
+                console.log('=== 第2步调试信息 ===')
+                console.log('formData原始数据:', formData.value)
                 console.log('第2步提交数据:', locationData)
+                console.log('地点:', formData.value.location)
+                console.log('详细地址:', formData.value.address_detail)
+                console.log('经纬度:', formData.value.lat, formData.value.lng)
+                console.log('==================')
                 const result = await editEvent(eventId.value, locationData)
                 console.log('第2步保存结果:', result)
                 if (result) {
@@ -2644,9 +2679,9 @@ const nextStep = async () => {
                     return
                 }
                 
-                // 更新赛事时间信息 - 只传递时间相关字段
+                // 第3步：只提交时间相关字段
                 const timeData: any = {
-                    step: 3, // 第3步：时间信息
+                    step: 3, // 第3步标识
                     start_time: formData.value.start_time,
                     end_time: formData.value.end_time
                 }
@@ -2659,7 +2694,15 @@ const nextStep = async () => {
                     timeData.registration_end_time = formData.value.registration_end_time
                 }
                 
+                // 详细调试信息
+                console.log('=== 第3步调试信息 ===')
+                console.log('formData原始数据:', formData.value)
                 console.log('第3步提交数据:', timeData)
+                console.log('开始时间:', formData.value.start_time)
+                console.log('结束时间:', formData.value.end_time)
+                console.log('报名开始时间:', formData.value.registration_start_time)
+                console.log('报名结束时间:', formData.value.registration_end_time)
+                console.log('==================')
                 const result = await editEvent(eventId.value, timeData)
                 console.log('第3步保存结果:', result)
                 if (result) {
@@ -2704,13 +2747,18 @@ const nextStep = async () => {
             }
             
             try {
-                // 保存报名字段设置 - 只传递报名相关字段
-                const signupData = {
-                    step: 4, // 第4步：报名设置
+                // 第4步：只提交报名相关字段
+                const signupData: any = {
+                    step: 4, // 第4步标识
                     signup_fields: formData.value.signup_fields
                 }
                 
+                // 详细调试信息
+                console.log('=== 第4步调试信息 ===')
+                console.log('formData原始数据:', formData.value)
                 console.log('第4步提交数据:', signupData)
+                console.log('报名字段:', formData.value.signup_fields)
+                console.log('==================')
                 const result = await editEvent(eventId.value, signupData)
                 console.log('第4步保存结果:', result)
                 if (result) {

@@ -209,11 +209,71 @@ class EventService extends BaseApiService
         
         $data['update_time'] = time();
         
-        // 只更新提交的字段，不进行任何过滤
-        // 前端负责只传递需要更新的字段
-        $updateData = $data;
+        // 根据步骤决定更新哪些字段
+        $updateData = [];
+        switch ($step) {
+            case 1:
+                // 第1步：基础信息
+                if (isset($data['name'])) $updateData['name'] = $data['name'];
+                if (isset($data['organizer_id'])) $updateData['organizer_id'] = $data['organizer_id'];
+                if (isset($data['event_type'])) $updateData['event_type'] = $data['event_type'];
+                if (isset($data['series_id'])) $updateData['series_id'] = $data['series_id'];
+                break;
+            case 2:
+                // 第2步：地址信息
+                if (isset($data['location'])) $updateData['location'] = $data['location'];
+                if (isset($data['address_detail'])) $updateData['address_detail'] = $data['address_detail'];
+                if (isset($data['location_detail'])) $updateData['location_detail'] = $data['location_detail'];
+                if (isset($data['latitude'])) $updateData['latitude'] = $data['latitude'];
+                if (isset($data['longitude'])) $updateData['longitude'] = $data['longitude'];
+                break;
+            case 3:
+                // 第3步：时间信息
+                if (isset($data['start_time'])) $updateData['start_time'] = $data['start_time'];
+                if (isset($data['end_time'])) $updateData['end_time'] = $data['end_time'];
+                if (isset($data['registration_start_time'])) $updateData['registration_start_time'] = $data['registration_start_time'];
+                if (isset($data['registration_end_time'])) $updateData['registration_end_time'] = $data['registration_end_time'];
+                break;
+            case 4:
+                // 第4步：报名设置
+                if (isset($data['signup_fields'])) $updateData['signup_fields'] = $data['signup_fields'];
+                break;
+            case 5:
+                // 第5步：项目选择
+                if (isset($data['custom_groups'])) $updateData['custom_groups'] = $data['custom_groups'];
+                if (isset($data['base_item_ids'])) $updateData['base_item_ids'] = $data['base_item_ids'];
+                break;
+            case 6:
+                // 第6步：项目设置
+                if (isset($data['age_groups'])) $updateData['age_groups'] = $data['age_groups'];
+                if (isset($data['age_group_display'])) $updateData['age_group_display'] = $data['age_group_display'];
+                if (isset($data['show_participant_count'])) $updateData['show_participant_count'] = $data['show_participant_count'];
+                if (isset($data['show_progress'])) $updateData['show_progress'] = $data['show_progress'];
+                break;
+            case 7:
+                // 第7步：最终设置
+                if (isset($data['number_plate_settings'])) $updateData['number_plate_settings'] = $data['number_plate_settings'];
+                if (isset($data['remark'])) $updateData['remark'] = $data['remark'];
+                break;
+            default:
+                // 默认：更新所有字段（兼容旧版本）
+                $updateData = $data;
+                break;
+        }
         
-        $this->model->where([['id', '=', $id]])->update($updateData);
+        // 调试信息
+        \think\facade\Log::info('EventService edit - 步骤: ' . $step);
+        \think\facade\Log::info('EventService edit - 准备更新数据: ' . json_encode($updateData));
+        \think\facade\Log::info('EventService edit - 赛事ID: ' . $id);
+        
+        try {
+            $result = $this->model->where([['id', '=', $id]])->update($updateData);
+            \think\facade\Log::info('EventService edit - 更新结果: ' . json_encode($result));
+        } catch (\Exception $e) {
+            \think\facade\Log::error('EventService edit - 更新失败: ' . $e->getMessage());
+            \think\facade\Log::error('EventService edit - 更新数据: ' . json_encode($updateData));
+            throw $e;
+        }
         
         // 保存号码牌设置
         if (!empty($number_plate_settings)) {
