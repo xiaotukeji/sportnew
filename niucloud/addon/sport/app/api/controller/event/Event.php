@@ -126,7 +126,16 @@ class Event extends BaseApiController
         $this->validateStepData($data);
         
         (new EventService())->edit($id, $data);
-        return success('EDIT_SUCCESS');
+        
+        // 返回调试信息给前端
+        return success([
+            'message' => 'EDIT_SUCCESS',
+            'debug' => [
+                'step' => $data['step'] ?? 'unknown',
+                'submitted_data' => $data,
+                'event_id' => $id
+            ]
+        ]);
     }
 
     /**

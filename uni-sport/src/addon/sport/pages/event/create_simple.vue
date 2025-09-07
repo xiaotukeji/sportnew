@@ -2451,7 +2451,7 @@ const nextStep = async () => {
                 return
             }
             
-            // 准备基础赛事数据
+            // 准备基础赛事数据 - 只传递第1步需要的字段
             const basicEventData: any = {
                 step: 1, // 第1步：基础信息
                 name: formData.value.name.trim(),
@@ -2473,6 +2473,7 @@ const nextStep = async () => {
                 // 编辑模式：更新现有赛事的基础信息
                 // 注意：编辑模式下只更新传入的字段，不覆盖其他字段
                 const result = await editEvent(eventId.value, basicEventData)
+                console.log('第1步保存结果:', result)
                 if (result) {
                     uni.showToast({
                         title: '基础信息已保存',
@@ -2601,7 +2602,7 @@ const nextStep = async () => {
                     finalLocationDetail += (finalLocationDetail ? ' ' : '') + formData.value.address_detail
                 }
                 
-                // 更新赛事地点信息
+                // 更新赛事地点信息 - 只传递地址相关字段
                 const locationData = {
                     step: 2, // 第2步：地点信息
                     location: formData.value.location,
@@ -2611,7 +2612,9 @@ const nextStep = async () => {
                     longitude: formData.value.lng ? parseFloat(formData.value.lng) : null
                 }
                 
+                console.log('第2步提交数据:', locationData)
                 const result = await editEvent(eventId.value, locationData)
+                console.log('第2步保存结果:', result)
                 if (result) {
                     uni.showToast({
                         title: '地点信息已保存',
@@ -2641,7 +2644,7 @@ const nextStep = async () => {
                     return
                 }
                 
-                // 更新赛事时间信息
+                // 更新赛事时间信息 - 只传递时间相关字段
                 const timeData: any = {
                     step: 3, // 第3步：时间信息
                     start_time: formData.value.start_time,
@@ -2656,7 +2659,9 @@ const nextStep = async () => {
                     timeData.registration_end_time = formData.value.registration_end_time
                 }
                 
+                console.log('第3步提交数据:', timeData)
                 const result = await editEvent(eventId.value, timeData)
+                console.log('第3步保存结果:', result)
                 if (result) {
                     uni.showToast({
                         title: '时间信息已保存',
@@ -2699,13 +2704,15 @@ const nextStep = async () => {
             }
             
             try {
-                // 保存报名字段设置
+                // 保存报名字段设置 - 只传递报名相关字段
                 const signupData = {
                     step: 4, // 第4步：报名设置
                     signup_fields: formData.value.signup_fields
                 }
                 
+                console.log('第4步提交数据:', signupData)
                 const result = await editEvent(eventId.value, signupData)
+                console.log('第4步保存结果:', result)
                 if (result) {
                     uni.showToast({
                         title: '报名设置已保存',
