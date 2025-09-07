@@ -211,12 +211,24 @@ class EventService extends BaseApiService
         
         // 过滤空值，只更新有值的字段
         // 保留 update_time 字段，过滤掉空字符串和null值
+        // 注意：organizer_id 和 series_id 为 0 是有效值，不应该被过滤
         $updateData = [];
         foreach ($data as $key => $value) {
-            if ($key === 'update_time' || ($value !== '' && $value !== null)) {
+            if ($key === 'update_time' || 
+                $key === 'organizer_id' || 
+                $key === 'series_id' || 
+                $key === 'event_type' ||
+                $key === 'year' ||
+                $key === 'start_time' ||
+                $key === 'end_time' ||
+                ($value !== '' && $value !== null)) {
                 $updateData[$key] = $value;
             }
         }
+        
+        // 调试信息
+        \think\facade\Log::info('EventService edit - 原始数据: ' . json_encode($data));
+        \think\facade\Log::info('EventService edit - 过滤后数据: ' . json_encode($updateData));
         
         $this->model->where([['id', '=', $id]])->update($updateData);
         

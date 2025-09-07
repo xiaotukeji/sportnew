@@ -2460,6 +2460,10 @@ const nextStep = async () => {
                 year: formData.value.year
             }
             
+            // 调试信息
+            console.log('第1步提交数据:', basicEventData)
+            console.log('formData.organizer_id:', formData.value.organizer_id)
+            
             // 只在有值时添加 series_id
             if (formData.value.series_id && formData.value.series_id > 0) {
                 basicEventData.series_id = formData.value.series_id
