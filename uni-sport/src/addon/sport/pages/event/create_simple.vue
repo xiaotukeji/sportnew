@@ -2492,6 +2492,11 @@ const nextStep = async () => {
                             icon: 'success',
                             duration: 1500
                         })
+                        // 保存成功后跳转到下一步
+                        currentStep.value++
+                        if (currentStep.value > maxReachedStep.value) {
+                            maxReachedStep.value = currentStep.value
+                        }
                     }
                 } catch (error) {
                     console.error('第1步保存失败:', error)
@@ -2656,6 +2661,11 @@ const nextStep = async () => {
                         icon: 'success',
                         duration: 1500
                     })
+                    // 保存成功后跳转到下一步
+                    currentStep.value++
+                    if (currentStep.value > maxReachedStep.value) {
+                        maxReachedStep.value = currentStep.value
+                    }
                 }
             } catch (error) {
                 console.error('第2步保存失败:', error)
@@ -2711,6 +2721,11 @@ const nextStep = async () => {
                         icon: 'success',
                         duration: 1500
                     })
+                    // 保存成功后跳转到下一步
+                    currentStep.value++
+                    if (currentStep.value > maxReachedStep.value) {
+                        maxReachedStep.value = currentStep.value
+                    }
                 }
             } catch (error) {
                 console.error('第3步保存失败:', error)
@@ -2767,6 +2782,11 @@ const nextStep = async () => {
                         icon: 'success',
                         duration: 1500
                     })
+                    // 保存成功后跳转到下一步
+                    currentStep.value++
+                    if (currentStep.value > maxReachedStep.value) {
+                        maxReachedStep.value = currentStep.value
+                    }
                 }
             } catch (error) {
                 console.error('第4步保存失败:', error)
@@ -2778,20 +2798,8 @@ const nextStep = async () => {
             }
         }
         
-        currentStep.value++
-        if (currentStep.value > maxReachedStep.value) {
-            maxReachedStep.value = currentStep.value
-        }
-        
-        // 进入第5步时加载分类数据
-        if (currentStep.value === 5) {
-            loadCategories()
-        }
-        
-        // 进入第6步时初始化项目数据
-        if (currentStep.value === 6) {
-            initEventItems()
-        }
+        // 注意：步骤跳转现在由每个步骤的保存成功后手动控制
+        // 不再在这里自动跳转，避免跳过步骤
     }
 }
 
