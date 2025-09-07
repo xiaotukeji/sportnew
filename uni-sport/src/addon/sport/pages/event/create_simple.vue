@@ -965,7 +965,6 @@
                     <view class="setting-item">
                         <view class="setting-info">
                             <text class="setting-label">编号模式</text>
-                            <text class="setting-desc">选择号码分配方式</text>
                         </view>
                         <radio-group @change="onNumberingModeChange" class="radio-group">
                             <label class="radio-item">
@@ -989,7 +988,7 @@
                             <input 
                                 v-model="numberPlateSettings.prefix"
                                 placeholder="如：A、B（可为空）"
-                                class="form-input"
+                                class="form-input with-bg"
                                 maxlength="10"
                                 @input="onPrefixChange"
                             />
@@ -1002,7 +1001,7 @@
                                 :value="numberLengthIndex" 
                                 :range="numberLengthOptions"
                                 @change="onNumberLengthChange"
-                                class="form-picker"
+                                class="form-picker with-bg"
                             >
                                 <view class="picker-display">
                                     {{ numberLengthOptions[numberLengthIndex] }}
@@ -1010,40 +1009,38 @@
                             </picker>
                         </view>
 
-                        <!-- 号码范围 -->
-                        <view class="form-row">
-                            <view class="form-item half">
+                        <!-- 号码范围和步长 -->
+                        <view class="form-row three-columns">
+                            <view class="form-item third">
                                 <view class="form-label">起始号码</view>
                                 <input 
                                     v-model.number="numberPlateSettings.start_number"
                                     type="number"
                                     placeholder="1"
-                                    class="form-input"
+                                    class="form-input with-bg"
                                     @input="onNumberRangeChange"
                                 />
                             </view>
-                            <view class="form-item half">
+                            <view class="form-item third">
                                 <view class="form-label">结束号码</view>
                                 <input 
                                     v-model.number="numberPlateSettings.end_number"
                                     type="number"
                                     placeholder="999"
-                                    class="form-input"
+                                    class="form-input with-bg"
                                     @input="onNumberRangeChange"
                                 />
                             </view>
-                        </view>
-
-                        <!-- 编号步长 -->
-                        <view class="form-item">
-                            <view class="form-label">编号步长</view>
-                            <input 
-                                v-model.number="numberPlateSettings.step"
-                                type="number"
-                                placeholder="1"
-                                class="form-input"
-                                @input="onStepChange"
-                            />
+                            <view class="form-item third">
+                                <view class="form-label">编号步长</view>
+                                <input 
+                                    v-model.number="numberPlateSettings.step"
+                                    type="number"
+                                    placeholder="1"
+                                    class="form-input with-bg"
+                                    @input="onStepChange"
+                                />
+                            </view>
                         </view>
 
                         <!-- 号码预览 -->
@@ -1062,7 +1059,6 @@
                         
                         <!-- 保留号码 -->
                         <view class="form-item">
-                            <view class="form-label">保留号码</view>
                             <view class="number-tags">
                                 <view 
                                     v-for="(number, index) in reservedNumbers" 
@@ -1073,20 +1069,19 @@
                                     <text class="tag-remove" @tap="removeReservedNumber(index)">×</text>
                                 </view>
                             </view>
-                            <view class="number-input-row">
+                            <view class="number-input-section">
                                 <input 
                                     v-model="tempReservedNumber"
-                                    placeholder="输入保留号码"
-                                    class="form-input"
+                                    placeholder="请输入保留号码，如：666、888"
+                                    class="form-input full-width"
                                     @confirm="addReservedNumber"
                                 />
-                                <button class="add-btn" @tap="addReservedNumber">添加</button>
+                                <button class="add-btn full-width" @tap="addReservedNumber">添加保留号码</button>
                             </view>
                         </view>
 
                         <!-- 禁用号码 -->
                         <view class="form-item">
-                            <view class="form-label">禁用号码</view>
                             <view class="number-tags">
                                 <view 
                                     v-for="(number, index) in disabledNumbers" 
@@ -1097,14 +1092,14 @@
                                     <text class="tag-remove" @tap="removeDisabledNumber(index)">×</text>
                                 </view>
                             </view>
-                            <view class="number-input-row">
+                            <view class="number-input-section">
                                 <input 
                                     v-model="tempDisabledNumber"
-                                    placeholder="输入禁用号码"
-                                    class="form-input"
+                                    placeholder="请输入禁用号码，如：4、44、444"
+                                    class="form-input full-width"
                                     @confirm="addDisabledNumber"
                                 />
-                                <button class="add-btn" @tap="addDisabledNumber">添加</button>
+                                <button class="add-btn full-width" @tap="addDisabledNumber">添加禁用号码</button>
                             </view>
                         </view>
                     </view>
@@ -3670,6 +3665,26 @@ onMounted(() => {
             return { key: k, label: opt.label, required: true }
         })
     }
+
+    // 处理输入框文本对齐
+    setTimeout(() => {
+        const inputs = document.querySelectorAll('.form-input, .form-input.with-bg')
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value) {
+                    this.style.textAlign = 'left'
+                } else {
+                    this.style.textAlign = 'center'
+                }
+            })
+            
+            input.addEventListener('blur', function() {
+                if (!this.value) {
+                    this.style.textAlign = 'center'
+                }
+            })
+        })
+    }, 100)
 })
 
 // 表单数据
@@ -6574,9 +6589,11 @@ picker {
     background-color: #f8f9fa;
     border: 1px solid #e9ecef;
     border-radius: 8rpx;
-    padding: 16rpx 20rpx;
+    padding: 0 20rpx;
     height: 88rpx;
     box-sizing: border-box;
+    line-height: 88rpx;
+    text-align: center;
 }
 
 .custom-field-row .btn-secondary {
@@ -7277,18 +7294,70 @@ picker {
 
 .form-input {
     width: 100%;
-    height: 80rpx;
-    border: 1rpx solid #ddd;
+    height: 88rpx;
+    border: 1px solid #e9ecef;
     border-radius: 8rpx;
     padding: 0 20rpx;
     font-size: 28rpx;
     background: #fff;
+    box-sizing: border-box;
+    line-height: 88rpx;
+    text-align: center;
+}
+
+.form-input::placeholder {
+    text-align: center;
+    color: #999;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: opacity 0.3s;
+    opacity: 1;
+}
+
+.form-input:focus::placeholder {
+    opacity: 1;
+    color: #aaa;
+}
+
+.form-input:not(:placeholder-shown)::placeholder {
+    opacity: 0;
+}
+
+.form-input.with-bg {
+    background-color: #f8f9fa;
+    padding: 0 20rpx;
+    line-height: 88rpx;
+    text-align: center;
+}
+
+.form-input.with-bg::placeholder {
+    text-align: center;
+    color: #999;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: opacity 0.3s;
+    opacity: 1;
+}
+
+.form-input.with-bg:focus::placeholder {
+    opacity: 1;
+    color: #aaa;
+}
+
+.form-input.with-bg:not(:placeholder-shown)::placeholder {
+    opacity: 0;
 }
 
 .picker-value {
     width: 100%;
-    height: 80rpx;
-    border: 1rpx solid #ddd;
+    height: 88rpx;
+    border: 1px solid #e9ecef;
     border-radius: 8rpx;
     padding: 0 20rpx;
     font-size: 28rpx;
@@ -7296,6 +7365,8 @@ picker {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-sizing: border-box;
+    line-height: 88rpx;
 }
 
 .picker-arrow {
@@ -7674,14 +7745,27 @@ picker {
     flex: 1;
 }
 
+.form-row.three-columns {
+    display: flex;
+    gap: 16rpx;
+}
+
+.form-item.third {
+    flex: 1;
+}
+
 .form-picker {
     width: 100%;
 }
 
+.form-picker.with-bg .picker-display {
+    background-color: #f8f9fa;
+}
+
 .picker-display {
     width: 100%;
-    height: 80rpx;
-    border: 1rpx solid #ddd;
+    height: 88rpx;
+    border: 1px solid #e9ecef;
     border-radius: 8rpx;
     padding: 0 20rpx;
     font-size: 28rpx;
@@ -7689,6 +7773,8 @@ picker {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-sizing: border-box;
+    line-height: 88rpx;
 }
 
 .number-preview {
@@ -7763,23 +7849,57 @@ picker {
     align-items: center;
 }
 
-.number-input-row .form-input {
-    flex: 1;
+.number-input-section {
+    margin-top: 16rpx;
 }
 
-.add-btn {
-    height: 80rpx;
-    padding: 0 24rpx;
-    background: #007aff;
-    color: #fff;
+.number-input-section .form-input {
+    width: 100%;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8rpx;
+    padding: 0 20rpx;
+    height: 88rpx;
+    box-sizing: border-box;
+    margin-bottom: 16rpx;
+    line-height: 88rpx;
+    text-align: center;
+}
+
+.number-input-section .form-input::placeholder {
+    color: #999;
+    font-size: 26rpx;
+    text-align: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: opacity 0.3s;
+    opacity: 1;
+}
+
+.number-input-section .form-input:focus::placeholder {
+    opacity: 1;
+    color: #aaa;
+}
+
+.number-input-section .form-input:not(:placeholder-shown)::placeholder {
+    opacity: 0;
+}
+
+.number-input-section .add-btn {
+    width: 100%;
+    padding: 16rpx 24rpx;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: white;
     border: none;
     border-radius: 8rpx;
     font-size: 26rpx;
     white-space: nowrap;
-    
-    &:active {
-        background: #0056b3;
-    }
+    height: 88rpx;
+    line-height: 56rpx;
+    box-sizing: border-box;
 }
 
 .time-window-row {
