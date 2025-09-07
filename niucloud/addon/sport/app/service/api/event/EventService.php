@@ -209,7 +209,16 @@ class EventService extends BaseApiService
         
         $data['update_time'] = time();
         
-        $this->model->where([['id', '=', $id]])->update($data);
+        // 过滤空值，只更新有值的字段
+        // 保留 update_time 字段，过滤掉空字符串和null值
+        $updateData = [];
+        foreach ($data as $key => $value) {
+            if ($key === 'update_time' || ($value !== '' && $value !== null)) {
+                $updateData[$key] = $value;
+            }
+        }
+        
+        $this->model->where([['id', '=', $id]])->update($updateData);
         
         // 保存号码牌设置
         if (!empty($number_plate_settings)) {

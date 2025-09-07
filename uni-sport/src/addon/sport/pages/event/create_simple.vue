@@ -2452,17 +2452,22 @@ const nextStep = async () => {
             }
             
             // 准备基础赛事数据
-            const basicEventData = {
+            const basicEventData: any = {
                 step: 1, // 第1步：基础信息
                 name: formData.value.name.trim(),
                 organizer_id: formData.value.organizer_id,
                 event_type: formData.value.event_type,
-                series_id: formData.value.series_id || 0,
                 year: formData.value.year
+            }
+            
+            // 只在有值时添加 series_id
+            if (formData.value.series_id && formData.value.series_id > 0) {
+                basicEventData.series_id = formData.value.series_id
             }
             
             if (isEditMode.value) {
                 // 编辑模式：更新现有赛事的基础信息
+                // 注意：编辑模式下只更新传入的字段，不覆盖其他字段
                 const result = await editEvent(eventId.value, basicEventData)
                 if (result) {
                     uni.showToast({
@@ -2633,12 +2638,18 @@ const nextStep = async () => {
                 }
                 
                 // 更新赛事时间信息
-                const timeData = {
+                const timeData: any = {
                     step: 3, // 第3步：时间信息
                     start_time: formData.value.start_time,
-                    end_time: formData.value.end_time,
-                    registration_start_time: formData.value.registration_start_time || '',
-                    registration_end_time: formData.value.registration_end_time || ''
+                    end_time: formData.value.end_time
+                }
+                
+                // 只在有值时添加报名时间
+                if (formData.value.registration_start_time) {
+                    timeData.registration_start_time = formData.value.registration_start_time
+                }
+                if (formData.value.registration_end_time) {
+                    timeData.registration_end_time = formData.value.registration_end_time
                 }
                 
                 const result = await editEvent(eventId.value, timeData)
