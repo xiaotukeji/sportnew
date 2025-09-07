@@ -131,6 +131,10 @@ class EventService extends BaseApiService
             $data['signup_fields'] = json_encode($data['signup_fields'], JSON_UNESCAPED_UNICODE);
         }
         
+        // 处理号码牌设置
+        $number_plate_settings = $data['number_plate_settings'] ?? null;
+        unset($data['number_plate_settings']);
+        
         $data['create_time'] = time();
         $data['update_time'] = time();
         $data['status'] = 0;  // 默认状态为待发布
@@ -152,6 +156,11 @@ class EventService extends BaseApiService
             // 保存比赛项目
             if (!empty($base_item_ids)) {
                 $this->saveEventItems($event_id, $base_item_ids);
+            }
+            
+            // 保存号码牌设置
+            if (!empty($number_plate_settings)) {
+                $this->saveNumberPlateSettings($event_id, $number_plate_settings);
             }
             
             $this->model->commit();
@@ -188,9 +197,19 @@ class EventService extends BaseApiService
             $data['signup_fields'] = json_encode($data['signup_fields'], JSON_UNESCAPED_UNICODE);
         }
         
+        // 处理号码牌设置
+        $number_plate_settings = $data['number_plate_settings'] ?? null;
+        unset($data['number_plate_settings']);
+        
         $data['update_time'] = time();
         
         $this->model->where([['id', '=', $id]])->update($data);
+        
+        // 保存号码牌设置
+        if (!empty($number_plate_settings)) {
+            $this->saveNumberPlateSettings($id, $number_plate_settings);
+        }
+        
         return true;
     }
 
@@ -790,5 +809,22 @@ class EventService extends BaseApiService
         }
         
         return $venueIds;
+    }
+
+    /**
+     * 保存号码牌设置
+     * @param int $eventId 赛事ID
+     * @param array $settings 号码牌设置数据
+     * @return bool
+     */
+    protected function saveNumberPlateSettings($eventId, $settings)
+    {
+        if (empty($settings)) {
+            return true;
+        }
+
+        // 使用NumberPlateService保存设置
+        $numberPlateService = new \addon\sport\app\service\api\number_plate\NumberPlateService();
+        return $numberPlateService->saveEventNumberRule($eventId, $settings);
     }
 } 

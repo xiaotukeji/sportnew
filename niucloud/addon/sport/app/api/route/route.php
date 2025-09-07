@@ -59,6 +59,23 @@ Route::group('sport', function() {
     // 更新赛事设置
     Route::put('event/:id/settings', 'addon\sport\app\api\controller\event\Event@updateSettings');
     
+    /***************************************************** 号码牌管理 ****************************************************/
+    
+    // 获取赛事号码牌规则
+    Route::get('event/:id/number-rule', 'addon\sport\app\api\controller\event\Event@getNumberRule');
+    
+    // 保存赛事号码牌规则
+    Route::post('event/:id/number-rule', 'addon\sport\app\api\controller\event\Event@saveNumberRule');
+    
+    // 获取可选择的号码列表
+    Route::get('event/:id/available-numbers', 'addon\sport\app\api\controller\event\Event@getAvailableNumbers');
+    
+    // 获取赛事号码分配列表
+    Route::get('event/:id/number-assignments', 'addon\sport\app\api\controller\event\Event@getNumberAssignments');
+    
+    // 取消号码分配
+    Route::delete('event/:id/number-assignments/:assignment_id', 'addon\sport\app\api\controller\event\Event@cancelNumberAssignment');
+    
     /***************************************************** 赛事场地管理 ****************************************************/
     
     // 获取赛事场地列表

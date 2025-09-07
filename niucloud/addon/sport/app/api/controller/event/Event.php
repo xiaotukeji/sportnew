@@ -73,7 +73,10 @@ class Event extends BaseApiController
             ['season', ''],            // 赛季
             ['age_groups', ''],        // 年龄组设置
             ['age_group_display', 0],  // 年龄组显示方式
+            ['show_participant_count', 0], // 显示报名人数
+            ['show_progress', 0],      // 显示比赛进度
             ['signup_fields', []],     // 报名字段配置
+            ['number_plate_settings', []], // 号码牌设置
             ['remark', ''],            // 备注
         ]);
 
@@ -110,7 +113,10 @@ class Event extends BaseApiController
             ['season', ''],            // 赛季
             ['age_groups', ''],        // 年龄组设置
             ['age_group_display', 0],  // 年龄组显示方式
+            ['show_participant_count', 0], // 显示报名人数
+            ['show_progress', 0],      // 显示比赛进度
             ['signup_fields', []],     // 报名字段配置
+            ['number_plate_settings', []], // 号码牌设置
             ['remark', ''],            // 备注
         ]);
 
@@ -310,5 +316,88 @@ class Event extends BaseApiController
         
         $venueIds = (new EventService())->batchAddEventVenues($id, $data);
         return success('BATCH_ADD_SUCCESS', ['ids' => $venueIds]);
+    }
+
+    /**
+     * 获取赛事号码牌规则
+     * @param int $id 赛事ID
+     * @return \think\Response
+     */
+    public function getNumberRule(int $id)
+    {
+        $rule = (new \addon\sport\app\service\api\number_plate\NumberPlateService())->getEventNumberRule($id);
+        return success('', $rule);
+    }
+
+    /**
+     * 保存赛事号码牌规则
+     * @param int $id 赛事ID
+     * @return \think\Response
+     */
+    public function saveNumberRule(int $id)
+    {
+        $data = $this->request->params([
+            ['numbering_mode', 1],      // 编号模式：1系统分配 2用户自选
+            ['prefix', ''],             // 号码前缀
+            ['number_length', 3],       // 数字位数
+            ['start_number', 1],        // 起始号码
+            ['end_number', 999],        // 结束号码
+            ['step', 1],                // 编号步长
+            ['reserved_numbers', ''],   // 保留号码列表
+            ['disabled_numbers', ''],   // 禁用号码列表
+            ['allow_athlete_choice', 0], // 是否允许运动员自选
+            ['choice_time_window', 7],  // 自选时间窗口
+            ['choice_rules', 'first_come_first_served'], // 自选规则
+            ['auto_assign_after_registration', 1], // 报名后是否自动分配
+        ]);
+
+        (new \addon\sport\app\service\api\number_plate\NumberPlateService())->saveEventNumberRule($id, $data);
+        return success('SAVE_SUCCESS');
+    }
+
+    /**
+     * 获取可选择的号码列表
+     * @param int $id 赛事ID
+     * @return \think\Response
+     */
+    public function getAvailableNumbers(int $id)
+    {
+        $data = $this->request->params([
+            ['item_id', 0], // 项目ID
+        ]);
+
+        $numbers = (new \addon\sport\app\service\api\number_plate\NumberPlateService())->getAvailableNumbers($id, $data['item_id']);
+        return success('', $numbers);
+    }
+
+    /**
+     * 获取赛事号码分配列表
+     * @param int $id 赛事ID
+     * @return \think\Response
+     */
+    public function getNumberAssignments(int $id)
+    {
+        $data = $this->request->params([
+            ['item_id', ''],           // 项目ID
+            ['assignment_type', ''],   // 分配类型
+            ['number_plate', ''],      // 号码牌
+            ['page', 1],               // 页码
+            ['limit', 15],             // 每页数量
+        ]);
+
+        $result = (new \addon\sport\app\service\api\number_plate\NumberPlateService())->getNumberAssignments($id, $data);
+        return success('', $result);
+    }
+
+    /**
+     * 取消号码分配
+     * @param int $id 赛事ID
+     * @param int $assignmentId 分配记录ID
+     * @return \think\Response
+     */
+    public function cancelNumberAssignment(int $id, int $assignmentId)
+    {
+        (new \addon\sport\app\service\api\number_plate\NumberPlateService())->cancelNumberAssignment($id, $assignmentId);
+        return success('CANCEL_SUCCESS');
     }
 } 

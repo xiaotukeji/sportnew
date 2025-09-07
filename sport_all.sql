@@ -3338,3 +3338,64 @@ CREATE TABLE `wechat_reply` (
   `reply_method` varchar(50) NOT NULL DEFAULT '' COMMENT '回复方式 all 全部 rand随机',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC COMMENT='公众号消息回调表';
+
+-- ----------------------------
+-- Table structure for sport_event_number_rule
+-- 赛事号码牌规则表
+-- ----------------------------
+DROP TABLE IF EXISTS `sport_event_number_rule`;
+CREATE TABLE `sport_event_number_rule` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `event_id` int(11) NOT NULL COMMENT '赛事ID',
+  `rule_name` varchar(100) NOT NULL DEFAULT '默认规则' COMMENT '规则名称',
+  `numbering_mode` tinyint(4) NOT NULL DEFAULT '1' COMMENT '编号模式：1系统分配 2用户自选',
+  `prefix` varchar(10) DEFAULT NULL COMMENT '号码前缀，可为空',
+  `number_length` tinyint(4) NOT NULL DEFAULT '3' COMMENT '数字位数：1-6位',
+  `start_number` int(11) NOT NULL DEFAULT '1' COMMENT '起始号码',
+  `end_number` int(11) NOT NULL DEFAULT '999' COMMENT '结束号码',
+  `step` int(11) NOT NULL DEFAULT '1' COMMENT '编号步长',
+  `reserved_numbers` text COMMENT '保留号码列表，JSON格式存储',
+  `disabled_numbers` text COMMENT '禁用号码列表，JSON格式存储',
+  `allow_athlete_choice` tinyint(4) NOT NULL DEFAULT '0' COMMENT '是否允许运动员自选：0不允许 1允许',
+  `choice_time_window` int(11) DEFAULT '7' COMMENT '自选时间窗口（天）',
+  `choice_rules` varchar(50) DEFAULT 'first_come_first_served' COMMENT '自选规则：first_come_first_served先到先得',
+  `auto_assign_after_registration` tinyint(4) NOT NULL DEFAULT '1' COMMENT '报名后是否自动分配：0不自动 1自动',
+  `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态：0禁用 1启用',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
+  `create_time` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_event_id` (`event_id`),
+  KEY `idx_event_id` (`event_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事号码牌规则表';
+
+-- ----------------------------
+-- Table structure for sport_event_number_assignment
+-- 赛事号码分配表
+-- ----------------------------
+DROP TABLE IF EXISTS `sport_event_number_assignment`;
+CREATE TABLE `sport_event_number_assignment` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `event_id` int(11) NOT NULL COMMENT '赛事ID',
+  `registration_id` int(11) NOT NULL COMMENT '报名记录ID',
+  `athlete_id` int(11) NOT NULL COMMENT '参赛人员ID',
+  `item_id` int(11) NOT NULL COMMENT '项目ID',
+  `number_plate` varchar(20) NOT NULL COMMENT '分配的号码牌',
+  `assignment_type` tinyint(4) NOT NULL DEFAULT '1' COMMENT '分配类型：1系统分配 2用户自选',
+  `assignment_time` int(11) NOT NULL COMMENT '分配时间',
+  `assignment_by` int(11) DEFAULT NULL COMMENT '分配者ID（系统分配为0，用户自选为用户ID）',
+  `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态：0已取消 1有效',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
+  `create_time` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_event_registration` (`event_id`, `registration_id`),
+  UNIQUE KEY `uk_event_number` (`event_id`, `number_plate`),
+  KEY `idx_event_id` (`event_id`),
+  KEY `idx_registration_id` (`registration_id`),
+  KEY `idx_athlete_id` (`athlete_id`),
+  KEY `idx_item_id` (`item_id`),
+  KEY `idx_number_plate` (`number_plate`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事号码分配表';

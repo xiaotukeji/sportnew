@@ -867,132 +867,320 @@
                     </view>
                 </view>
             </view>
-        
-        
+
+
         <!-- 第7步：更多设置 -->
         <view v-if="currentStep === 7" class="form-wrapper">
-            <view class="form-section">
-                <!-- 显示设置卡片 -->
-                <view class="settings-card">
-                    <view class="card-header">
-                        <view class="card-icon">👁️</view>
-                        <view class="card-title">显示设置</view>
-                        <view class="card-subtitle">控制赛事信息的显示方式</view>
+            <!-- 显示设置 -->
+            <view class="settings-card">
+                <view class="card-header">
+                    <view class="card-title">显示设置</view>
+                </view>
+                <view class="card-content">
+                    <!-- 显示年龄组 -->
+                    <view class="setting-item">
+                        <view class="setting-info">
+                            <text class="setting-label">显示年龄组</text>
+                            <text class="setting-desc">在赛事页面显示参赛者的年龄组信息</text>
+                        </view>
+                        <switch 
+                            :checked="eventSettings.age_group_display" 
+                            @change="onAgeGroupDisplayChange"
+                            class="setting-switch"
+                        />
                     </view>
-                    <view class="card-content">
-                        <!-- 显示年龄组 -->
-                        <view class="setting-item">
-                            <view class="setting-info">
-                                <text class="setting-label">显示年龄组</text>
-                                <text class="setting-desc">在赛事页面显示参赛者的年龄组信息</text>
-                            </view>
-                            <switch 
-                                :checked="eventSettings.age_group_display" 
-                                @change="onAgeGroupDisplayChange"
-                                class="setting-switch"
-                            />
+                    
+                    <!-- 显示报名人数 -->
+                    <view class="setting-item">
+                        <view class="setting-info">
+                            <text class="setting-label">显示报名人数</text>
+                            <text class="setting-desc">实时显示各项目的报名人数统计</text>
                         </view>
-                        
-                        <!-- 显示报名人数 -->
-                        <view class="setting-item">
-                            <view class="setting-info">
-                                <text class="setting-label">显示报名人数</text>
-                                <text class="setting-desc">实时显示各项目的报名人数统计</text>
-                            </view>
-                            <switch 
-                                :checked="eventSettings.show_participant_count" 
-                                @change="onShowParticipantCountChange"
-                                class="setting-switch"
-                            />
+                        <switch 
+                            :checked="eventSettings.show_participant_count" 
+                            @change="onShowParticipantCountChange"
+                            class="setting-switch"
+                        />
+                    </view>
+                    
+                    <!-- 显示比赛进度 -->
+                    <view class="setting-item">
+                        <view class="setting-info">
+                            <text class="setting-label">显示比赛进度</text>
+                            <text class="setting-desc">显示比赛进行状态和完成进度</text>
                         </view>
-                        
-                        <!-- 显示比赛进度 -->
-                        <view class="setting-item">
-                            <view class="setting-info">
-                                <text class="setting-label">显示比赛进度</text>
-                                <text class="setting-desc">显示比赛进行状态和完成进度</text>
-                            </view>
-                            <switch 
-                                :checked="eventSettings.show_progress" 
-                                @change="onShowProgressChange"
-                                class="setting-switch"
-                            />
-                        </view>
+                        <switch 
+                            :checked="eventSettings.show_progress" 
+                            @change="onShowProgressChange"
+                            class="setting-switch"
+                        />
                     </view>
                 </view>
-                
-                <!-- 协办单位管理卡片 -->
-                <view class="settings-card">
-                    <view class="card-header">
-                        <view class="card-icon">🤝</view>
-                        <view class="card-title">协办单位管理</view>
-                        <view class="card-subtitle">管理赛事的协办单位、赞助商和支持单位</view>
-                    </view>
-                    <view class="card-content">
-                        <view class="co-organizer-section">
-                            <view class="section-info">
-                                <text class="info-text">添加协办单位、赞助商或支持单位，丰富赛事信息</text>
-                            </view>
-                            
-                            <!-- 协办单位列表 -->
-                            <view v-if="coOrganizerList.length > 0" class="co-organizer-list">
-                                <view 
-                                    v-for="(item, index) in coOrganizerList" 
-                                    :key="item.id || index"
-                                    class="co-organizer-item"
-                                >
-                                    <view class="item-content">
-                                        <view class="item-header">
-                                            <view class="item-name">{{ item.organizer_name }}</view>
-                                            <view class="item-type">{{ item.organizer_type_text || getCoOrganizerTypeText(item.organizer_type) }}</view>
-                                        </view>
+            </view>
+            
+            <!-- 协办单位管理 -->
+            <view class="settings-card">
+                <view class="card-header">
+                    <view class="card-title">协办单位管理</view>
+                </view>
+                <view class="card-content">
+                    <view class="co-organizer-section">
+                        <!-- 协办单位列表 -->
+                        <view v-if="coOrganizerList.length > 0" class="co-organizer-list">
+                            <view 
+                                v-for="(item, index) in coOrganizerList" 
+                                :key="item.id || index"
+                                class="co-organizer-item"
+                            >
+                                <view class="item-content">
+                                    <view class="item-header">
+                                        <view class="item-name">{{ item.organizer_name }}</view>
+                                        <view class="item-type">{{ item.organizer_type_text || getCoOrganizerTypeText(item.organizer_type) }}</view>
                                     </view>
                                 </view>
                             </view>
-                            
-                            <!-- 空状态 -->
-                            <view v-else class="empty-state">
-                                <text class="empty-text">暂无协办单位</text>
+                        </view>
+                        
+                        <!-- 空状态 -->
+                        <view v-else class="empty-state">
+                            <text class="empty-text">暂无协办单位</text>
+                        </view>
+                        
+                        <button class="manage-btn" @tap="handleShowCoOrganizerManager">
+                            <text class="manage-icon">👥</text>
+                            <text class="manage-text">管理协办单位</text>
+                        </button>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 号码牌设置 -->
+            <view class="settings-card">
+                <view class="card-header">
+                    <view class="card-title">号码牌设置</view>
+                    <view class="card-subtitle">配置参赛号码分配规则</view>
+                </view>
+                <view class="card-content">
+                    <!-- 编号模式选择 -->
+                    <view class="setting-item">
+                        <view class="setting-info">
+                            <text class="setting-label">编号模式</text>
+                            <text class="setting-desc">选择号码分配方式</text>
+                        </view>
+                        <radio-group @change="onNumberingModeChange" class="radio-group">
+                            <label class="radio-item">
+                                <radio value="1" :checked="numberPlateSettings.numbering_mode === 1" />
+                                <text class="radio-text">系统分配</text>
+                            </label>
+                            <label class="radio-item">
+                                <radio value="2" :checked="numberPlateSettings.numbering_mode === 2" />
+                                <text class="radio-text">用户自选</text>
+                            </label>
+                        </radio-group>
+                    </view>
+
+                    <!-- 号码格式设置 -->
+                    <view class="setting-section">
+                        <view class="section-title">号码格式</view>
+                        
+                        <!-- 前缀设置 -->
+                        <view class="form-item">
+                            <view class="form-label">号码前缀</view>
+                            <input 
+                                v-model="numberPlateSettings.prefix"
+                                placeholder="如：A、B（可为空）"
+                                class="form-input"
+                                maxlength="10"
+                                @input="onPrefixChange"
+                            />
+                        </view>
+
+                        <!-- 数字位数 -->
+                        <view class="form-item">
+                            <view class="form-label">数字位数</view>
+                            <picker 
+                                :value="numberLengthIndex" 
+                                :range="numberLengthOptions"
+                                @change="onNumberLengthChange"
+                                class="form-picker"
+                            >
+                                <view class="picker-display">
+                                    {{ numberLengthOptions[numberLengthIndex] }}
+                                </view>
+                            </picker>
+                        </view>
+
+                        <!-- 号码范围 -->
+                        <view class="form-row">
+                            <view class="form-item half">
+                                <view class="form-label">起始号码</view>
+                                <input 
+                                    v-model.number="numberPlateSettings.start_number"
+                                    type="number"
+                                    placeholder="1"
+                                    class="form-input"
+                                    @input="onNumberRangeChange"
+                                />
                             </view>
-                            
-                            <button class="manage-btn" @tap="handleShowCoOrganizerManager">
-                                <text class="manage-icon">👥</text>
-                                <text class="manage-text">管理协办单位</text>
-                            </button>
+                            <view class="form-item half">
+                                <view class="form-label">结束号码</view>
+                                <input 
+                                    v-model.number="numberPlateSettings.end_number"
+                                    type="number"
+                                    placeholder="999"
+                                    class="form-input"
+                                    @input="onNumberRangeChange"
+                                />
+                            </view>
+                        </view>
+
+                        <!-- 编号步长 -->
+                        <view class="form-item">
+                            <view class="form-label">编号步长</view>
+                            <input 
+                                v-model.number="numberPlateSettings.step"
+                                type="number"
+                                placeholder="1"
+                                class="form-input"
+                                @input="onStepChange"
+                            />
+                        </view>
+
+                        <!-- 号码预览 -->
+                        <view class="form-item">
+                            <view class="form-label">号码预览</view>
+                            <view class="number-preview">
+                                <text class="preview-label">示例：</text>
+                                <text class="preview-number">{{ numberPreview }}</text>
+                            </view>
                         </view>
                     </view>
-                </view>
-                
-                <!-- 功能设置卡片（预留） -->
-                <view class="settings-card">
-                    <view class="card-header">
-                        <view class="card-icon">⚙️</view>
-                        <view class="card-title">功能设置</view>
-                        <view class="card-subtitle">配置赛事的特殊功能选项</view>
-                    </view>
-                    <view class="card-content">
-                        <view class="coming-soon">
-                            <text class="coming-soon-text">更多功能即将上线...</text>
+
+                    <!-- 特殊号码设置 -->
+                    <view class="setting-section">
+                        <view class="section-title">特殊号码</view>
+                        
+                        <!-- 保留号码 -->
+                        <view class="form-item">
+                            <view class="form-label">保留号码</view>
+                            <view class="number-tags">
+                                <view 
+                                    v-for="(number, index) in reservedNumbers" 
+                                    :key="index"
+                                    class="number-tag"
+                                >
+                                    <text class="tag-text">{{ number }}</text>
+                                    <text class="tag-remove" @tap="removeReservedNumber(index)">×</text>
+                                </view>
+                            </view>
+                            <view class="number-input-row">
+                                <input 
+                                    v-model="tempReservedNumber"
+                                    placeholder="输入保留号码"
+                                    class="form-input"
+                                    @confirm="addReservedNumber"
+                                />
+                                <button class="add-btn" @tap="addReservedNumber">添加</button>
+                            </view>
+                        </view>
+
+                        <!-- 禁用号码 -->
+                        <view class="form-item">
+                            <view class="form-label">禁用号码</view>
+                            <view class="number-tags">
+                                <view 
+                                    v-for="(number, index) in disabledNumbers" 
+                                    :key="index"
+                                    class="number-tag disabled"
+                                >
+                                    <text class="tag-text">{{ number }}</text>
+                                    <text class="tag-remove" @tap="removeDisabledNumber(index)">×</text>
+                                </view>
+                            </view>
+                            <view class="number-input-row">
+                                <input 
+                                    v-model="tempDisabledNumber"
+                                    placeholder="输入禁用号码"
+                                    class="form-input"
+                                    @confirm="addDisabledNumber"
+                                />
+                                <button class="add-btn" @tap="addDisabledNumber">添加</button>
+                            </view>
                         </view>
                     </view>
-                </view>
-                
-                <!-- 高级设置卡片（预留） -->
-                <view class="settings-card">
-                    <view class="card-header">
-                        <view class="card-icon">🔧</view>
-                        <view class="card-title">高级设置</view>
-                        <view class="card-subtitle">专业用户的高级配置选项</view>
+
+                    <!-- 用户自选设置 -->
+                    <view v-if="numberPlateSettings.numbering_mode === 2" class="setting-section">
+                        <view class="section-title">自选设置</view>
+                        
+                        <!-- 自选时间窗口 -->
+                        <view class="form-item">
+                            <view class="form-label">自选时间窗口</view>
+                            <view class="time-window-row">
+                                <input 
+                                    v-model.number="numberPlateSettings.choice_time_window"
+                                    type="number"
+                                    placeholder="7"
+                                    class="form-input"
+                                />
+                                <text class="time-unit">天</text>
+                            </view>
+                            <text class="form-desc">报名后允许用户自选号码的天数</text>
+                        </view>
+
+                        <!-- 自选规则 -->
+                        <view class="form-item">
+                            <view class="form-label">自选规则</view>
+                            <picker 
+                                :value="choiceRuleIndex" 
+                                :range="choiceRuleOptions"
+                                @change="onChoiceRuleChange"
+                                class="form-picker"
+                            >
+                                <view class="picker-display">
+                                    {{ choiceRuleOptions[choiceRuleIndex] }}
+                                </view>
+                            </picker>
+                        </view>
                     </view>
-                    <view class="card-content">
-                        <view class="coming-soon">
-                            <text class="coming-soon-text">高级功能开发中...</text>
+
+                    <!-- 自动分配设置 -->
+                    <view v-if="numberPlateSettings.numbering_mode === 1" class="setting-section">
+                        <view class="section-title">自动分配</view>
+                        
+                        <view class="setting-item">
+                            <view class="setting-info">
+                                <text class="setting-label">报名后自动分配</text>
+                                <text class="setting-desc">用户报名成功后自动分配号码</text>
+                            </view>
+                            <switch 
+                                :checked="numberPlateSettings.auto_assign_after_registration" 
+                                @change="onAutoAssignChange"
+                                class="setting-switch"
+                            />
                         </view>
                     </view>
                 </view>
             </view>
+            
+            <!-- 高级设置（预留） -->
+            <view class="settings-card">
+                <view class="card-header">
+                    <view class="card-title">高级设置</view>
+                </view>
+                <view class="card-content">
+                    <view class="coming-soon">
+                        <text class="coming-soon-text">高级功能开发中...</text>
+                    </view>
+                </view>
+            </view>
         </view>
-    </view>
+
+
+        </view>
+        
+        
+
         <!-- 底部操作栏 -->
         <view class="bottom-actions">
             <button 
@@ -1597,6 +1785,51 @@ const eventSettings = ref({
     show_progress: true
 })
 
+// 号码牌设置
+const numberPlateSettings = ref({
+    numbering_mode: 1, // 1=系统分配 2=用户自选
+    prefix: '', // 号码前缀
+    number_length: 3, // 数字位数
+    start_number: 1, // 起始号码
+    end_number: 999, // 结束号码
+    step: 1, // 编号步长
+    reserved_numbers: [], // 保留号码列表
+    disabled_numbers: [], // 禁用号码列表
+    allow_athlete_choice: false, // 是否允许运动员自选
+    choice_time_window: 7, // 自选时间窗口（天）
+    choice_rules: 'first_come_first_served', // 自选规则
+    auto_assign_after_registration: true // 报名后是否自动分配
+})
+
+// 号码牌设置相关数据
+const numberLengthOptions = ['1位', '2位', '3位', '4位', '5位', '6位']
+const numberLengthIndex = ref(2) // 默认3位
+
+const choiceRuleOptions = ['先到先得', '随机分配', '按报名顺序']
+const choiceRuleIndex = ref(0) // 默认先到先得
+
+// 临时输入数据
+const tempReservedNumber = ref('')
+const tempDisabledNumber = ref('')
+
+// 计算属性
+const reservedNumbers = computed(() => numberPlateSettings.value.reserved_numbers)
+const disabledNumbers = computed(() => numberPlateSettings.value.disabled_numbers)
+
+// 号码预览
+const numberPreview = computed(() => {
+    const prefix = numberPlateSettings.value.prefix || ''
+    const length = numberPlateSettings.value.number_length
+    const start = numberPlateSettings.value.start_number
+    const step = numberPlateSettings.value.step
+    
+    // 生成示例号码
+    const exampleNumber = start + step
+    const paddedNumber = exampleNumber.toString().padStart(length, '0')
+    
+    return prefix + paddedNumber
+})
+
 // 协办单位管理
 const showCoOrganizerManager = ref(false)
 const coOrganizerList = ref<any[]>([])
@@ -1942,22 +2175,75 @@ const handleSubmit = async () => {
             signup_fields: formData.value.signup_fields
         }
         
+        // 如果是第7步，添加显示设置和号码牌设置
+        if (currentStep.value === 7) {
+            // 从选中的主办方获取organizer_type
+            const selectedOrganizer = organizerList.value.find((item: any) => item.id === formData.value.organizer_id)
+            submitData.organizer_type = selectedOrganizer?.organizer_type || 1
+            
+            // 显示设置
+            submitData.age_group_display = eventSettings.value.age_group_display ? 1 : 0
+            submitData.show_participant_count = eventSettings.value.show_participant_count ? 1 : 0
+            submitData.show_progress = eventSettings.value.show_progress ? 1 : 0
+            
+            // 号码牌设置
+            submitData.number_plate_settings = {
+                numbering_mode: numberPlateSettings.value.numbering_mode,
+                prefix: numberPlateSettings.value.prefix,
+                number_length: numberPlateSettings.value.number_length,
+                start_number: numberPlateSettings.value.start_number,
+                end_number: numberPlateSettings.value.end_number,
+                step: numberPlateSettings.value.step,
+                reserved_numbers: JSON.stringify(numberPlateSettings.value.reserved_numbers),
+                disabled_numbers: JSON.stringify(numberPlateSettings.value.disabled_numbers),
+                allow_athlete_choice: numberPlateSettings.value.allow_athlete_choice ? 1 : 0,
+                choice_time_window: numberPlateSettings.value.choice_time_window,
+                choice_rules: numberPlateSettings.value.choice_rules,
+                auto_assign_after_registration: numberPlateSettings.value.auto_assign_after_registration ? 1 : 0
+            }
+        }
+        
         let result: any
         
         if (isEditMode.value) {
             // 编辑模式：根据当前步骤决定保存内容
             if (currentStep.value === 7) {
-                // 第7步：只保存赛事设置（显示设置）
+                // 第7步：保存赛事设置（显示设置）+ 完整赛事数据
+                // 从选中的主办方获取organizer_type
+                const selectedOrganizer = organizerList.value.find((item: any) => item.id === formData.value.organizer_id)
                 const eventSettingsData = {
+                    // 包含完整的赛事数据，避免验证失败
+                    name: formData.value.name,
+                    event_type: formData.value.event_type,
+                    year: formData.value.year,
+                    start_time: formData.value.start_time,
+                    end_time: formData.value.end_time,
+                    location: formData.value.location,
+                    organizer_id: formData.value.organizer_id,
+                    organizer_type: selectedOrganizer?.organizer_type || 1, // 从主办方获取，默认为1
+                    // 第7步特有的设置
                     age_group_display: eventSettings.value.age_group_display ? 1 : 0,
                     show_participant_count: eventSettings.value.show_participant_count ? 1 : 0,
                     show_progress: eventSettings.value.show_progress ? 1 : 0,
+                    // 号码牌设置
+                    number_plate_settings: {
+                        numbering_mode: numberPlateSettings.value.numbering_mode,
+                        prefix: numberPlateSettings.value.prefix,
+                        number_length: numberPlateSettings.value.number_length,
+                        start_number: numberPlateSettings.value.start_number,
+                        end_number: numberPlateSettings.value.end_number,
+                        step: numberPlateSettings.value.step,
+                        reserved_numbers: JSON.stringify(numberPlateSettings.value.reserved_numbers),
+                        disabled_numbers: JSON.stringify(numberPlateSettings.value.disabled_numbers),
+                        allow_athlete_choice: numberPlateSettings.value.allow_athlete_choice ? 1 : 0,
+                        choice_time_window: numberPlateSettings.value.choice_time_window,
+                        choice_rules: numberPlateSettings.value.choice_rules,
+                        auto_assign_after_registration: numberPlateSettings.value.auto_assign_after_registration ? 1 : 0
+                    },
                     update_time: Date.now() / 1000 // 添加更新时间
                 }
                 
-                // 第7步：只保存赛事设置
-                
-                // 只更新赛事设置字段
+                // 第7步：保存完整赛事数据 + 显示设置
                 result = await editEvent(eventId.value, eventSettingsData)
             } else {
                 // 其他步骤：保存完整数据（创建模式或编辑模式的其他步骤）
@@ -3173,6 +3459,44 @@ const loadEventData = async () => {
         // 加载协办单位列表
         await loadCoOrganizerList()
         
+        // 加载显示设置
+        if (eventData.age_group_display !== undefined) {
+            eventSettings.value.age_group_display = eventData.age_group_display === 1
+        }
+        if (eventData.show_participant_count !== undefined) {
+            eventSettings.value.show_participant_count = eventData.show_participant_count === 1
+        }
+        if (eventData.show_progress !== undefined) {
+            eventSettings.value.show_progress = eventData.show_progress === 1
+        }
+        
+        // 加载号码牌设置
+        if (eventData.number_plate_settings) {
+            const settings = eventData.number_plate_settings
+            numberPlateSettings.value = {
+                numbering_mode: settings.numbering_mode || 1,
+                prefix: settings.prefix || '',
+                number_length: settings.number_length || 3,
+                start_number: settings.start_number || 1,
+                end_number: settings.end_number || 999,
+                step: settings.step || 1,
+                reserved_numbers: settings.reserved_numbers ? JSON.parse(settings.reserved_numbers) : [],
+                disabled_numbers: settings.disabled_numbers ? JSON.parse(settings.disabled_numbers) : [],
+                allow_athlete_choice: settings.allow_athlete_choice === 1,
+                choice_time_window: settings.choice_time_window || 7,
+                choice_rules: settings.choice_rules || 'first_come_first_served',
+                auto_assign_after_registration: settings.auto_assign_after_registration === 1
+            }
+            
+            // 设置数字位数选择器的索引
+            numberLengthIndex.value = Math.max(0, (settings.number_length || 3) - 1)
+            
+            // 设置自选规则选择器的索引
+            const rules = ['first_come_first_served', 'random', 'by_registration_order']
+            const ruleIndex = rules.indexOf(settings.choice_rules || 'first_come_first_served')
+            choiceRuleIndex.value = ruleIndex >= 0 ? ruleIndex : 0
+        }
+        
         // 更新步骤状态 - 编辑模式下允许访问所有步骤
         maxReachedStep.value = 7
         
@@ -4238,6 +4562,100 @@ const onShowParticipantCountChange = (e: any) => {
 
 const onShowProgressChange = (e: any) => {
     eventSettings.value.show_progress = e.detail.value
+}
+
+// 号码牌设置相关函数
+const onNumberingModeChange = (e: any) => {
+    numberPlateSettings.value.numbering_mode = parseInt(e.detail.value)
+}
+
+const onPrefixChange = () => {
+    // 前缀变化时触发预览更新
+}
+
+const onNumberLengthChange = (e: any) => {
+    numberLengthIndex.value = e.detail.value
+    numberPlateSettings.value.number_length = parseInt(e.detail.value) + 1
+}
+
+const onNumberRangeChange = () => {
+    // 验证号码范围
+    if (numberPlateSettings.value.start_number >= numberPlateSettings.value.end_number) {
+        uni.showToast({
+            title: '起始号码应小于结束号码',
+            icon: 'none'
+        })
+    }
+}
+
+const onStepChange = () => {
+    // 验证步长
+    if (numberPlateSettings.value.step < 1) {
+        numberPlateSettings.value.step = 1
+    }
+}
+
+const onChoiceRuleChange = (e: any) => {
+    choiceRuleIndex.value = e.detail.value
+    const rules = ['first_come_first_served', 'random', 'by_registration_order']
+    numberPlateSettings.value.choice_rules = rules[e.detail.value]
+}
+
+const onAutoAssignChange = (e: any) => {
+    numberPlateSettings.value.auto_assign_after_registration = e.detail.value
+}
+
+// 特殊号码管理函数
+const addReservedNumber = () => {
+    const number = tempReservedNumber.value.trim()
+    if (!number) {
+        uni.showToast({
+            title: '请输入保留号码',
+            icon: 'none'
+        })
+        return
+    }
+    
+    if (numberPlateSettings.value.reserved_numbers.includes(number)) {
+        uni.showToast({
+            title: '该号码已存在',
+            icon: 'none'
+        })
+        return
+    }
+    
+    numberPlateSettings.value.reserved_numbers.push(number)
+    tempReservedNumber.value = ''
+}
+
+const removeReservedNumber = (index: number) => {
+    numberPlateSettings.value.reserved_numbers.splice(index, 1)
+}
+
+const addDisabledNumber = () => {
+    const number = tempDisabledNumber.value.trim()
+    if (!number) {
+        uni.showToast({
+            title: '请输入禁用号码',
+            icon: 'none'
+        })
+        return
+    }
+    
+    if (numberPlateSettings.value.disabled_numbers.includes(number)) {
+        uni.showToast({
+            title: '该号码已存在',
+            icon: 'none'
+        })
+        return
+    }
+    
+    numberPlateSettings.value.disabled_numbers.push(number)
+    tempDisabledNumber.value = ''
+}
+
+const removeDisabledNumber = (index: number) => {
+    numberPlateSettings.value.disabled_numbers.splice(index, 1)
 }
 
 // 协办单位管理相关方法
@@ -7025,54 +7443,27 @@ picker {
     border: 1rpx solid #f0f0f0;
 }
 
-/* 第7步特殊样式 - 紧贴顶部 */
-.form-wrapper .settings-card:first-child {
-    margin-top: 0 !important;
-}
-
-/* 第7步整体样式调整 */
-.form-wrapper:has(.settings-card) {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
-}
 
 .card-header {
-    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    background: #f8f9fa;
     padding: 32rpx;
-    color: white;
-    position: relative;
+    color: #333;
+    border-bottom: 1rpx solid #e0e0e0;
 }
 
-.card-header::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 1rpx;
-    background: rgba(255, 255, 255, 0.2);
-}
 
-.card-icon {
-    font-size: 40rpx;
-    margin-bottom: 12rpx;
-}
 
 .card-title {
-    font-size: 32rpx;
-    font-weight: bold;
-    margin-bottom: 8rpx;
-}
-
-.card-subtitle {
-    font-size: 24rpx;
-    opacity: 0.9;
-    line-height: 1.4;
+    font-size: 30rpx;
+    font-weight: 600;
+    margin-bottom: 0;
+    color: #333;
 }
 
 .card-content {
     padding: 32rpx;
 }
+
 
 .setting-item {
     display: flex;
@@ -7085,6 +7476,7 @@ picker {
 .setting-item:last-child {
     border-bottom: none;
 }
+
 
 .setting-info {
     flex: 1;
@@ -7233,5 +7625,179 @@ picker {
 .empty-text {
     color: #999;
     font-size: 26rpx;
+}
+
+/* 号码牌设置样式 */
+.card-subtitle {
+    font-size: 24rpx;
+    color: #999;
+    margin-top: 8rpx;
+}
+
+.setting-section {
+    margin-top: 32rpx;
+    padding-top: 32rpx;
+    border-top: 1rpx solid #f5f5f5;
+}
+
+.section-title {
+    font-size: 30rpx;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 24rpx;
+    padding-left: 8rpx;
+    border-left: 4rpx solid #007aff;
+}
+
+.radio-group {
+    display: flex;
+    gap: 32rpx;
+}
+
+.radio-item {
+    display: flex;
+    align-items: center;
+    gap: 12rpx;
+}
+
+.radio-text {
+    font-size: 28rpx;
+    color: #333;
+}
+
+.form-row {
+    display: flex;
+    gap: 24rpx;
+}
+
+.form-item.half {
+    flex: 1;
+}
+
+.form-picker {
+    width: 100%;
+}
+
+.picker-display {
+    width: 100%;
+    height: 80rpx;
+    border: 1rpx solid #ddd;
+    border-radius: 8rpx;
+    padding: 0 20rpx;
+    font-size: 28rpx;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.number-preview {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+    padding: 20rpx;
+    background: #f8f9fa;
+    border-radius: 12rpx;
+    border: 1rpx solid #e9ecef;
+}
+
+.preview-label {
+    font-size: 26rpx;
+    color: #666;
+}
+
+.preview-number {
+    font-size: 32rpx;
+    font-weight: 600;
+    color: #007aff;
+    background: #fff;
+    padding: 8rpx 16rpx;
+    border-radius: 8rpx;
+    border: 1rpx solid #007aff;
+}
+
+.number-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12rpx;
+    margin-bottom: 16rpx;
+    min-height: 40rpx;
+}
+
+.number-tag {
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 8rpx 12rpx;
+    border-radius: 20rpx;
+    font-size: 24rpx;
+    border: 1rpx solid #bbdefb;
+}
+
+.number-tag.disabled {
+    background: #ffebee;
+    color: #d32f2f;
+    border-color: #ffcdd2;
+}
+
+.tag-text {
+    font-size: 24rpx;
+}
+
+.tag-remove {
+    font-size: 28rpx;
+    font-weight: bold;
+    cursor: pointer;
+    color: #999;
+    
+    &:hover {
+        color: #f44336;
+    }
+}
+
+.number-input-row {
+    display: flex;
+    gap: 16rpx;
+    align-items: center;
+}
+
+.number-input-row .form-input {
+    flex: 1;
+}
+
+.add-btn {
+    height: 80rpx;
+    padding: 0 24rpx;
+    background: #007aff;
+    color: #fff;
+    border: none;
+    border-radius: 8rpx;
+    font-size: 26rpx;
+    white-space: nowrap;
+    
+    &:active {
+        background: #0056b3;
+    }
+}
+
+.time-window-row {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+}
+
+.time-unit {
+    font-size: 28rpx;
+    color: #666;
+    white-space: nowrap;
+}
+
+.form-desc {
+    font-size: 24rpx;
+    color: #999;
+    margin-top: 8rpx;
+    line-height: 1.4;
 }
 </style> 
