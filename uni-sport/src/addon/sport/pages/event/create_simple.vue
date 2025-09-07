@@ -878,7 +878,7 @@
                 </view>
                 <view class="card-content">
                     <!-- 显示年龄组 -->
-                    <view class="setting-item">
+                    <!-- <view class="setting-item">
                         <view class="setting-info">
                             <text class="setting-label">显示年龄组</text>
                             <text class="setting-desc">在赛事页面显示参赛者的年龄组信息</text>
@@ -888,7 +888,7 @@
                             @change="onAgeGroupDisplayChange"
                             class="setting-switch"
                         />
-                    </view>
+                    </view> -->
                     
                     <!-- 显示报名人数 -->
                     <view class="setting-item">
@@ -947,7 +947,7 @@
                         </view>
                         
                         <button class="manage-btn" @tap="handleShowCoOrganizerManager">
-                            <text class="manage-icon">👥</text>
+                            
                             <text class="manage-text">管理协办单位</text>
                         </button>
                     </view>
@@ -1157,18 +1157,7 @@
                     </view>
                 </view>
             </view>
-            
-            <!-- 高级设置（预留） -->
-            <view class="settings-card">
-                <view class="card-header">
-                    <view class="card-title">高级设置</view>
-                </view>
-                <view class="card-content">
-                    <view class="coming-soon">
-                        <text class="coming-soon-text">高级功能开发中...</text>
-                    </view>
-                </view>
-            </view>
+
         </view>
 
 
@@ -1788,8 +1777,8 @@ const numberPlateSettings = ref({
     start_number: 1, // 起始号码
     end_number: 999, // 结束号码
     step: 1, // 编号步长
-    reserved_numbers: [], // 保留号码列表
-    disabled_numbers: [], // 禁用号码列表
+    reserved_numbers: [] as string[], // 保留号码列表
+    disabled_numbers: [] as string[], // 禁用号码列表
     allow_athlete_choice: false, // 是否允许运动员自选
     choice_time_window: 7, // 自选时间窗口（天）
     choice_rules: 'first_come_first_served', // 自选规则
@@ -2201,22 +2190,15 @@ const handleSubmit = async () => {
         let result: any
         
         if (isEditMode.value) {
-            // 编辑模式：根据当前步骤决定保存内容
+            // 编辑模式：第7步只保存最终设置
             if (currentStep.value === 7) {
-                // 第7步：保存赛事设置（显示设置）+ 完整赛事数据
+                // 第7步：保存赛事最终设置（显示设置和号码牌设置）
                 // 从选中的主办方获取organizer_type
                 const selectedOrganizer = organizerList.value.find((item: any) => item.id === formData.value.organizer_id)
-                const eventSettingsData = {
-                    // 包含完整的赛事数据，避免验证失败
-                    name: formData.value.name,
-                    event_type: formData.value.event_type,
-                    year: formData.value.year,
-                    start_time: formData.value.start_time,
-                    end_time: formData.value.end_time,
-                    location: formData.value.location,
-                    organizer_id: formData.value.organizer_id,
-                    organizer_type: selectedOrganizer?.organizer_type || 1, // 从主办方获取，默认为1
-                    // 第7步特有的设置
+                const finalSettingsData = {
+                    // 主办方类型
+                    organizer_type: selectedOrganizer?.organizer_type || 1,
+                    // 显示设置
                     age_group_display: eventSettings.value.age_group_display ? 1 : 0,
                     show_participant_count: eventSettings.value.show_participant_count ? 1 : 0,
                     show_progress: eventSettings.value.show_progress ? 1 : 0,
@@ -2238,8 +2220,8 @@ const handleSubmit = async () => {
                     update_time: Date.now() / 1000 // 添加更新时间
                 }
                 
-                // 第7步：保存完整赛事数据 + 显示设置
-                result = await editEvent(eventId.value, eventSettingsData)
+                // 第7步：保存最终设置
+                result = await editEvent(eventId.value, finalSettingsData)
             } else {
                 // 其他步骤：保存完整数据（创建模式或编辑模式的其他步骤）
             result = await editEvent(eventId.value, submitData)
@@ -2298,63 +2280,54 @@ const handleSubmit = async () => {
             }, 1500)
             
         } else {
-            // 创建模式：新增赛事
+            // 这种情况不应该发生，因为第1步已经创建了赛事并切换到编辑模式
+            // 如果还是创建模式，说明第1步创建失败，需要重新创建
+            console.warn('第7步仍为创建模式，重新创建赛事')
             result = await addEvent(submitData)
             
-            // 保存选择的比赛项目
-            if (selectedItems.value.length > 0) {
-                try {
-                    await saveEventItems({
-                        event_id: result.data.id,
-                        base_item_ids: selectedItems.value
-                    })
-                    // 比赛项目保存成功
-                } catch (error) {
-                    // 保存比赛项目失败
-                    uni.showToast({
-                        title: '比赛创建成功，但项目保存失败',
-                        icon: 'none'
-                    })
-                }
-            }
-            
-            // 第6步时，保存项目设置
-            if (currentStep.value === 6 && eventItems.value && eventItems.value.length > 0) {
-                try {
-                    // 第6步：开始保存项目设置
-                    const settingsResult = await saveItemSettings()
-                    if (settingsResult) {
-                        // 项目设置保存成功
-                    } else {
-                        // 项目设置保存失败
+            if (result && result.data && result.data.id) {
+                // 保存赛事ID，切换到编辑模式
+                eventId.value = result.data.id
+                isEditMode.value = true
+                
+                // 保存选择的比赛项目
+                if (selectedItems.value.length > 0) {
+                    try {
+                        await saveEventItems({
+                            event_id: result.data.id,
+                            base_item_ids: selectedItems.value
+                        })
+                        // 比赛项目保存成功
+                    } catch (error) {
+                        // 保存比赛项目失败
                         uni.showToast({
-                            title: '比赛创建成功，但项目设置保存失败',
+                            title: '比赛创建成功，但项目保存失败',
                             icon: 'none'
-                    })
+                        })
                     }
-                } catch (error) {
-                    // 保存项目设置时出错
-                    uni.showToast({
-                        title: '比赛创建成功，但项目设置保存失败',
-                        icon: 'none'
-                    })
                 }
-            }
-            
-            // 创建成功后清除缓存
-            uni.removeStorageSync('sport_event_form_data')
-            
-            uni.showToast({
-                title: '创建比赛成功',
-                icon: 'success'
-            })
-            
-            // 延迟跳转到赛事详情页面
-            setTimeout(() => {
-                uni.redirectTo({
-                    url: `/addon/sport/pages/event/detail?id=${result.data.id}`
+                
+                // 创建成功后清除缓存
+                uni.removeStorageSync('sport_event_form_data')
+                
+                uni.showToast({
+                    title: '创建比赛成功',
+                    icon: 'success'
                 })
-            }, 1500)
+                
+                // 延迟跳转到赛事详情页面
+                setTimeout(() => {
+                    uni.redirectTo({
+                        url: `/addon/sport/pages/event/detail?id=${result.data.id}`
+                    })
+                }, 1500)
+            } else {
+                uni.showToast({
+                    title: '赛事创建失败，请重试',
+                    icon: 'none'
+                })
+                return
+            }
         }
         
     } catch (error) {
@@ -2458,7 +2431,81 @@ const goToStep = (step: number) => {
 }
 
 const nextStep = async () => {
-    if (currentStep.value === 3) {
+    if (currentStep.value === 1) {
+        // 第1步特殊处理：创建或更新赛事基础信息
+        try {
+            // 验证第1步必填字段
+            if (!formData.value.name.trim()) {
+                uni.showToast({
+                    title: '请输入赛事名称',
+                    icon: 'none'
+                })
+                return
+            }
+            if (!formData.value.organizer_id) {
+                uni.showToast({
+                    title: '请选择主办方',
+                    icon: 'none'
+                })
+                return
+            }
+            
+            // 准备基础赛事数据
+            const basicEventData = {
+                name: formData.value.name.trim(),
+                organizer_id: formData.value.organizer_id,
+                event_type: formData.value.event_type,
+                series_id: formData.value.series_id || 0,
+                year: formData.value.year
+            }
+            
+            if (isEditMode.value) {
+                // 编辑模式：更新现有赛事的基础信息
+                const result = await editEvent(eventId.value, basicEventData)
+                if (result) {
+                    uni.showToast({
+                        title: '基础信息已保存',
+                        icon: 'success',
+                        duration: 1500
+                    })
+                }
+            } else {
+                // 新建模式：创建新赛事
+                const result: any = await addEvent(basicEventData)
+                if (result && result.data && result.data.id) {
+                    // 保存赛事ID，切换到编辑模式
+                    eventId.value = result.data.id
+                    isEditMode.value = true
+                    
+                    uni.showToast({
+                        title: '赛事已创建',
+                        icon: 'success',
+                        duration: 1500
+                    })
+                } else {
+                    uni.showToast({
+                        title: '创建赛事失败，请重试',
+                        icon: 'none'
+                    })
+                    return
+                }
+            }
+            
+            // 进入第2步
+            currentStep.value = 2
+            if (currentStep.value > maxReachedStep.value) {
+                maxReachedStep.value = currentStep.value
+            }
+            
+        } catch (error) {
+            console.error('第1步保存失败:', error)
+            uni.showToast({
+                title: '保存失败，请重试',
+                icon: 'none'
+            })
+            return
+        }
+    } else if (currentStep.value === 3) {
         // 第3步特殊处理：检查时间有效性
         if (!formData.value.start_time || !formData.value.end_time) {
             uni.showToast({
@@ -2525,6 +2572,89 @@ const nextStep = async () => {
         }
     } else if (canProceedToNext.value && currentStep.value < 6) {
         // 其他步骤的正常处理
+        // 第2步特殊处理：保存地点信息
+        if (currentStep.value === 2) {
+            try {
+                // 验证地点信息
+                if (!formData.value.location || !formData.value.address_detail) {
+                    uni.showToast({
+                        title: '请完善地点信息',
+                        icon: 'none'
+                    })
+                    return
+                }
+                
+                // 组合完整地址信息
+                let finalLocationDetail = formData.value.location
+                if (formData.value.address_detail) {
+                    finalLocationDetail += (finalLocationDetail ? ' ' : '') + formData.value.address_detail
+                }
+                
+                // 更新赛事地点信息
+                const locationData = {
+                    location: formData.value.location,
+                    location_detail: finalLocationDetail,
+                    address_detail: formData.value.address_detail,
+                    latitude: formData.value.lat ? parseFloat(formData.value.lat) : null,
+                    longitude: formData.value.lng ? parseFloat(formData.value.lng) : null
+                }
+                
+                const result = await editEvent(eventId.value, locationData)
+                if (result) {
+                    uni.showToast({
+                        title: '地点信息已保存',
+                        icon: 'success',
+                        duration: 1500
+                    })
+                }
+            } catch (error) {
+                console.error('第2步保存失败:', error)
+                uni.showToast({
+                    title: '保存失败，请重试',
+                    icon: 'none'
+                })
+                return
+            }
+        }
+        
+        // 第3步特殊处理：保存时间信息
+        if (currentStep.value === 3) {
+            try {
+                // 验证时间信息
+                if (!formData.value.start_time || !formData.value.end_time) {
+                    uni.showToast({
+                        title: '请完善时间信息',
+                        icon: 'none'
+                    })
+                    return
+                }
+                
+                // 更新赛事时间信息
+                const timeData = {
+                    start_time: formData.value.start_time,
+                    end_time: formData.value.end_time,
+                    registration_start_time: formData.value.registration_start_time || '',
+                    registration_end_time: formData.value.registration_end_time || ''
+                }
+                
+                const result = await editEvent(eventId.value, timeData)
+                if (result) {
+                    uni.showToast({
+                        title: '时间信息已保存',
+                        icon: 'success',
+                        duration: 1500
+                    })
+                }
+            } catch (error) {
+                console.error('第3步保存失败:', error)
+                uni.showToast({
+                    title: '保存失败，请重试',
+                    icon: 'none'
+                })
+                return
+            }
+        }
+        
         // 第4步特殊验证：检查必填字段数量
         if (currentStep.value === 4) {
             if (formData.value.signup_fields.length === 0) {
@@ -2544,6 +2674,29 @@ const nextStep = async () => {
             } else if (formData.value.signup_fields.length >= 3 && requiredFields.length === 0) {
                 uni.showToast({
                     title: '请至少设置一个必填字段',
+                    icon: 'none'
+                })
+                return
+            }
+            
+            try {
+                // 保存报名字段设置
+                const signupData = {
+                    signup_fields: formData.value.signup_fields
+                }
+                
+                const result = await editEvent(eventId.value, signupData)
+                if (result) {
+                    uni.showToast({
+                        title: '报名设置已保存',
+                        icon: 'success',
+                        duration: 1500
+                    })
+                }
+            } catch (error) {
+                console.error('第4步保存失败:', error)
+                uni.showToast({
+                    title: '保存失败，请重试',
                     icon: 'none'
                 })
                 return
@@ -3669,8 +3822,8 @@ onMounted(() => {
     // 处理输入框文本对齐
     setTimeout(() => {
         const inputs = document.querySelectorAll('.form-input, .form-input.with-bg')
-        inputs.forEach(input => {
-            input.addEventListener('input', function() {
+        inputs.forEach((input: any) => {
+            input.addEventListener('input', function(this: any) {
                 if (this.value) {
                     this.style.textAlign = 'left'
                 } else {
@@ -3678,7 +3831,7 @@ onMounted(() => {
                 }
             })
             
-            input.addEventListener('blur', function() {
+            input.addEventListener('blur', function(this: any) {
                 if (!this.value) {
                     this.style.textAlign = 'center'
                 }
