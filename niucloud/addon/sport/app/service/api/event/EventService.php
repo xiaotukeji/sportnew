@@ -672,7 +672,8 @@ class EventService extends BaseApiService
         
         $where = [
             ['event_id', '=', $eventId],
-            ['status', '=', 1]  // 只获取有效的场地
+            ['status', '=', 1],  // 只获取有效的场地
+            ['delete_time', '=', 0]  // 过滤已删除的场地（软删除）
         ];
         
         if (!empty($data['venue_type'])) {
@@ -703,16 +704,8 @@ class EventService extends BaseApiService
         // 验证权限
         $this->checkEventPermission($eventId);
         
-        // 验证场地编码唯一性
+        // 新增场地不需要检查编码冲突，因为是新增操作
         $venue_model = new \addon\sport\app\model\venue\SportVenue();
-        $exists = $venue_model->where([
-            ['event_id', '=', $eventId],
-            ['venue_code', '=', $data['venue_code']]
-        ])->find();
-        
-        if ($exists) {
-            throw new CommonException('场地编码已存在');
-        }
         
         $venue_data = [
             'event_id' => $eventId,
@@ -825,6 +818,7 @@ class EventService extends BaseApiService
         // 软删除场地
         $venue_model->where('id', $venueId)->update([
             'status' => 0,
+            'delete_time' => time(),  // 设置删除时间
             'update_time' => time()
         ]);
     }
@@ -847,10 +841,11 @@ class EventService extends BaseApiService
             $venueCode = $data['code_prefix'] . '_' . $i;
             $venueName = $data['name_prefix'] . $i;
             
-            // 检查编码是否已存在
+            // 检查编码是否已存在（只检查未删除的场地）
             $exists = $venue_model->where([
                 ['event_id', '=', $eventId],
-                ['venue_code', '=', $venueCode]
+                ['venue_code', '=', $venueCode],
+                ['delete_time', '=', 0]  // 只检查未删除的场地
             ])->find();
             
             if ($exists) {

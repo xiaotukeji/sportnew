@@ -1463,7 +1463,7 @@
                                 range-key="label"
                                 @change="onNewVenueTypeChange"
                             >
-                                <view class="picker-value">
+                                <view class="picker-value venue-picker">
                                     <text>{{ getVenueTypeLabel(newVenue.venue_type) || '请选择场地类型' }}</text>
                                     <text class="picker-arrow">></text>
                                 </view>
@@ -1473,10 +1473,16 @@
                         <!-- 添加模式切换 -->
                         <view class="form-item">
                             <text class="form-label">添加模式：</text>
-                            <view class="mode-switch buttons row">
-                                <view class="mode-btn left" :class="{ active: !batchMode }" @tap="batchMode = false">单个添加</view>
-                                <view class="mode-btn right" :class="{ active: batchMode }" @tap="batchMode = true">批量添加</view>
-                            </view>
+                            <radio-group @change="onModeChange" class="mode-radio-group">
+                                <label class="mode-radio-item">
+                                    <radio value="single" :checked="!batchMode" color="#ff6b35" />
+                                    <text class="radio-text">单个添加</text>
+                                </label>
+                                <label class="mode-radio-item">
+                                    <radio value="batch" :checked="batchMode" color="#ff6b35" />
+                                    <text class="radio-text">批量添加</text>
+                                </label>
+                            </radio-group>
                         </view>
                         
                         <!-- 单个添加模式 -->
@@ -1484,7 +1490,7 @@
                             <view class="form-item">
                                 <text class="form-label">场地名称：</text>
                                 <input 
-                                    class="form-input" 
+                                    class="form-input venue-input" 
                                     v-model="newVenue.name"
                                     placeholder="如：乒乓球台1、羽毛球场地A"
                                 />
@@ -1496,7 +1502,7 @@
                             <view class="form-item">
                                 <text class="form-label">名称前缀：</text>
                                 <input 
-                                    class="form-input" 
+                                    class="form-input venue-input" 
                                     v-model="batchVenue.namePrefix"
                                     placeholder="如：乒乓球台"
                                 />
@@ -1505,7 +1511,7 @@
                             <view class="form-item">
                                 <text class="form-label">起始编号：</text>
                                 <input 
-                                    class="form-input" 
+                                    class="form-input venue-input" 
                                     type="number" 
                                     v-model="batchVenue.startNumber"
                                     placeholder="1"
@@ -1515,7 +1521,7 @@
                             <view class="form-item">
                                 <text class="form-label">结束编号：</text>
                                 <input 
-                                    class="form-input" 
+                                    class="form-input venue-input" 
                                     type="number" 
                                     v-model="batchVenue.endNumber"
                                     placeholder="10"
@@ -1526,7 +1532,7 @@
                         <view class="form-item">
                             <text class="form-label">场地位置：</text>
                             <input 
-                                class="form-input" 
+                                class="form-input venue-input" 
                                 v-model="newVenue.location"
                                 placeholder="如：体育馆一楼"
                             />
@@ -1568,7 +1574,7 @@
                 </view>
                 <!-- 底部关闭按钮 -->
                 <view style="padding: 16rpx">
-                    <button class="add-btn" @tap="closeVenueDialog"><text class="add-text">关闭</text></button>
+                    <button class="close-bottom-btn" @tap="closeVenueDialog"><text class="close-bottom-text">关闭</text></button>
                 </view>
             </view>
         </view>
@@ -5303,6 +5309,12 @@ const generateVenueCodePrefix = (venueType: string) => {
     return codeMap[venueType] || 'OT'
 }
 
+// 处理添加模式切换
+const onModeChange = (e: any) => {
+    const value = e.detail.value
+    batchMode.value = value === 'batch'
+}
+
 const addNewVenue = async () => {
     if (!newVenue.value.venue_type) {
         uni.showToast({
@@ -7675,7 +7687,7 @@ picker {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 32rpx;
+    padding: 24rpx 32rpx;
     border-bottom: 1rpx solid #eee;
 }
 
@@ -7689,11 +7701,14 @@ picker {
     width: 60rpx;
     height: 60rpx;
     border-radius: 50%;
-    background: #f5f5f5;
+    background: #f8f9fa;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: none;
+    border: 1px solid #e9ecef;
+    &:active {
+        background: #e9ecef;
+    }
 }
 
 .close-text {
@@ -7702,22 +7717,22 @@ picker {
 }
 
 .dialog-content {
-    padding: 32rpx;
+    padding: 24rpx 32rpx;
 }
 
 .add-venue-section {
-    margin-bottom: 40rpx;
+    margin-bottom: 32rpx;
 }
 
 .section-title {
-    font-size: 32rpx;
+    font-size: 30rpx;
     font-weight: 600;
     color: #333;
-    margin-bottom: 24rpx;
+    margin-bottom: 20rpx;
 }
 
 .form-item {
-    margin-bottom: 24rpx;
+    margin-bottom: 20rpx;
 }
 
 .form-label {
@@ -7855,43 +7870,105 @@ picker {
     font-size: 24rpx;
 }
 
-.mode-switch {
+/* 单选按钮组样式 */
+.mode-radio-group {
     display: flex;
-    border: 1rpx solid #ddd;
-    border-radius: 8rpx;
-    overflow: hidden;
+    gap: 32rpx;
+    margin-top: 8rpx;
 }
 
-.mode-btn {
-    flex: 1;
-    height: 80rpx;
+.mode-radio-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 28rpx;
-    background: #f5f5f5;
-    color: #666;
-    border: none;
+    gap: 12rpx;
 }
 
-.mode-btn.active {
-    background: #007aff;
-    color: #fff;
+.radio-text {
+    font-size: 28rpx;
+    color: #333;
+}
+
+/* 场地输入框样式 */
+.form-input.venue-input {
+    width: 100%;
+    height: 80rpx;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8rpx;
+    padding: 0 20rpx;
+    font-size: 28rpx;
+    color: #333;
+    box-sizing: border-box;
+    line-height: 80rpx;
+    text-align: left;
+    &:focus {
+        border-color: #ff6b35;
+        background-color: #fff;
+    }
+    &::placeholder {
+        color: #999;
+        text-align: left;
+    }
+}
+
+/* 场地选择器样式 */
+.picker-value.venue-picker {
+    width: 100%;
+    height: 80rpx;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8rpx;
+    padding: 0 20rpx;
+    font-size: 28rpx;
+    color: #333;
+    box-sizing: border-box;
+    line-height: 80rpx;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    &:active {
+        border-color: #ff6b35;
+        background-color: #fff;
+    }
 }
 
 .add-btn {
     width: 100%;
     height: 80rpx;
-    background: #007aff;
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
     color: #fff;
-    border: none;
+    border: 2rpx solid #e55a2b;
     border-radius: 8rpx;
     font-size: 28rpx;
     margin-top: 20rpx;
+    box-shadow: 0 4rpx 12rpx rgba(255, 107, 53, 0.3);
+    &:active {
+        transform: translateY(2rpx);
+        box-shadow: 0 2rpx 8rpx rgba(255, 107, 53, 0.3);
+    }
 }
 
 .add-text {
     color: #fff;
+}
+
+/* 底部关闭按钮样式 */
+.close-bottom-btn {
+    width: 100%;
+    height: 80rpx;
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #e9ecef;
+    border-radius: 8rpx;
+    font-size: 28rpx;
+    &:active {
+        background: #e9ecef;
+    }
+}
+
+.close-bottom-text {
+    color: #666;
 }
 
 .existing-venues-section {
