@@ -803,12 +803,15 @@ class EventService extends BaseApiService
             throw new CommonException('场地不存在');
         }
         
-        // 检查是否有关联的有效项目分配（只检查status=1的记录）
+        // 检查是否有关联的有效项目分配（只检查当前赛事下的项目）
         $assignment_model = new \addon\sport\app\model\assignment\SportItemVenueAssignment();
-        $assignments = $assignment_model->where([
-            ['venue_id', '=', $venueId],
-            ['status', '=', 1]
-        ])->count();
+        $assignments = $assignment_model->alias('a')
+            ->join('sport_item i', 'a.item_id = i.id')
+            ->where([
+                ['a.venue_id', '=', $venueId],
+                ['a.status', '=', 1],
+                ['i.event_id', '=', $eventId]  // 只检查当前赛事下的项目
+            ])->count();
         
         if ($assignments > 0) {
             throw new CommonException('该场地已被项目使用，无法删除');
