@@ -5502,8 +5502,8 @@ const deleteVenue = async (venueId: number | string) => {
             if (res.confirm) {
                 try {
                     // 调用删除API
-                    if (currentItemId.value) {
-                        await deleteEventVenue(currentItemId.value, Number(venueId))
+                    if (eventId.value) {
+                        await deleteEventVenue(eventId.value, Number(venueId))
                     } else {
                         throw new Error('赛事ID不存在')
                     }
