@@ -4873,7 +4873,7 @@ const isVenueSelectedForItem = (itemId: number, venueId: number) => {
     return assignments.some(assignment => assignment.venue_id === venueId)
 }
 
-const toggleVenueSelection = (itemId: number, venueId: number) => {
+const toggleVenueSelection = async (itemId: number, venueId: number) => {
     if (!itemVenueAssignments.value[itemId]) {
         itemVenueAssignments.value[itemId] = []
     }
@@ -4883,8 +4883,27 @@ const toggleVenueSelection = (itemId: number, venueId: number) => {
     const existingIndex = assignments.findIndex(assignment => assignment.venue_id === venueId)
     
     if (existingIndex > -1) {
-        // 取消选择：从已分配列表中移除
+        // 取消选择：从已分配列表中移除，并调用后端API
         assignments.splice(existingIndex, 1)
+        
+        try {
+            // 调用后端API取消场地分配
+            await apiRemoveVenueFromItem(itemId, venueId)
+        } catch (error) {
+            console.error('取消场地分配失败:', error)
+            // 如果API调用失败，恢复本地状态
+            const venue = venues.value.find(v => v.id === venueId)
+            if (venue) {
+                const assignmentData = {
+                    venue_id: venue.id,
+                    name: venue.name,
+                    venue_code: venue.venue_code,
+                    venue_type: venue.venue_type,
+                    assignment_type: 2 // 共享模式
+                }
+                assignments.push(assignmentData)
+            }
+        }
     } else {
         // 选择场地：添加到已分配列表
         const venue = venues.value.find(v => v.id === venueId)
