@@ -5501,8 +5501,12 @@ const deleteVenue = async (venueId: number | string) => {
         success: async (res) => {
             if (res.confirm) {
                 try {
-                    // 这里应该调用删除API
-                    // await deleteVenue(venueId)
+                    // 调用删除API
+                    if (currentItemId.value) {
+                        await deleteEventVenue(currentItemId.value, Number(venueId))
+                    } else {
+                        throw new Error('赛事ID不存在')
+                    }
                     
                     // 从本地数据中移除
                     const index = venues.value.findIndex(v => v.id === venueId)
