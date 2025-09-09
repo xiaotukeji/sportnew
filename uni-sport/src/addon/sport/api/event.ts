@@ -33,7 +33,7 @@ export function getEventInfo(event_id: number) {
  * @returns
  */
 export function addEvent(params: Record<string, any>) {
-    return request.post('sport/event', params, { showErrorMessage: true, showSuccessMessage: true })
+    return request.post('sport/event', params, { showErrorMessage: true, showSuccessMessage: false })
 }
 
 /**
@@ -43,7 +43,7 @@ export function addEvent(params: Record<string, any>) {
  * @returns
  */
 export function editEvent(event_id: number, params: Record<string, any>) {
-    return request.put(`sport/event/${event_id}`, params, { showErrorMessage: true, showSuccessMessage: true })
+    return request.put(`sport/event/${event_id}`, params, { showErrorMessage: true, showSuccessMessage: false })
 }
 
 /**
@@ -90,7 +90,7 @@ export function getOrganizerList(organizer_type?: number) {
  * @returns
  */
 export function addOrganizer(params: Record<string, any>) {
-    return request.post('sport/organizer', params, { showErrorMessage: true, showSuccessMessage: true })
+    return request.post('sport/organizer', params, { showErrorMessage: true, showSuccessMessage: false })
 }
 
 /**
@@ -107,7 +107,7 @@ export function getEventSeriesList() {
  * @returns
  */
 export function addEventSeries(params: Record<string, any>) {
-    return request.post('sport/event-series', params, { showErrorMessage: true, showSuccessMessage: true })
+    return request.post('sport/event-series', params, { showErrorMessage: true, showSuccessMessage: false })
 }
 
 /**
@@ -150,7 +150,7 @@ export function getBaseItems(params: { category_id?: number; keyword?: string } 
  * @returns
  */
 export function saveEventItems(data: { event_id: number; base_item_ids: number[] }) {
-    return request.post('sport/event/items/save', data, { showErrorMessage: true, showSuccessMessage: true });
+    return request.post('sport/event/items/save', data, { showErrorMessage: true, showSuccessMessage: false });
 }
 
 /**

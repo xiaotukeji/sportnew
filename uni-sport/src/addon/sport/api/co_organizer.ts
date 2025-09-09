@@ -60,7 +60,7 @@ export function getCoOrganizerList(event_id: number, params: Record<string, any>
 export function addCoOrganizer(params: CoOrganizerItem) {
     return request.post('sport/co-organizer', params, { 
         showErrorMessage: true, 
-        showSuccessMessage: true 
+        showSuccessMessage: false 
     })
 }
 
@@ -82,7 +82,7 @@ export function getCoOrganizerInfo(id: number) {
 export function editCoOrganizer(id: number, params: Partial<CoOrganizerItem>) {
     return request.put(`sport/co-organizer/${id}`, params, { 
         showErrorMessage: true, 
-        showSuccessMessage: true 
+        showSuccessMessage: false 
     })
 }
 
@@ -94,7 +94,7 @@ export function editCoOrganizer(id: number, params: Partial<CoOrganizerItem>) {
 export function deleteCoOrganizer(id: number) {
     return request.delete(`sport/co-organizer/${id}`, {}, { 
         showErrorMessage: true, 
-        showSuccessMessage: true 
+        showSuccessMessage: false 
     })
 }
 
@@ -110,6 +110,6 @@ export function batchAddCoOrganizers(event_id: number, co_organizers: Partial<Co
         co_organizers
     }, { 
         showErrorMessage: true, 
-        showSuccessMessage: true 
+        showSuccessMessage: false 
     })
 }

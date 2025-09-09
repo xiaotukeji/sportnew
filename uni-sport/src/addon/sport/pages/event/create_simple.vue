@@ -82,7 +82,7 @@
                     <view class="form-item">
                         <view class="form-label required">比赛名称</view>
                         <input 
-                            class="form-input" 
+                            class="form-input basic-input" 
                             v-model="formData.name" 
                             placeholder="请输入比赛名称"
                             maxlength="100"
@@ -93,7 +93,7 @@
                     <view class="form-item">
                         <view class="form-label required">主办方</view>
                         <input 
-                            class="form-input readonly" 
+                            class="form-input basic-input readonly" 
                             :value="selectedOrganizerName" 
                             placeholder="请选择主办方"
                             disabled
@@ -118,13 +118,10 @@
                     <view class="form-item">
                         <view class="form-label required">选择地点</view>
                         <view class="location-container">
-                            <input 
-                                class="form-input readonly" 
-                                :value="formData.location || ''" 
-                                placeholder="点击地图选择地点"
-                                disabled
-                                @tap="chooseLocation"
-                            />
+                            <view class="location-display" @tap="chooseLocation">
+                                <text class="location-text-display" v-if="formData.location">{{ formData.location }}</text>
+                                <text class="location-placeholder" v-else>点击地图选择地点</text>
+                            </view>
                             <view class="location-action" @tap="chooseLocation">
                                 <text class="location-icon">📍</text>
                                 <text class="location-text">地图选择</text>
@@ -136,7 +133,7 @@
                     <view class="form-item">
                         <view class="form-label required">详细地址</view>
                         <input 
-                            class="form-input" 
+                            class="form-input basic-input" 
                             v-model="formData.address_detail" 
                             placeholder="请输入详细地址（如：xx楼xx室）"
                             maxlength="200"
@@ -328,11 +325,11 @@
                         <view 
                             v-for="(group, index) in formData.custom_groups" 
                             :key="index"
-                            class="form-item"
+                            class="form-item group-form-item"
                         >
                             <view class="group-item">
                                 <input 
-                                    class="form-input group-input" 
+                                    class="form-input group-input modal-input" 
                                     v-model="group.group_name" 
                                     :placeholder="`分组${index + 1}名称`"
                                     maxlength="50"
@@ -343,11 +340,6 @@
                             </view>
                         </view>
                         
-                        <view class="form-item">
-                            <view class="add-group-btn" @tap="addGroup">
-                                <text class="add-text">+ 添加分组</text>
-                            </view>
-                        </view>
                     </view>
                 </view>
             </view>
@@ -965,7 +957,7 @@
                     <view class="setting-item">
                         <view class="setting-info">
                             <text class="setting-label">编号模式</text>
-                        </view>
+                    </view>
                         <radio-group @change="onNumberingModeChange" class="radio-group">
                             <label class="radio-item">
                                 <radio value="1" :checked="numberPlateSettings.numbering_mode === 1" />
@@ -976,7 +968,7 @@
                                 <text class="radio-text">用户自选</text>
                             </label>
                         </radio-group>
-                    </view>
+                </view>
 
                     <!-- 号码格式设置 -->
                     <view class="setting-section">
@@ -992,8 +984,8 @@
                                 maxlength="10"
                                 @input="onPrefixChange"
                             />
-                        </view>
-
+            </view>
+            
                         <!-- 数字位数 -->
                         <view class="form-item">
                             <view class="form-label">数字位数</view>
@@ -1005,9 +997,9 @@
                             >
                                 <view class="picker-display">
                                     {{ numberLengthOptions[numberLengthIndex] }}
-                                </view>
+                </view>
                             </picker>
-                        </view>
+                    </view>
 
                         <!-- 号码范围和步长 -->
                         <view class="form-row three-columns">
@@ -1020,7 +1012,7 @@
                                     class="form-input with-bg"
                                     @input="onNumberRangeChange"
                                 />
-                            </view>
+                </view>
                             <view class="form-item third">
                                 <view class="form-label">结束号码</view>
                                 <input 
@@ -1040,8 +1032,8 @@
                                     class="form-input with-bg"
                                     @input="onStepChange"
                                 />
-                            </view>
-                        </view>
+            </view>
+        </view>
 
                         <!-- 号码预览 -->
                         <view class="form-item">
@@ -1078,8 +1070,8 @@
                                 />
                                 <button class="add-btn full-width" @tap="addReservedNumber">添加保留号码</button>
                             </view>
-                        </view>
-
+        </view>
+        
                         <!-- 禁用号码 -->
                         <view class="form-item">
                             <view class="number-tags">
@@ -1181,7 +1173,7 @@
                 :disabled="!canProceedToNext"
                 @tap="nextStep"
             >
-                下一步
+                下一步（保存）
             </button>
             <button 
                 v-if="currentStep === 7" 
@@ -1190,7 +1182,7 @@
                 :disabled="submitLoading || !canProceedToNext"
                 @tap="handleSubmit"
             >
-                {{ submitLoading ? (isEditMode ? '保存中...' : '创建比赛') : (isEditMode ? '保存修改' : '创建比赛') }}
+                {{ submitLoading ? (isEditMode ? '保存中...' : '创建比赛') : (isEditMode ? '保存赛事' : '创建比赛') }}
             </button>
         </view>
 
@@ -1290,7 +1282,7 @@
                     <view class="form-item">
                         <view class="form-label required">名称</view>
                         <input 
-                            class="form-input" 
+                            class="form-input modal-input" 
                             v-model="organizerForm.organizer_name" 
                             :placeholder="organizerForm.organizer_type === 1 ? '请输入姓名（个人）' : '请输入机构名称（单位）'"
                             maxlength="100"
@@ -1325,7 +1317,7 @@
                     <view class="form-item">
                         <view class="form-label">联系人</view>
                         <input 
-                            class="form-input" 
+                            class="form-input modal-input" 
                             v-model="organizerForm.contact_name" 
                             placeholder="请输入联系人"
                             maxlength="50"
@@ -1334,7 +1326,7 @@
                     <view class="form-item">
                         <view class="form-label">联系电话</view>
                         <input 
-                            class="form-input" 
+                            class="form-input modal-input" 
                             v-model="organizerForm.contact_phone" 
                             placeholder="请输入联系电话"
                             maxlength="20"
@@ -2268,10 +2260,7 @@ const handleSubmit = async () => {
                 }
             }
             
-            uni.showToast({
-                title: '保存修改成功',
-                icon: 'success'
-            })
+            // 保存修改成功，无需提示
             
             // 延迟跳转到赛事详情页面
             setTimeout(() => {
@@ -2290,38 +2279,38 @@ const handleSubmit = async () => {
                 // 保存赛事ID，切换到编辑模式
                 eventId.value = result.data.id
                 isEditMode.value = true
-                
-                // 保存选择的比赛项目
-                if (selectedItems.value.length > 0) {
-                    try {
-                        await saveEventItems({
-                            event_id: result.data.id,
-                            base_item_ids: selectedItems.value
-                        })
-                        // 比赛项目保存成功
-                    } catch (error) {
-                        // 保存比赛项目失败
-                        uni.showToast({
-                            title: '比赛创建成功，但项目保存失败',
-                            icon: 'none'
-                        })
-                    }
-                }
-                
-                // 创建成功后清除缓存
-                uni.removeStorageSync('sport_event_form_data')
-                
-                uni.showToast({
-                    title: '创建比赛成功',
-                    icon: 'success'
-                })
-                
-                // 延迟跳转到赛事详情页面
-                setTimeout(() => {
-                    uni.redirectTo({
-                        url: `/addon/sport/pages/event/detail?id=${result.data.id}`
+            
+            // 保存选择的比赛项目
+            if (selectedItems.value.length > 0) {
+                try {
+                    await saveEventItems({
+                        event_id: result.data.id,
+                        base_item_ids: selectedItems.value
                     })
-                }, 1500)
+                    // 比赛项目保存成功
+                } catch (error) {
+                    // 保存比赛项目失败
+                    uni.showToast({
+                        title: '比赛创建成功，但项目保存失败',
+                        icon: 'none'
+                    })
+                }
+            }
+            
+            // 创建成功后清除缓存
+            uni.removeStorageSync('sport_event_form_data')
+            
+            uni.showToast({
+                title: '创建比赛成功',
+                icon: 'success'
+            })
+            
+            // 延迟跳转到赛事详情页面
+            setTimeout(() => {
+                uni.redirectTo({
+                    url: `/addon/sport/pages/event/detail?id=${result.data.id}`
+                })
+            }, 1500)
             } else {
                 uni.showToast({
                     title: '赛事创建失败，请重试',
@@ -2352,47 +2341,14 @@ const validateTime = () => {
 
 // 是否可以进入下一步
 const canProceedToNext = computed(() => {
-    switch (currentStep.value) {
-        case 1:
-            // 第1步：要求比赛名称和主办方（必填）
+    // 第1步需要验证，因为这是基础信息
+    if (currentStep.value === 1) {
             return formData.value.name.trim() !== '' && formData.value.organizer_id > 0
-        case 2:
-            // 第2步：要求地点信息
-            return formData.value.location && formData.value.address_detail
-        case 3:
-            // 第3步：要求时间信息，且结束时间必须大于开始时间
-            return formData.value.start_time > 0 && formData.value.end_time > 0 && formData.value.start_time < formData.value.end_time
-        case 4:
-            // 第4步：报名参数，必须至少选择了一个字段，且必填字段数量合理
-            if (formData.value.signup_fields.length === 0) {
-                return false
-            }
-            const requiredFields = formData.value.signup_fields.filter(f => f.required)
-            // 如果总字段数少于3个，则所有字段都必须是必填的
-            // 如果总字段数大于等于3个，则必填字段数不能为0
-            if (formData.value.signup_fields.length < 3) {
-                return requiredFields.length === formData.value.signup_fields.length
-            } else {
-                return requiredFields.length > 0
-            }
-        case 5:
-            // 第5步：要求选择项目
-            return selectedItems.value.length > 0
-        case 6:
-            // 第6步：项目设置，只要有项目数据就可以进入下一步
-            if (!eventItems.value || eventItems.value.length === 0) {
-                // 第6步验证失败：没有项目数据
-                return false
-            }
-            
-            // 第6步验证通过：有项目数据，可以进入下一步
-            return true
-        case 7:
-            // 第7步：更多设置，总是可以进入下一步（完成）
-            return true
-        default:
-            return false
     }
+    
+    // 其他步骤在进入页面时不验证，只在点击下一步时验证
+    // 这样用户刚进入页面时按钮是可用的，不会因为数据为空而禁用
+            return true
 })
 
 // 步骤控制
@@ -2432,6 +2388,194 @@ const goToStep = (step: number) => {
 }
 
 const nextStep = async () => {
+    // 简单逻辑：每次点击下一步只跳转一步
+    console.log('点击下一步，当前步骤:', currentStep.value)
+    
+    // 验证当前步骤数据
+    if (!canProceedToNext.value) {
+        console.log('当前步骤数据不完整，不能跳转')
+        return
+    }
+    
+    // 保存当前步骤数据（如果需要）
+    if (currentStep.value === 1) {
+        // 第1步：验证并保存基础信息
+        if (!formData.value.name.trim()) {
+            uni.showToast({ title: '请输入赛事名称', icon: 'none' })
+            return
+        }
+        if (!formData.value.organizer_id) {
+            uni.showToast({ title: '请选择主办方', icon: 'none' })
+            return
+        }
+        
+        try {
+            const basicEventData: any = {
+                step: 1,
+                name: formData.value.name.trim(),
+                organizer_id: formData.value.organizer_id
+            }
+            
+            if (formData.value.event_type === 2 && formData.value.series_id && formData.value.series_id > 0) {
+                basicEventData.event_type = formData.value.event_type
+                basicEventData.series_id = formData.value.series_id
+            } else if (formData.value.event_type === 1) {
+                basicEventData.event_type = formData.value.event_type
+            }
+            
+            console.log('第1步保存数据:', basicEventData)
+            
+            if (isEditMode.value) {
+                const result: any = await editEvent(eventId.value, basicEventData)
+                if (result) {
+                    // 基础信息已保存，无需提示
+                }
+            } else {
+                const result: any = await addEvent(basicEventData)
+                if (result && result.data && result.data.id) {
+                    eventId.value = result.data.id
+                    isEditMode.value = true
+                    // 赛事已创建，无需提示
+                }
+            }
+        } catch (error) {
+            console.error('第1步保存失败:', error)
+            uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+            return
+        }
+    } else if (currentStep.value === 2) {
+        // 第2步：验证并保存地址信息
+        if (!formData.value.location || !formData.value.address_detail) {
+            uni.showToast({ title: '请完善地点信息', icon: 'none' })
+            return
+        }
+        
+        try {
+            const locationData: any = {
+                step: 2,
+                location: formData.value.location,
+                address_detail: formData.value.address_detail
+            }
+            
+            if (formData.value.lat) locationData.latitude = parseFloat(formData.value.lat)
+            if (formData.value.lng) locationData.longitude = parseFloat(formData.value.lng)
+            
+            console.log('第2步保存数据:', locationData)
+            
+            const result = await editEvent(eventId.value, locationData)
+            if (result) {
+                // 地点信息已保存，无需提示
+            }
+        } catch (error) {
+            console.error('第2步保存失败:', error)
+            uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+            return
+        }
+    } else if (currentStep.value === 3) {
+        // 第3步：验证并保存时间信息
+        if (!formData.value.start_time || !formData.value.end_time) {
+            uni.showToast({ title: '请完善时间信息', icon: 'none' })
+            return
+        }
+        if (formData.value.start_time >= formData.value.end_time) {
+            uni.showToast({ title: '结束时间必须大于开始时间', icon: 'none' })
+            return
+        }
+        
+        // 验证分组信息
+        if (formData.value.custom_groups.length > 0) {
+            for (let i = 0; i < formData.value.custom_groups.length; i++) {
+                const group = formData.value.custom_groups[i]
+                if (!group.group_name || group.group_name.trim() === '') {
+                    uni.showToast({ 
+                        title: `请填写分组${i + 1}的名称或删除该分组`, 
+                        icon: 'none' 
+                    })
+                    return
+                }
+            }
+        }
+        
+        try {
+            const timeData: any = {
+                step: 3,
+                start_time: formData.value.start_time,
+                end_time: formData.value.end_time
+            }
+            
+            if (formData.value.registration_start_time) {
+                timeData.registration_start_time = formData.value.registration_start_time
+            }
+            if (formData.value.registration_end_time) {
+                timeData.registration_end_time = formData.value.registration_end_time
+            }
+            
+            console.log('第3步保存数据:', timeData)
+            
+            const result = await editEvent(eventId.value, timeData)
+            if (result) {
+                // 时间信息已保存，无需提示
+            }
+        } catch (error) {
+            console.error('第3步保存失败:', error)
+            uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+            return
+        }
+    } else if (currentStep.value === 4) {
+        // 第4步：验证并保存报名设置
+        if (formData.value.signup_fields.length === 0) {
+            uni.showToast({ title: '请至少选择一个报名字段', icon: 'none' })
+            return
+        }
+        
+        const requiredFields = formData.value.signup_fields.filter(f => f.required)
+        if (formData.value.signup_fields.length < 3 && requiredFields.length !== formData.value.signup_fields.length) {
+            uni.showToast({ title: '请将所有选择的字段设为必填', icon: 'none' })
+            return
+        } else if (formData.value.signup_fields.length >= 3 && requiredFields.length === 0) {
+            uni.showToast({ title: '请至少设置一个必填字段', icon: 'none' })
+            return
+        }
+        
+        try {
+            const signupData: any = {
+                step: 4,
+                signup_fields: formData.value.signup_fields
+            }
+            
+            console.log('第4步保存数据:', signupData)
+            
+            const result = await editEvent(eventId.value, signupData)
+            if (result) {
+                // 报名设置已保存，无需提示
+            }
+        } catch (error) {
+            console.error('第4步保存失败:', error)
+            uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+            return
+        }
+    }
+    
+    // 跳转到下一步
+    currentStep.value++
+    console.log('跳转到步骤:', currentStep.value)
+    
+    if (currentStep.value > maxReachedStep.value) {
+        maxReachedStep.value = currentStep.value
+    }
+    
+    // 进入第5步时加载分类数据
+    if (currentStep.value === 5) {
+        loadCategories()
+    }
+    
+    // 进入第6步时初始化项目数据
+    if (currentStep.value === 6) {
+        initEventItems()
+    }
+}
+
+const nextStepOld = async () => {
     if (currentStep.value === 1) {
         // 第1步特殊处理：创建或更新赛事基础信息
         try {
@@ -2468,13 +2612,12 @@ const nextStep = async () => {
             }
             
             // 详细调试信息
-            console.log('=== 第1步调试信息 ===')
-            console.log('formData原始数据:', formData.value)
-            console.log('第1步提交数据:', basicEventData)
+            console.log('=== 第1步跳转到第2步 ===')
+            console.log('第1步提交的数据:', basicEventData)
             console.log('比赛名称:', formData.value.name)
             console.log('主办方ID:', formData.value.organizer_id)
             console.log('赛事类型:', formData.value.event_type)
-            console.log('年份:', formData.value.year)
+            console.log('系列赛ID:', formData.value.series_id)
             console.log('==================')
             
             if (isEditMode.value) {
@@ -2487,16 +2630,7 @@ const nextStep = async () => {
                         console.log('后端调试信息:', result.debug)
                     }
                     if (result) {
-                        uni.showToast({
-                            title: '基础信息已保存',
-                            icon: 'success',
-                            duration: 1500
-                        })
-                        // 保存成功后跳转到下一步
-                        currentStep.value++
-                        if (currentStep.value > maxReachedStep.value) {
-                            maxReachedStep.value = currentStep.value
-                        }
+                        // 基础信息已保存，无需提示
                     }
                 } catch (error) {
                     console.error('第1步保存失败:', error)
@@ -2514,11 +2648,7 @@ const nextStep = async () => {
                     eventId.value = result.data.id
                     isEditMode.value = true
                     
-                    uni.showToast({
-                        title: '赛事已创建',
-                        icon: 'success',
-                        duration: 1500
-                    })
+                    // 赛事已创建，无需提示
                 } else {
                     uni.showToast({
                         title: '创建赛事失败，请重试',
@@ -2558,6 +2688,20 @@ const nextStep = async () => {
             })
             return
         }
+        
+        // 验证分组信息
+        if (formData.value.custom_groups.length > 0) {
+            for (let i = 0; i < formData.value.custom_groups.length; i++) {
+                const group = formData.value.custom_groups[i]
+                if (!group.group_name || group.group_name.trim() === '') {
+                    uni.showToast({
+                        title: `请填写分组${i + 1}的名称或删除该分组`,
+                        icon: 'none'
+                    })
+                    return
+                }
+            }
+        }
     }
     
     if (currentStep.value === 6) {
@@ -2577,11 +2721,7 @@ const nextStep = async () => {
                         maxReachedStep.value = currentStep.value
                     }
                     
-                    uni.showToast({
-                        title: '项目设置已保存',
-                        icon: 'success',
-                        duration: 1500
-                    })
+                    // 项目设置已保存，无需提示
                 } else {
                     // 项目设置保存失败
                     uni.showToast({
@@ -2646,9 +2786,8 @@ const nextStep = async () => {
                 }
                 
                 // 详细调试信息
-                console.log('=== 第2步调试信息 ===')
-                console.log('formData原始数据:', formData.value)
-                console.log('第2步提交数据:', locationData)
+                console.log('=== 第2步跳转到第3步 ===')
+                console.log('第2步提交的数据:', locationData)
                 console.log('地点:', formData.value.location)
                 console.log('详细地址:', formData.value.address_detail)
                 console.log('经纬度:', formData.value.lat, formData.value.lng)
@@ -2656,16 +2795,7 @@ const nextStep = async () => {
                 const result = await editEvent(eventId.value, locationData)
                 console.log('第2步保存结果:', result)
                 if (result) {
-                    uni.showToast({
-                        title: '地点信息已保存',
-                        icon: 'success',
-                        duration: 1500
-                    })
-                    // 保存成功后跳转到下一步
-                    currentStep.value++
-                    if (currentStep.value > maxReachedStep.value) {
-                        maxReachedStep.value = currentStep.value
-                    }
+                    // 地点信息已保存，无需提示
                 }
             } catch (error) {
                 console.error('第2步保存失败:', error)
@@ -2689,6 +2819,20 @@ const nextStep = async () => {
                     return
                 }
                 
+                // 验证分组信息
+                if (formData.value.custom_groups.length > 0) {
+                    for (let i = 0; i < formData.value.custom_groups.length; i++) {
+                        const group = formData.value.custom_groups[i]
+                        if (!group.group_name || group.group_name.trim() === '') {
+                            uni.showToast({
+                                title: `请填写分组${i + 1}的名称或删除该分组`,
+                                icon: 'none'
+                            })
+                            return
+                        }
+                    }
+                }
+                
                 // 第3步：只提交时间相关字段
                 const timeData: any = {
                     step: 3, // 第3步标识
@@ -2705,9 +2849,8 @@ const nextStep = async () => {
                 }
                 
                 // 详细调试信息
-                console.log('=== 第3步调试信息 ===')
-                console.log('formData原始数据:', formData.value)
-                console.log('第3步提交数据:', timeData)
+                console.log('=== 第3步跳转到第4步 ===')
+                console.log('第3步提交的数据:', timeData)
                 console.log('开始时间:', formData.value.start_time)
                 console.log('结束时间:', formData.value.end_time)
                 console.log('报名开始时间:', formData.value.registration_start_time)
@@ -2716,16 +2859,7 @@ const nextStep = async () => {
                 const result = await editEvent(eventId.value, timeData)
                 console.log('第3步保存结果:', result)
                 if (result) {
-                    uni.showToast({
-                        title: '时间信息已保存',
-                        icon: 'success',
-                        duration: 1500
-                    })
-                    // 保存成功后跳转到下一步
-                    currentStep.value++
-                    if (currentStep.value > maxReachedStep.value) {
-                        maxReachedStep.value = currentStep.value
-                    }
+                    // 时间信息已保存，无需提示
                 }
             } catch (error) {
                 console.error('第3步保存失败:', error)
@@ -2769,24 +2903,14 @@ const nextStep = async () => {
                 }
                 
                 // 详细调试信息
-                console.log('=== 第4步调试信息 ===')
-                console.log('formData原始数据:', formData.value)
-                console.log('第4步提交数据:', signupData)
+                console.log('=== 第4步跳转到第5步 ===')
+                console.log('第4步提交的数据:', signupData)
                 console.log('报名字段:', formData.value.signup_fields)
                 console.log('==================')
                 const result = await editEvent(eventId.value, signupData)
                 console.log('第4步保存结果:', result)
                 if (result) {
-                    uni.showToast({
-                        title: '报名设置已保存',
-                        icon: 'success',
-                        duration: 1500
-                    })
-                    // 保存成功后跳转到下一步
-                    currentStep.value++
-                    if (currentStep.value > maxReachedStep.value) {
-                        maxReachedStep.value = currentStep.value
-                    }
+                    // 报名设置已保存，无需提示
                 }
             } catch (error) {
                 console.error('第4步保存失败:', error)
@@ -2798,8 +2922,21 @@ const nextStep = async () => {
             }
         }
         
-        // 注意：步骤跳转现在由每个步骤的保存成功后手动控制
-        // 不再在这里自动跳转，避免跳过步骤
+        // 保存成功后跳转到下一步
+        currentStep.value++
+        if (currentStep.value > maxReachedStep.value) {
+            maxReachedStep.value = currentStep.value
+        }
+        
+        // 进入第5步时加载分类数据
+        if (currentStep.value === 5) {
+            loadCategories()
+        }
+        
+        // 进入第6步时初始化项目数据
+        if (currentStep.value === 6) {
+            initEventItems()
+        }
     }
 }
 
@@ -3029,10 +3166,7 @@ const performChooseLocation = () => {
             // 组合完整地址用于提交
             formData.value.full_address = locationName
             
-            uni.showToast({
-                title: '地址选择成功',
-                icon: 'success'
-            })
+            // 地址选择成功，无需提示
         },
         fail: (res) => {
             if (res.errMsg && res.errMsg.includes('cancel')) {
@@ -3232,7 +3366,7 @@ const uploadOrganizerImageFile = (filePath: string) => {
     }).then((res: any) => {
         uni.hideLoading()
         organizerForm.value.organizer_license_img = res.data.url
-        uni.showToast({ title: '上传成功', icon: 'success' })
+        // 上传成功，无需提示
     }).catch(err => {
         uni.hideLoading()
         uni.showToast({ title: '上传失败', icon: 'none' })
@@ -3298,10 +3432,7 @@ const addOrganizerConfirm = async () => {
             organizer_license_img: ''
         }
         
-        uni.showToast({
-            title: '添加主办方成功',
-            icon: 'success'
-        })
+        // 添加主办方成功，无需提示
     } catch (error) {
         console.error('添加主办方失败:', error)
     }
@@ -3357,10 +3488,7 @@ const addSeriesConfirm = async () => {
             description: ''
         }
         
-        uni.showToast({
-            title: '添加系列赛成功',
-            icon: 'success'
-        })
+        // 添加系列赛成功，无需提示
     } catch (error) {
         // 添加系列赛失败
     }
@@ -3901,13 +4029,15 @@ onMounted(() => {
     // 初始化项目选择等其他逻辑
     tempSelectedItems.value = [...selectedItems.value]
 
-    // 首次创建默认选择：姓名、手机、身份证号（三个必填）
+    // 创建模式默认选择：姓名、手机、身份证号（三个必填）
+    // 编辑模式保持原有设置，不设置默认值
     if (!isEditMode.value && (!formData.value.signup_fields || formData.value.signup_fields.length === 0)) {
         const defaults = ['name','mobile','id_card']
         formData.value.signup_fields = defaults.map(k => {
             const opt = allSignupFieldOptions.find(o => o.key === k)!
             return { key: k, label: opt.label, required: true }
         })
+        console.log('创建模式设置默认报名字段:', formData.value.signup_fields)
     }
 
     // 注意：uni-app不支持直接操作DOM，文本对齐通过CSS处理
@@ -4019,6 +4149,20 @@ const validateForm = () => {
             icon: 'none'
         })
         return false
+    }
+    
+    // 验证分组信息
+    if (formData.value.custom_groups.length > 0) {
+        for (let i = 0; i < formData.value.custom_groups.length; i++) {
+            const group = formData.value.custom_groups[i]
+            if (!group.group_name || group.group_name.trim() === '') {
+                uni.showToast({
+                    title: `请填写分组${i + 1}的名称或删除该分组`,
+                    icon: 'none'
+                })
+                return false
+            }
+        }
     }
     
     return true
@@ -4677,11 +4821,7 @@ const saveItemSettings = async () => {
             }
         }
         
-        uni.showToast({
-            title: '项目设置已保存',
-            icon: 'success',
-            duration: 1500
-        })
+        // 项目设置已保存，无需提示
         
         return true
     } catch (error: any) {
@@ -5244,10 +5384,7 @@ const addNewVenue = async () => {
             // 调用批量添加API
             await apiBatchAddVenues(eventId.value, data)
             
-            uni.showToast({
-                title: `成功添加${count}个场地`,
-                icon: 'success'
-            })
+            // 成功添加场地，无需提示
         } else {
             // 单个添加模式
             if (!newVenue.value.name) {
@@ -5294,10 +5431,7 @@ const addNewVenue = async () => {
             // 调用添加API
             await addEventVenue(eventId.value, data)
             
-            uni.showToast({
-                title: '场地添加成功',
-                icon: 'success'
-            })
+            // 场地添加成功，无需提示
         }
         
         // 重新加载场地列表
@@ -5364,10 +5498,7 @@ const deleteVenue = async (venueId: number | string) => {
                         venues.value.splice(index, 1)
                     }
                     
-                    uni.showToast({
-                        title: '删除成功',
-                        icon: 'success'
-                    })
+                    // 删除成功，无需提示
                 } catch (error) {
                     console.error('删除场地失败:', error)
                     uni.showToast({
@@ -5730,7 +5861,7 @@ const deleteVenue = async (venueId: number | string) => {
 
 
 .form-item {
-    padding: 24rpx 32rpx;
+    padding: 20rpx 0;
     border-bottom: 1px solid #f8f8f8;
     
     &:last-child {
@@ -5740,7 +5871,7 @@ const deleteVenue = async (venueId: number | string) => {
     .form-label {
         font-size: 28rpx;
         color: #333;
-        margin-bottom: 16rpx;
+        margin-bottom: 12rpx;
         
         &.required::after {
             content: '*';
@@ -5786,20 +5917,46 @@ const deleteVenue = async (venueId: number | string) => {
 
 .location-container {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 16rpx;
     
-    .form-input {
-        flex: 1;
+    .location-display {
+        width: 100%;
+        min-height: 88rpx;
+        padding: 20rpx;
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8rpx;
+        box-sizing: border-box;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        
+        .location-text-display {
+            font-size: 28rpx;
+            color: #333;
+            line-height: 1.4;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+        
+        .location-placeholder {
+            font-size: 28rpx;
+            color: #999;
+            line-height: 1.4;
+        }
     }
     
     .location-action {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 8rpx;
         padding: 16rpx 24rpx;
         background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
         border-radius: 12rpx;
+        width: 100%;
+        box-sizing: border-box;
         
         .location-icon {
             font-size: 24rpx;
@@ -5828,13 +5985,31 @@ const deleteVenue = async (venueId: number | string) => {
         .form-input {
             flex: 1;
             padding-right: 40rpx;
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8rpx;
+            padding: 0 20rpx;
+            height: 80rpx;
+            line-height: 80rpx;
+            box-sizing: border-box;
+            text-align: left;
+            
+            &::placeholder {
+                color: #999;
+                text-align: left;
+                position: static;
+                transform: none;
+                opacity: 1;
+            }
         }
         
         .picker-arrow {
             position: absolute;
-            right: 12rpx;
+            right: 20rpx;
             font-size: 24rpx;
             color: #999;
+            top: 50%;
+            transform: translateY(-50%);
         }
     }
 }
@@ -6062,13 +6237,13 @@ picker {
         }
         
         &.submit-btn {
-            background: linear-gradient(135deg, #ff4757 0%, #ff3742 100%);
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
             color: white;
-            border: 2rpx solid #e63946;
+            border: 2rpx solid #e55a2b;
             
             &:active {
                 transform: translateY(2rpx);
-                box-shadow: 0 2rpx 8rpx rgba(255, 71, 87, 0.3);
+                box-shadow: 0 2rpx 8rpx rgba(255, 107, 53, 0.3);
             }
             
             &.loading {
@@ -6252,7 +6427,7 @@ picker {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 64rpx;
+    padding: 40rpx;
 }
 
 .modal-container {
@@ -6260,7 +6435,7 @@ picker {
     border-radius: 16rpx;
     width: 100%;
     max-width: 600rpx;
-    max-height: 80vh;
+    max-height: 85vh;
     overflow: hidden;
 }
 
@@ -6268,7 +6443,7 @@ picker {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 32rpx;
+    padding: 24rpx 32rpx;
     border-bottom: 1px solid #f0f0f0;
     
     .modal-title {
@@ -6285,14 +6460,14 @@ picker {
 }
 
 .modal-content {
-    padding: 32rpx;
-    max-height: 50vh;
+    padding: 24rpx 32rpx;
+    max-height: 60vh;
     overflow-y: auto;
 }
 
 /* 图片上传相关样式 */
 .upload-container {
-    margin-top: 20rpx;
+    margin-top: 12rpx;
     
     .image-preview {
         position: relative;
@@ -6345,13 +6520,45 @@ picker {
     }
 }
 
+/* 弹窗内输入框样式 */
+.form-input.modal-input {
+    width: 100%;
+    height: 80rpx;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8rpx;
+    padding: 0 20rpx;
+    font-size: 28rpx;
+    color: #333;
+    box-sizing: border-box;
+    line-height: 80rpx;
+    text-align: left;
+    
+    &:focus {
+        border-color: #ff6b35;
+        background-color: #fff;
+    }
+    
+    &::placeholder {
+        color: #999;
+        text-align: left;
+        position: static;
+        transform: none;
+        opacity: 1;
+    }
+    
+    &:focus::placeholder {
+        opacity: 0.6;
+    }
+}
+
 .modal-footer {
     display: flex;
     border-top: 1px solid #f0f0f0;
     
     .modal-btn {
         flex: 1;
-        height: 88rpx;
+        height: 80rpx;
         border: none;
         font-size: 28rpx;
         cursor: pointer;
@@ -6484,7 +6691,7 @@ picker {
 .group-item {
     display: flex;
     align-items: center;
-    gap: 16rpx;
+    gap: 12rpx;
     
     .group-input {
         flex: 1;
@@ -6508,16 +6715,14 @@ picker {
     }
 }
 
-.add-group-btn {
-    padding: 24rpx 0;
-    text-align: center;
-    border: 2rpx dashed #e0e0e0;
-    border-radius: 12rpx;
-    margin-top: 16rpx;
+
+/* 分组表单项样式 */
+.form-item.group-form-item {
+    padding: 12rpx 0;
+    border-bottom: 1px solid #f8f8f8;
     
-    .add-text {
-        color: #ff6b35;
-        font-size: 28rpx;
+    &:last-child {
+        border-bottom: none;
     }
 }
 
@@ -6525,7 +6730,7 @@ picker {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 24rpx 0;
+    padding: 16rpx 0;
     
     .group-default-text {
         color: #999;
@@ -7589,6 +7794,44 @@ picker {
 }
 
 .form-input.with-bg:not(:placeholder-shown)::placeholder {
+    opacity: 0;
+}
+
+// 基础信息输入框样式（比赛名称、主办方）
+.form-input.basic-input {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8rpx;
+    padding: 0 20rpx;
+    height: 88rpx;
+    line-height: 88rpx;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.form-input.basic-input:focus {
+    text-align: left;
+    border-color: #ff6b35;
+}
+
+.form-input.basic-input::placeholder {
+    text-align: left;
+    color: #999;
+    position: absolute;
+    left: 20rpx;
+    right: 20rpx;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: opacity 0.3s;
+    opacity: 1;
+}
+
+.form-input.basic-input:focus::placeholder {
+    opacity: 1;
+    color: #aaa;
+}
+
+.form-input.basic-input:not(:placeholder-shown)::placeholder {
     opacity: 0;
 }
 
