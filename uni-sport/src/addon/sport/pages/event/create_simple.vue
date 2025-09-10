@@ -3822,7 +3822,12 @@ const loadEventData = async () => {
         tempSelectedItems.value = [...selectedItems.value]
         
         // 加载协办单位列表
-        await loadCoOrganizerList()
+        try {
+            await loadCoOrganizerList()
+        } catch (error) {
+            console.error('加载协办单位列表失败:', error)
+            // 协办单位加载失败不影响整体流程
+        }
         
         // 加载显示设置
         if (eventData.age_group_display !== undefined) {
