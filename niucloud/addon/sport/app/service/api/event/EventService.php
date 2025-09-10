@@ -120,10 +120,61 @@ class EventService extends BaseApiService
             $info['signup_fields'] = [];
         }
         
-        // 暂时注释掉协办方和号码牌设置查询，避免影响编辑功能
-        // TODO: 后续优化时再添加
-        $info['co_organizers'] = [];
-        $info['number_plate_settings'] = [];
+        return $info;
+    }
+
+    /**
+     * 获取赛事详情页完整信息（包含协办方和号码牌设置）
+     * @param int $id
+     * @return array
+     */
+    public function getDetailInfo(int $id)
+    {
+        // 先获取基础信息
+        $info = $this->getInfo($id);
+        
+        // 获取协办方信息
+        try {
+            $coOrganizers = (new \addon\sport\app\model\co_organizer\SportEventCoOrganizer())
+                ->where([
+                    ['event_id', '=', $id],
+                    ['status', '=', 1]
+                ])
+                ->order('sort asc, id asc')
+                ->select()
+                ->toArray();
+            
+            $info['co_organizers'] = $coOrganizers;
+        } catch (\Exception $e) {
+            // 如果协办方表不存在或查询失败，设置为空数组
+            $info['co_organizers'] = [];
+        }
+        
+        // 获取号码牌设置
+        try {
+            $numberPlateSettings = (new \addon\sport\app\model\number_rule\SportEventNumberRule())
+                ->where([
+                    ['event_id', '=', $id],
+                    ['status', '=', 1]
+                ])
+                ->findOrEmpty()
+                ->toArray();
+            
+            if (!empty($numberPlateSettings)) {
+                // 处理保留号码和禁用号码
+                if (!empty($numberPlateSettings['reserved_numbers'])) {
+                    $numberPlateSettings['reserved_numbers'] = json_decode($numberPlateSettings['reserved_numbers'], true) ?: [];
+                }
+                if (!empty($numberPlateSettings['disabled_numbers'])) {
+                    $numberPlateSettings['disabled_numbers'] = json_decode($numberPlateSettings['disabled_numbers'], true) ?: [];
+                }
+            }
+            
+            $info['number_plate_settings'] = $numberPlateSettings;
+        } catch (\Exception $e) {
+            // 如果号码牌设置表不存在或查询失败，设置为空数组
+            $info['number_plate_settings'] = [];
+        }
         
         return $info;
     }

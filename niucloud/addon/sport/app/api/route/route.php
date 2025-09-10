@@ -38,6 +38,9 @@ Route::group('sport', function() {
     // 获取赛事详情
     Route::get('event/:id', 'addon\sport\app\api\controller\event\Event@info');
     
+    // 获取赛事详情页完整信息（包含协办方和号码牌设置）
+    Route::get('event/:id/detail', 'addon\sport\app\api\controller\event\Event@detailInfo');
+    
     // 添加赛事
     Route::post('event', 'addon\sport\app\api\controller\event\Event@add');
     

@@ -488,7 +488,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useLoginCheck } from '@/addon/sport/hooks/useLoginCheck'
-import { getEventInfo, getEventItems } from '@/addon/sport/api/event'
+import { getEventInfo, getEventItems, getEventDetailInfo } from '@/addon/sport/api/event'
 
 // 使用登录检查
 const { requireLogin } = useLoginCheck()
@@ -753,9 +753,10 @@ const loadEventDetail = async () => {
     
     try {
         loading.value = true
-        const response: any = await getEventInfo(eventId.value)
+        // 使用新的详情页API，包含协办方和号码牌设置
+        const response: any = await getEventDetailInfo(eventId.value)
         eventInfo.value = response.data
-        console.log('赛事详情:', eventInfo.value)
+        console.log('赛事详情（完整）:', eventInfo.value)
         
         // 加载赛事项目列表
         await loadEventItems()

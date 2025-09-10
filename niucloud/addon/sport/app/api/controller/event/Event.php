@@ -49,6 +49,16 @@ class Event extends BaseApiController
     }
 
     /**
+     * 获取赛事详情页完整信息（包含协办方和号码牌设置）
+     * @param int $id
+     * @return \think\Response
+     */
+    public function detailInfo(int $id)
+    {
+        return success((new EventService())->getDetailInfo($id));
+    }
+
+    /**
      * 添加赛事
      * @return \think\Response
      */

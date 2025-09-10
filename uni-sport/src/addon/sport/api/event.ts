@@ -28,6 +28,15 @@ export function getEventInfo(event_id: number) {
 }
 
 /**
+ * 获取赛事详情页完整信息（包含协办方和号码牌设置）
+ * @param event_id 赛事ID
+ * @returns
+ */
+export function getEventDetailInfo(event_id: number) {
+    return request.get(`sport/event/${event_id}/detail`);
+}
+
+/**
  * 添加赛事
  * @param params
  * @returns

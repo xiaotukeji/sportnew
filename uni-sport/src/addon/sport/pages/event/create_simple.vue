@@ -2395,7 +2395,11 @@ const goToStep = (step: number) => {
 
 const nextStep = async () => {
     // 简单逻辑：每次点击下一步只跳转一步
+    console.log('=== nextStep 函数开始执行 ===')
     console.log('点击下一步，当前步骤:', currentStep.value)
+    console.log('canProceedToNext.value:', canProceedToNext.value)
+    console.log('eventItems.value:', eventItems.value)
+    console.log('eventItems数量:', eventItems.value?.length || 0)
     
     // 验证当前步骤数据
     if (!canProceedToNext.value) {
@@ -2560,6 +2564,56 @@ const nextStep = async () => {
             uni.showToast({ title: '保存失败，请重试', icon: 'none' })
             return
         }
+    } else if (currentStep.value === 6) {
+        // 第6步特殊处理：保存项目设置并进入第7步
+        console.log('=== 第6步：开始保存项目设置 ===')
+        console.log('eventItems.value:', eventItems.value)
+        console.log('eventItems数量:', eventItems.value?.length || 0)
+        
+        try {
+            // 检查是否有项目设置需要保存
+            if (eventItems.value && eventItems.value.length > 0) {
+                console.log('开始调用saveItemSettings函数...')
+                const settingsResult = await saveItemSettings()
+                console.log('saveItemSettings返回结果:', settingsResult)
+                
+                if (settingsResult) {
+                    console.log('项目设置保存成功，进入第7步')
+                    // 项目设置保存成功，进入第7步
+                    currentStep.value = 7
+                    if (currentStep.value > maxReachedStep.value) {
+                        maxReachedStep.value = currentStep.value
+                    }
+                    return
+                } else {
+                    console.error('项目设置保存失败')
+                    // 项目设置保存失败
+                    uni.showToast({
+                        title: '项目设置保存失败，请重试',
+                        icon: 'none',
+                        duration: 3000
+                    })
+                    return
+                }
+            } else {
+                console.log('没有项目设置需要保存，直接进入第7步')
+                // 没有项目设置需要保存，直接进入第7步
+                currentStep.value = 7
+                if (currentStep.value > maxReachedStep.value) {
+                    maxReachedStep.value = currentStep.value
+                }
+                return
+            }
+        } catch (error) {
+            console.error('第6步保存项目设置时出错:', error)
+            // 第6步保存项目设置时出错
+            uni.showToast({
+                title: '保存失败，请重试',
+                icon: 'none',
+                duration: 3000
+            })
+            return
+        }
     }
     
     // 跳转到下一步
@@ -2713,12 +2767,18 @@ const nextStepOld = async () => {
     if (currentStep.value === 6) {
         // 第6步特殊处理：保存项目设置并进入第7步
         try {
-            // 第6步：点击下一步，开始保存项目设置
+            console.log('=== 第6步：开始保存项目设置 ===')
+            console.log('eventItems.value:', eventItems.value)
+            console.log('eventItems数量:', eventItems.value?.length || 0)
             
             // 检查是否有项目设置需要保存
             if (eventItems.value && eventItems.value.length > 0) {
+                console.log('开始调用saveItemSettings函数...')
                 const settingsResult = await saveItemSettings()
+                console.log('saveItemSettings返回结果:', settingsResult)
+                
                 if (settingsResult) {
+                    console.log('项目设置保存成功，进入第7步')
                     // 项目设置保存成功，进入第7步
                     
                     // 保存成功后进入第7步
@@ -2729,6 +2789,7 @@ const nextStepOld = async () => {
                     
                     // 项目设置已保存，无需提示
                 } else {
+                    console.error('项目设置保存失败')
                     // 项目设置保存失败
                     uni.showToast({
                         title: '项目设置保存失败，请重试',
@@ -2738,6 +2799,7 @@ const nextStepOld = async () => {
                     return
                 }
             } else {
+                console.log('没有项目设置需要保存，直接进入第7步')
                 // 没有项目设置需要保存，直接进入第7步
                 currentStep.value = 7
                 if (currentStep.value > maxReachedStep.value) {
@@ -2745,6 +2807,7 @@ const nextStepOld = async () => {
                 }
             }
         } catch (error) {
+            console.error('第6步保存项目设置时出错:', error)
             // 第6步保存项目设置时出错
             uni.showToast({
                 title: '保存失败，请重试',
@@ -4791,13 +4854,25 @@ const getCurrentProjectVenueTypeLabel = () => {
  * 保存项目设置到数据库
  */
 const saveItemSettings = async () => {
+    console.log('=== saveItemSettings 函数开始执行 ===')
+    console.log('eventId.value:', eventId.value)
+    console.log('eventItems.value:', eventItems.value)
+    console.log('eventItems数量:', eventItems.value?.length || 0)
+    
     if (!eventId.value || !eventItems.value || eventItems.value.length === 0) {
+        console.log('条件检查失败，返回false')
         return false
     }
     
     try {
+        console.log(`开始保存 ${eventItems.value.length} 个项目的设置`)
+        
         // 保存每个项目的设置
-        for (const item of eventItems.value) {
+        for (let i = 0; i < eventItems.value.length; i++) {
+            const item = eventItems.value[i]
+            console.log(`\n--- 处理第 ${i + 1} 个项目: ${item.name} ---`)
+            console.log('项目完整数据:', item)
+            
             // 准备保存的数据 - 修复ID字段问题
             const itemId = item.id // 直接使用id字段，因为后端接口返回的id就是sport_item_id
             const saveData = {
@@ -4813,37 +4888,49 @@ const saveItemSettings = async () => {
                 remark: item.remark || ''
             }
             
-            console.log(`保存项目设置: ${item.name} (ID: ${itemId})`, saveData)
+            console.log(`准备保存项目: ${item.name} (ID: ${itemId})`)
+            console.log('保存数据:', saveData)
             
             // 调用接口保存
+            console.log('调用updateItemSettings API...')
             const response: any = await updateItemSettings(saveData)
+            console.log('API响应:', response)
             
             // 检查响应状态
             if (response && (response.code === 200 || response.code === 1)) {
+                console.log(`项目 ${item.name} 保存成功`)
+                
                 // 保存场地分配
                 const selectedVenues = itemVenueAssignments.value[item.id] || []
+                console.log(`项目 ${item.name} 的场地分配:`, selectedVenues)
                 
                 if (selectedVenues.length > 0) {
                     try {
                         const venueIds = selectedVenues.map(venue => venue.venue_id || venue.id)
+                        console.log(`为项目 ${item.name} 分配场地:`, venueIds)
                         
                         await batchAssignVenuesToItem(itemId, {
                             venue_ids: venueIds,
                             assignment_type: 2 // 共享模式
                         })
+                        console.log(`项目 ${item.name} 场地分配成功`)
                     } catch (error) {
+                        console.error(`项目 ${item.name} 场地分配失败:`, error)
                         // 场地分配失败不影响整体保存
                     }
+                } else {
+                    console.log(`项目 ${item.name} 没有场地分配`)
                 }
             } else {
+                console.error(`项目 ${item.name} 保存失败:`, response)
                 throw new Error(`项目 ${item.name} 保存失败: ${response?.msg || '未知错误'}`)
             }
         }
         
-        // 项目设置已保存，无需提示
-        
+        console.log('=== 所有项目设置保存完成 ===')
         return true
     } catch (error: any) {
+        console.error('=== saveItemSettings 执行失败 ===', error)
         let errorMessage = '保存项目设置失败'
         if (error && error.msg) {
             errorMessage = error.msg
@@ -5147,10 +5234,34 @@ const initEventItems = async () => {
             
             if (response && response.data && Array.isArray(response.data)) {
                 // 使用接口返回的真实数据
-                eventItems.value = response.data.map((item: any) => ({
-                    ...item,
-                    is_configured: true // 编辑模式下默认为已配置
-                }))
+                eventItems.value = response.data.map((item: any) => {
+                    const processedItem = {
+                        ...item,
+                        is_configured: true // 编辑模式下默认为已配置
+                    }
+                    
+                    // 如果比赛说明不为空，自动开启比赛说明开关
+                    if (item.remark && item.remark.trim() !== '') {
+                        processedItem.remark_enabled = true
+                    }
+                    
+                    // 如果报名费不为0，自动开启报名费开关
+                    if (item.registration_fee && parseFloat(item.registration_fee) > 0) {
+                        processedItem.registration_fee_enabled = true
+                    }
+                    
+                    // 如果人数限制不为0，自动开启人数限制开关
+                    if (item.max_participants && parseInt(item.max_participants) > 0) {
+                        processedItem.max_participants_enabled = true
+                    }
+                    
+                    // 如果每组人数不为0，自动开启每组人数开关
+                    if (item.group_size && parseInt(item.group_size) > 0) {
+                        processedItem.group_size_enabled = true
+                    }
+                    
+                    return processedItem
+                })
                 
                 console.log('从接口获取的eventItems:', eventItems.value)
                 
