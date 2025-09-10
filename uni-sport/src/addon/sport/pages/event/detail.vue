@@ -390,6 +390,11 @@
                     <text class="value">{{ eventInfo.number_plate_settings.numbering_mode === 1 ? '系统分配' : '用户自选' }}</text>
                 </view>
                 
+                <view class="detail-item">
+                    <text class="label">自动编号</text>
+                    <text class="value">{{ getAutoAssignText(eventInfo.number_plate_settings.auto_assign_after_registration, eventInfo.number_plate_settings.numbering_mode) }}</text>
+                </view>
+                
                 <view v-if="eventInfo.number_plate_settings.prefix" class="detail-item">
                     <text class="label">号码前缀</text>
                     <text class="value">{{ eventInfo.number_plate_settings.prefix }}</text>
@@ -703,6 +708,19 @@ const getVenueTypeLabel = (venueType: string) => {
         'OTHER': '其他'
     }
     return typeMap[venueType] || venueType
+}
+
+/**
+ * 获取自动编号显示文本
+ */
+const getAutoAssignText = (autoAssign: number, numberingMode: number) => {
+    if (numberingMode === 1) {
+        // 系统分配模式
+        return autoAssign ? '是（系统统一编号）' : '否（手动分配）'
+    } else {
+        // 用户自选模式
+        return autoAssign ? '是（报名后自动分配）' : '否（用户自选号码）'
+    }
 }
 
 /**
