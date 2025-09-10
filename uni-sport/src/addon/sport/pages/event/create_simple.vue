@@ -1151,7 +1151,7 @@
                 <view class="card-content">
                     <!-- 联系人姓名 -->
                     <view class="form-item">
-                        <view class="form-label">联系人姓名11</view>
+                        <view class="form-label">联系人姓名</view>
                         <input 
                             class="form-input basic-input" 
                             v-model="formData.contact_name" 

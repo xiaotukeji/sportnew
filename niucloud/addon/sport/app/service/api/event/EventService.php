@@ -94,7 +94,7 @@ class EventService extends BaseApiService
             ->leftJoin('sport_organizer so', 'se.organizer_id = so.id')
             ->leftJoin('sport_event_series ses', 'se.series_id = ses.id')
             ->where([['se.id', '=', $id]])
-            ->field($field . ', so.organizer_name, so.contact_name, so.contact_phone, ses.name as series_name')
+            ->field($field . ', so.organizer_name, so.contact_name as organizer_contact_name, so.contact_phone as organizer_contact_phone, ses.name as series_name')
             ->append(['start_time_text', 'end_time_text', 'event_type_text', 'organizer_type_text', 'status_text'])
             ->findOrEmpty()
             ->toArray();
