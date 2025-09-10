@@ -103,6 +103,39 @@ class EventService extends BaseApiService
             throw new CommonException('SPORT_EVENT_NOT_EXIST');
         }
         
+        // 获取协办方信息
+        $coOrganizers = (new \addon\sport\app\model\co_organizer\SportEventCoOrganizer())
+            ->where([
+                ['event_id', '=', $id],
+                ['status', '=', 1]
+            ])
+            ->order('sort asc, id asc')
+            ->select()
+            ->toArray();
+        
+        $info['co_organizers'] = $coOrganizers;
+        
+        // 获取号码牌设置
+        $numberPlateSettings = (new \addon\sport\app\model\number_rule\SportEventNumberRule())
+            ->where([
+                ['event_id', '=', $id],
+                ['status', '=', 1]
+            ])
+            ->findOrEmpty()
+            ->toArray();
+        
+        if (!empty($numberPlateSettings)) {
+            // 处理保留号码和禁用号码
+            if (!empty($numberPlateSettings['reserved_numbers'])) {
+                $numberPlateSettings['reserved_numbers'] = json_decode($numberPlateSettings['reserved_numbers'], true) ?: [];
+            }
+            if (!empty($numberPlateSettings['disabled_numbers'])) {
+                $numberPlateSettings['disabled_numbers'] = json_decode($numberPlateSettings['disabled_numbers'], true) ?: [];
+            }
+        }
+        
+        $info['number_plate_settings'] = $numberPlateSettings;
+        
         return $info;
     }
 

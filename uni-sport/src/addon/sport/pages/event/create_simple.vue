@@ -812,18 +812,18 @@
                                                 <view class="venue-selection">
                                                     <view class="selection-header">
                                                         <text class="selection-label">选择场地：</text>
-                                                        <text class="venue-type-tip">{{ getVenueTypeLabel(getItemVenueType(item)) }}类型</text>
-                                                    </view>
-                                                    <view class="venue-selector-list">
-                                                        <view class="select-all" v-if="getAvailableVenuesForItem(item?.id)?.length > 0">
-                                                            <view class="select-row" :class="{ selected: isAllVenuesSelected(item?.id) }" @tap.stop="toggleSelectAllVenues(item?.id)">
+                                                        <view class="header-right">
+                                                            <text class="venue-type-tip">{{ getVenueTypeLabel(getItemVenueType(item)) }}类型</text>
+                                                            <!-- 全选功能移到右边，添加复选框 -->
+                                                            <view class="select-all-right" v-if="getAvailableVenuesForItem(item?.id)?.length > 0" @tap.stop="toggleSelectAllVenues(item?.id)">
                                                                 <text class="select-text">{{ isAllVenuesSelected(item?.id) ? '取消全选' : '全选' }}</text>
-                                                                <!-- 全选状态显示勾选标记 -->
-                                                                <view v-if="isAllVenuesSelected(item?.id)" class="selected-mark">
-                                                                    <text class="mark-text">✓</text>
+                                                                <view class="checkbox" :class="{ checked: isAllVenuesSelected(item?.id) }">
+                                                                    <text v-if="isAllVenuesSelected(item?.id)" class="checkmark">✓</text>
                                                                 </view>
                                                             </view>
                                                         </view>
+                                                    </view>
+                                                    <view class="venue-selector-list">
                                                         <view class="venue-options">
                                                             <view
                                                                 v-for="venue in (getAvailableVenuesForItem(item?.id) || [])"
@@ -7500,6 +7500,12 @@ picker {
                     font-size: 26rpx;
                     color: #333;
                 }
+
+                .header-right {
+                    display: flex;
+                    align-items: center;
+                    gap: 16rpx;
+                }
                 
                 .venue-type-tip {
                     font-size: 22rpx;
@@ -7510,6 +7516,58 @@ picker {
                     border: 1rpx solid rgba(255, 107, 53, 0.2);
                 }
 
+                .select-all-right {
+                    display: flex;
+                    align-items: center;
+                    gap: 8rpx;
+                    padding: 6rpx 12rpx;
+                    border-radius: 6rpx;
+                    background-color: #f8f9fa;
+                    border: 1rpx solid #e9ecef;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+
+                    &:hover {
+                        background-color: #e9ecef;
+                        border-color: #dee2e6;
+                    }
+
+                    &:active {
+                        background-color: #dee2e6;
+                    }
+
+                    .select-text {
+                        font-size: 24rpx;
+                        color: #495057;
+                        white-space: nowrap;
+                        order: 1;
+                    }
+
+                    .checkbox {
+                        width: 32rpx;
+                        height: 32rpx;
+                        border: 2rpx solid #ced4da;
+                        border-radius: 4rpx;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        background-color: #fff;
+                        transition: all 0.2s ease;
+                        order: 2;
+
+                        &.checked {
+                            background-color: #007bff;
+                            border-color: #007bff;
+                        }
+
+                        .checkmark {
+                            color: #fff;
+                            font-size: 20rpx;
+                            font-weight: bold;
+                        }
+                    }
+                }
+
                 .venue-selector-list {
                     flex: 1;
                     background-color: #fafafa;
@@ -7517,37 +7575,6 @@ picker {
                     border-radius: 8rpx;
                     padding: 16rpx;
 
-                    .select-all {
-                        margin-bottom: 8rpx;
-                        .select-row {
-                            display: flex;
-                            align-items: center;
-                            padding: 12rpx 8rpx;
-                            border-radius: 6rpx;
-                            background-color: #f5f7fa;
-                            cursor: pointer;
-                            transition: all 0.2s ease;
-                            border: 1rpx solid transparent;
-                            position: relative;
-                            
-                            &:hover {
-                                background-color: #fff5f0;
-                                border-color: #ff6b35;
-                            }
-                            
-                            &.selected {
-                                background: linear-gradient(135deg, #f1f8e9, #e8f5e8);
-                                border-color: #4caf50;
-                                color: #4caf50;
-                                font-weight: bold;
-                                box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.15);
-                            }
-                            .select-text {
-                                font-size: 26rpx;
-                                flex: 1;
-                            }
-                        }
-                    }
 
                     .venue-options {
                         display: flex;

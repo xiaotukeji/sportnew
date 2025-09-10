@@ -33,14 +33,22 @@
                     <text class="value">{{ eventInfo.series_name }}</text>
                 </view>
                 
-                <view class="detail-item">
-                    <text class="label">举办年份</text>
-                    <text class="value">{{ eventInfo.year }}年</text>
-                </view>
-                
                 <view v-if="eventInfo.season" class="detail-item">
                     <text class="label">赛季</text>
                     <text class="value">{{ eventInfo.season }}</text>
+                </view>
+                
+                <view v-if="eventInfo.age_groups && eventInfo.age_groups.length > 0" class="detail-item">
+                    <text class="label">年龄组设置</text>
+                    <view class="age-groups-container">
+                        <view 
+                            v-for="(group, index) in eventInfo.age_groups" 
+                            :key="index" 
+                            class="age-group-tag"
+                        >
+                            <text class="age-group-text">{{ group }}</text>
+                        </view>
+                    </view>
                 </view>
             </view>
             
@@ -103,6 +111,40 @@
                 </view>
             </view>
             
+            <!-- 协办方信息 -->
+            <view v-if="eventInfo.co_organizers && eventInfo.co_organizers.length > 0" class="detail-card">
+                <view class="card-title">
+                    <text class="title-text">协办方信息</text>
+                    <text class="item-count">({{ eventInfo.co_organizers.length }}个)</text>
+                </view>
+                
+                <view class="co-organizers-container">
+                    <view 
+                        v-for="(coOrg, index) in eventInfo.co_organizers" 
+                        :key="index" 
+                        class="co-organizer-item"
+                    >
+                        <view class="co-org-header">
+                            <text class="co-org-name">{{ coOrg.organizer_name }}</text>
+                            <view class="co-org-type-badge" :class="'type-' + coOrg.organizer_type">
+                                <text class="type-text">{{ getCoOrganizerTypeText(coOrg.organizer_type) }}</text>
+                            </view>
+                        </view>
+                        <view class="co-org-type-desc">
+                            <text class="type-desc-text">{{ getCoOrganizerTypeDesc(coOrg.organizer_type) }}</text>
+                        </view>
+                        <view v-if="coOrg.contact_name" class="co-org-detail">
+                            <text class="co-org-label">联系人：</text>
+                            <text class="co-org-value">{{ coOrg.contact_name }}</text>
+                        </view>
+                        <view v-if="coOrg.contact_phone" class="co-org-detail">
+                            <text class="co-org-label">联系电话：</text>
+                            <text class="co-org-value">{{ coOrg.contact_phone }}</text>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            
             <!-- 报名参数字段 -->
             <view class="detail-card">
                 <view class="card-title">
@@ -153,10 +195,10 @@
                 </view>
             </view>
             
-            <!-- 比赛项目 -->
+            <!-- 比赛项目设置 -->
             <view class="detail-card">
                 <view class="card-title">
-                    <text class="title-text">比赛项目</text>
+                    <text class="title-text">比赛项目设置</text>
                     <text class="item-count">({{ groupedEventItems.length }}大类 {{ eventItems.length }}项)</text>
                 </view>
                 
@@ -195,6 +237,61 @@
                                         <text class="detail-value">{{ getGenderTypeText(item.gender_type) }}</text>
                                     </view>
                                     
+                                    <!-- 项目设置信息 -->
+                                    <view v-if="item.registration_fee > 0" class="item-detail-row">
+                                        <text class="detail-label">报名费用：</text>
+                                        <text class="detail-value fee">¥{{ item.registration_fee }}</text>
+                                    </view>
+                                    
+                                    <view v-if="item.max_participants > 0" class="item-detail-row">
+                                        <text class="detail-label">最大参赛人数：</text>
+                                        <text class="detail-value">{{ item.max_participants }}人</text>
+                                    </view>
+                                    
+                                    <view v-if="item.rounds > 0" class="item-detail-row">
+                                        <text class="detail-label">比赛轮次：</text>
+                                        <text class="detail-value">{{ item.rounds }}轮</text>
+                                    </view>
+                                    
+                                    <view v-if="item.group_size > 0" class="item-detail-row">
+                                        <text class="detail-label">分组大小：</text>
+                                        <text class="detail-value">{{ item.group_size }}人/组</text>
+                                    </view>
+                                    
+                                    <view class="item-detail-row">
+                                        <text class="detail-label">允许重复报名：</text>
+                                        <text class="detail-value">{{ item.allow_duplicate_registration ? '是' : '否' }}</text>
+                                    </view>
+                                    
+                                    <view class="item-detail-row">
+                                        <text class="detail-label">循环赛制：</text>
+                                        <text class="detail-value">{{ item.is_round_robin ? '是' : '否' }}</text>
+                                    </view>
+                                    
+                                    <view v-if="item.venue_type" class="item-detail-row">
+                                        <text class="detail-label">场地类型：</text>
+                                        <text class="detail-value">{{ getVenueTypeLabel(item.venue_type) }}</text>
+                                    </view>
+                                    
+                                    <view v-if="item.venue_count > 0" class="item-detail-row">
+                                        <text class="detail-label">场地数量：</text>
+                                        <text class="detail-value">{{ item.venue_count }}个</text>
+                                    </view>
+                                    
+                                    <!-- 场地分配信息 -->
+                                    <view v-if="item.venues && item.venues.length > 0" class="item-detail-row">
+                                        <text class="detail-label">分配场地：</text>
+                                        <view class="venues-container">
+                                            <view 
+                                                v-for="venue in item.venues" 
+                                                :key="venue.id" 
+                                                class="venue-tag"
+                                            >
+                                                <text class="venue-text">{{ venue.name }}({{ venue.venue_code }})</text>
+                                            </view>
+                                        </view>
+                                    </view>
+                                    
                                     <view v-if="item.remark" class="item-detail-row">
                                         <text class="detail-label">项目说明：</text>
                                         <text class="detail-value">{{ item.remark }}</text>
@@ -208,6 +305,140 @@
                 <view v-else class="empty-items">
                     <text class="empty-text">暂无比赛项目</text>
                     <text class="empty-tip">请点击"下一步"添加比赛项目</text>
+                </view>
+            </view>
+            
+            <!-- 比赛场地安排 -->
+            <view v-if="hasVenueArrangements" class="detail-card">
+                <view class="card-title">
+                    <text class="title-text">比赛场地安排</text>
+                </view>
+                
+                <view class="venue-arrangements-container">
+                    <view 
+                        v-for="(group, groupIndex) in groupedEventItems" 
+                        :key="group.categoryName" 
+                        class="venue-category-group"
+                    >
+                        <view class="venue-category-header">
+                            <text class="venue-category-name">{{ group.categoryName }}</text>
+                            <text class="venue-category-count">({{ getCategoryVenueCount(group.items) }}个场地)</text>
+                        </view>
+                        
+                        <view class="venue-items-list">
+                            <view 
+                                v-for="item in group.items.filter(i => i.venues && i.venues.length > 0)" 
+                                :key="item.id" 
+                                class="venue-item-card"
+                            >
+                                <view class="venue-item-header">
+                                    <text class="venue-item-name">{{ item.name }}</text>
+                                    <text class="venue-item-type">{{ getVenueTypeLabel(item.venue_type) }}</text>
+                                </view>
+                                
+                                <view class="venue-assignments">
+                                    <view 
+                                        v-for="venue in item.venues" 
+                                        :key="venue.id" 
+                                        class="venue-assignment"
+                                    >
+                                        <view class="venue-info">
+                                            <text class="venue-name">{{ venue.name }}</text>
+                                            <text class="venue-code">({{ venue.venue_code }})</text>
+                                        </view>
+                                        <view v-if="venue.location" class="venue-location">
+                                            <text class="location-text">{{ venue.location }}</text>
+                                        </view>
+                                    </view>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 显示设置 -->
+            <view class="detail-card">
+                <view class="card-title">
+                    <text class="title-text">显示设置</text>
+                </view>
+                
+                <view class="detail-item">
+                    <text class="label">显示报名人数</text>
+                    <text class="value">{{ eventInfo.show_participant_count ? '是' : '否' }}</text>
+                </view>
+                
+                <view class="detail-item">
+                    <text class="label">显示比赛进度</text>
+                    <text class="value">{{ eventInfo.show_progress ? '是' : '否' }}</text>
+                </view>
+                
+                <view class="detail-item">
+                    <text class="label">显示年龄组</text>
+                    <text class="value">{{ eventInfo.age_group_display ? '是' : '否' }}</text>
+                </view>
+            </view>
+            
+            <!-- 号码牌设置 -->
+            <view v-if="eventInfo.number_plate_settings" class="detail-card">
+                <view class="card-title">
+                    <text class="title-text">号码牌设置</text>
+                </view>
+                
+                <view class="detail-item">
+                    <text class="label">编号模式</text>
+                    <text class="value">{{ eventInfo.number_plate_settings.numbering_mode === 1 ? '系统分配' : '用户自选' }}</text>
+                </view>
+                
+                <view v-if="eventInfo.number_plate_settings.prefix" class="detail-item">
+                    <text class="label">号码前缀</text>
+                    <text class="value">{{ eventInfo.number_plate_settings.prefix }}</text>
+                </view>
+                
+                <view class="detail-item">
+                    <text class="label">数字位数</text>
+                    <text class="value">{{ eventInfo.number_plate_settings.number_length }}位</text>
+                </view>
+                
+                <view class="detail-item">
+                    <text class="label">起始号码</text>
+                    <text class="value">{{ eventInfo.number_plate_settings.start_number }}</text>
+                </view>
+                
+                <view class="detail-item">
+                    <text class="label">结束号码</text>
+                    <text class="value">{{ eventInfo.number_plate_settings.end_number }}</text>
+                </view>
+                
+                <view v-if="eventInfo.number_plate_settings.numbering_mode === 2" class="detail-item">
+                    <text class="label">自选时间窗口</text>
+                    <text class="value">{{ eventInfo.number_plate_settings.choice_time_window }}天</text>
+                </view>
+                
+                <view v-if="eventInfo.number_plate_settings.reserved_numbers && eventInfo.number_plate_settings.reserved_numbers.length > 0" class="detail-item">
+                    <text class="label">保留号码</text>
+                    <view class="numbers-container">
+                        <view 
+                            v-for="number in eventInfo.number_plate_settings.reserved_numbers" 
+                            :key="number" 
+                            class="number-tag reserved"
+                        >
+                            <text class="number-text">{{ number }}</text>
+                        </view>
+                    </view>
+                </view>
+                
+                <view v-if="eventInfo.number_plate_settings.disabled_numbers && eventInfo.number_plate_settings.disabled_numbers.length > 0" class="detail-item">
+                    <text class="label">禁用号码</text>
+                    <view class="numbers-container">
+                        <view 
+                            v-for="number in eventInfo.number_plate_settings.disabled_numbers" 
+                            :key="number" 
+                            class="number-tag disabled"
+                        >
+                            <text class="number-text">{{ number }}</text>
+                        </view>
+                    </view>
                 </view>
             </view>
             
@@ -408,6 +639,70 @@ const getGenderTypeText = (type: number) => {
         3: '混合/不限'
     }
     return typeMap[type] || '未知'
+}
+
+/**
+ * 获取协办方类型文本
+ */
+const getCoOrganizerTypeText = (type: number) => {
+    const typeMap: Record<number, string> = {
+        1: '协办单位',
+        2: '赞助商',
+        3: '支持单位'
+    }
+    return typeMap[type] || '未知'
+}
+
+/**
+ * 获取协办方类型描述
+ */
+const getCoOrganizerTypeDesc = (type: number) => {
+    const descMap: Record<number, string> = {
+        1: '协助主办方组织和管理赛事',
+        2: '为赛事提供资金或物资支持',
+        3: '为赛事提供技术或服务支持'
+    }
+    return descMap[type] || ''
+}
+
+/**
+ * 检查是否有场地安排
+ */
+const hasVenueArrangements = computed(() => {
+    if (!eventItems.value || eventItems.value.length === 0) return false
+    return eventItems.value.some(item => item.venues && item.venues.length > 0)
+})
+
+/**
+ * 获取分类下的场地数量
+ */
+const getCategoryVenueCount = (items: any[]) => {
+    let totalCount = 0
+    items.forEach(item => {
+        if (item.venues && item.venues.length > 0) {
+            totalCount += item.venues.length
+        }
+    })
+    return totalCount
+}
+
+/**
+ * 获取场地类型标签
+ */
+const getVenueTypeLabel = (venueType: string) => {
+    const typeMap: Record<string, string> = {
+        'PP': '乒乓球台',
+        'BD': '羽毛球场地',
+        'BB': '篮球场地',
+        'FB': '足球场地',
+        'TN': '网球场地',
+        'VB': '排球场地',
+        'SW': '游泳场地',
+        'AT': '田径场地',
+        'GYM': '健身房',
+        'OTHER': '其他'
+    }
+    return typeMap[venueType] || venueType
 }
 
 /**
@@ -625,6 +920,273 @@ onMounted(() => {
         color: #999;
         margin-left: 16rpx;
         font-weight: normal;
+    }
+    
+    .age-groups-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8rpx;
+        margin-top: 8rpx;
+    }
+    
+    .age-group-tag {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 6rpx 12rpx;
+        border-radius: 16rpx;
+        
+        .age-group-text {
+            font-size: 22rpx;
+            color: white;
+            font-weight: 500;
+        }
+    }
+    
+    .co-organizers-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16rpx;
+    }
+    
+    .co-organizer-item {
+        background-color: #f8f9fa;
+        border-radius: 12rpx;
+        padding: 20rpx;
+        border: 1rpx solid #e9ecef;
+        
+        .co-org-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12rpx;
+            
+            .co-org-name {
+                font-size: 28rpx;
+                font-weight: bold;
+                color: #333;
+                flex: 1;
+            }
+            
+            .co-org-type-badge {
+                padding: 6rpx 12rpx;
+                border-radius: 20rpx;
+                margin-left: 16rpx;
+                
+                &.type-1 {
+                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                }
+                
+                &.type-2 {
+                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+                }
+                
+                &.type-3 {
+                    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                }
+                
+                .type-text {
+                    font-size: 20rpx;
+                    color: white;
+                    font-weight: bold;
+                }
+            }
+        }
+        
+        .co-org-type-desc {
+            margin-bottom: 12rpx;
+            
+            .type-desc-text {
+                font-size: 22rpx;
+                color: #888;
+                font-style: italic;
+            }
+        }
+        
+        .co-org-detail {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8rpx;
+            
+            &:last-child {
+                margin-bottom: 0;
+            }
+            
+            .co-org-label {
+                font-size: 24rpx;
+                color: #666;
+                margin-right: 8rpx;
+                width: 120rpx;
+                flex-shrink: 0;
+            }
+            
+            .co-org-value {
+                font-size: 24rpx;
+                color: #333;
+                flex: 1;
+            }
+        }
+    }
+    
+    .venues-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8rpx;
+        margin-top: 8rpx;
+    }
+    
+    .venue-tag {
+        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        padding: 6rpx 12rpx;
+        border-radius: 16rpx;
+        
+        .venue-text {
+            font-size: 22rpx;
+            color: #333;
+            font-weight: 500;
+        }
+    }
+    
+    .numbers-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8rpx;
+        margin-top: 8rpx;
+    }
+    
+    .number-tag {
+        padding: 6rpx 12rpx;
+        border-radius: 16rpx;
+        
+        &.reserved {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        &.disabled {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+        
+        .number-text {
+            font-size: 22rpx;
+            color: white;
+            font-weight: 500;
+        }
+    }
+    
+    .fee {
+        color: #ff6b35;
+        font-weight: bold;
+    }
+    
+    .venue-arrangements-container {
+        .venue-category-group {
+            margin-bottom: 24rpx;
+            background-color: #f8f9fa;
+            border-radius: 12rpx;
+            padding: 20rpx;
+            border: 1rpx solid #e9ecef;
+            
+            &:last-child {
+                margin-bottom: 0;
+            }
+            
+            .venue-category-header {
+                display: flex;
+                align-items: center;
+                margin-bottom: 16rpx;
+                padding-bottom: 12rpx;
+                border-bottom: 1rpx solid #dee2e6;
+                
+                .venue-category-name {
+                    font-size: 28rpx;
+                    font-weight: bold;
+                    color: #333;
+                    flex: 1;
+                }
+                
+                .venue-category-count {
+                    font-size: 22rpx;
+                    color: #666;
+                    background-color: #e9ecef;
+                    padding: 4rpx 8rpx;
+                    border-radius: 12rpx;
+                }
+            }
+            
+            .venue-items-list {
+                display: flex;
+                flex-direction: column;
+                gap: 16rpx;
+                
+                .venue-item-card {
+                    background-color: white;
+                    border-radius: 8rpx;
+                    padding: 16rpx;
+                    border: 1rpx solid #e9ecef;
+                    
+                    .venue-item-header {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 12rpx;
+                        
+                        .venue-item-name {
+                            font-size: 26rpx;
+                            font-weight: bold;
+                            color: #333;
+                            flex: 1;
+                        }
+                        
+                        .venue-item-type {
+                            font-size: 22rpx;
+                            color: #666;
+                            background-color: #f0f0f0;
+                            padding: 4rpx 8rpx;
+                            border-radius: 8rpx;
+                        }
+                    }
+                    
+                    .venue-assignments {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8rpx;
+                        
+                        .venue-assignment {
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            padding: 8rpx 12rpx;
+                            background-color: #f8f9fa;
+                            border-radius: 6rpx;
+                            border: 1rpx solid #e9ecef;
+                            
+                            .venue-info {
+                                display: flex;
+                                align-items: center;
+                                flex: 1;
+                                
+                                .venue-name {
+                                    font-size: 24rpx;
+                                    color: #333;
+                                    font-weight: 500;
+                                }
+                                
+                                .venue-code {
+                                    font-size: 22rpx;
+                                    color: #666;
+                                    margin-left: 8rpx;
+                                }
+                            }
+                            
+                            .venue-location {
+                                .location-text {
+                                    font-size: 22rpx;
+                                    color: #888;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     
     .items-container {
