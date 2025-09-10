@@ -1153,7 +1153,7 @@
                     <view class="form-item">
                         <view class="form-label">联系人姓名</view>
                         <input 
-                            class="form-input" 
+                            class="form-input basic-input" 
                             v-model="formData.contact_name" 
                             placeholder="请输入联系人姓名"
                             maxlength="50"
@@ -1164,7 +1164,7 @@
                     <view class="form-item">
                         <view class="form-label">联系电话</view>
                         <input 
-                            class="form-input" 
+                            class="form-input basic-input" 
                             v-model="formData.contact_phone" 
                             placeholder="请输入联系电话"
                             maxlength="20"
@@ -1175,21 +1175,10 @@
                     <view class="form-item">
                         <view class="form-label">微信号</view>
                         <input 
-                            class="form-input" 
+                            class="form-input basic-input" 
                             v-model="formData.contact_wechat" 
                             placeholder="请输入微信号"
                             maxlength="50"
-                        />
-                    </view>
-                    
-                    <!-- QQ号 -->
-                    <view class="form-item">
-                        <view class="form-label">QQ号</view>
-                        <input 
-                            class="form-input" 
-                            v-model="formData.contact_qq" 
-                            placeholder="请输入QQ号"
-                            maxlength="20"
                         />
                     </view>
                     
@@ -1197,20 +1186,9 @@
                     <view class="form-item">
                         <view class="form-label">邮箱</view>
                         <input 
-                            class="form-input" 
+                            class="form-input basic-input" 
                             v-model="formData.contact_email" 
                             placeholder="请输入邮箱"
-                            maxlength="100"
-                        />
-                    </view>
-                    
-                    <!-- 服务时间 -->
-                    <view class="form-item">
-                        <view class="form-label">服务时间</view>
-                        <input 
-                            class="form-input" 
-                            v-model="formData.service_hours" 
-                            placeholder="如：周一至周五 9:00-18:00"
                             maxlength="100"
                         />
                     </view>
@@ -1762,9 +1740,7 @@ interface FormData {
     contact_name: string
     contact_phone: string
     contact_wechat: string
-    contact_qq: string
     contact_email: string
-    service_hours: string
 }
 
 interface SignupField {
@@ -1832,9 +1808,7 @@ const formData = ref<FormData>({
     contact_name: '',          // 联系人姓名
     contact_phone: '',         // 联系电话
     contact_wechat: '',        // 微信号
-    contact_qq: '',            // QQ号
-    contact_email: '',         // 邮箱
-    service_hours: ''          // 服务时间
+    contact_email: ''          // 邮箱
 })
 
 // 项目选择相关数据
@@ -2134,9 +2108,7 @@ const initFormData = () => {
         contact_name: '',
         contact_phone: '',
         contact_wechat: '',
-        contact_qq: '',
-        contact_email: '',
-        service_hours: ''
+        contact_email: ''
     }
     
     // 设置默认时间
@@ -2272,9 +2244,7 @@ const handleSubmit = async () => {
             submitData.contact_name = formData.value.contact_name
             submitData.contact_phone = formData.value.contact_phone
             submitData.contact_wechat = formData.value.contact_wechat
-            submitData.contact_qq = formData.value.contact_qq
             submitData.contact_email = formData.value.contact_email
-            submitData.service_hours = formData.value.service_hours
         }
         
         let result: any
@@ -2312,9 +2282,7 @@ const handleSubmit = async () => {
                     contact_name: formData.value.contact_name,
                     contact_phone: formData.value.contact_phone,
                     contact_wechat: formData.value.contact_wechat,
-                    contact_qq: formData.value.contact_qq,
                     contact_email: formData.value.contact_email,
-                    service_hours: formData.value.service_hours,
                     update_time: Date.now() / 1000 // 添加更新时间
                 }
                 
@@ -3930,9 +3898,7 @@ const loadEventData = async () => {
             contact_name: eventData.contact_name || '',
             contact_phone: eventData.contact_phone || '',
             contact_wechat: eventData.contact_wechat || '',
-            contact_qq: eventData.contact_qq || '',
-            contact_email: eventData.contact_email || '',
-            service_hours: eventData.service_hours || ''
+            contact_email: eventData.contact_email || ''
         }
         
         // 设置时间选择器的值
@@ -4093,9 +4059,7 @@ onMounted(() => {
                 contact_name: '',
                 contact_phone: '',
                 contact_wechat: '',
-                contact_qq: '',
-                contact_email: '',
-                service_hours: ''
+                contact_email: ''
             }
             
             // 清空选择的数据
@@ -4164,9 +4128,7 @@ onMounted(() => {
                 contact_name: '',
                 contact_phone: '',
                 contact_wechat: '',
-                contact_qq: '',
-                contact_email: '',
-                service_hours: ''
+                contact_email: ''
             }
             
             // 清空选择的数据
