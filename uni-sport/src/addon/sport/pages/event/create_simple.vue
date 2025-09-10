@@ -613,7 +613,7 @@
                 <view class="form-section">
                     <view class="section-title">
                         <view class="title-left">
-                        <text class="title-text">项目设置222</text>
+                        <text class="title-text">项目设置</text>
                             <text class="title-count">({{ groupedEventItems?.length || 0 }}大类 {{ eventItems?.length || 0 }}项)</text>
                         </view>
         </view>
@@ -2219,14 +2219,6 @@ const handleSubmit = async () => {
                     },
                     update_time: Date.now() / 1000 // 添加更新时间
                 }
-                
-                // 添加调试日志
-                console.log('=== 第7步提交数据调试 ===')
-                console.log('numberPlateSettings.value:', numberPlateSettings.value)
-                console.log('reserved_numbers:', numberPlateSettings.value.reserved_numbers)
-                console.log('disabled_numbers:', numberPlateSettings.value.disabled_numbers)
-                console.log('finalSettingsData:', finalSettingsData)
-                console.log('number_plate_settings:', finalSettingsData.number_plate_settings)
                 
                 // 第7步：保存最终设置
                 result = await editEvent(eventId.value, finalSettingsData)
@@ -5123,10 +5115,6 @@ const onAutoAssignChange = (e: any) => {
 // 特殊号码管理函数
 const addReservedNumber = () => {
     const number = tempReservedNumber.value.trim()
-    console.log('=== 添加保留号码调试 ===')
-    console.log('输入号码:', number)
-    console.log('添加前 reserved_numbers:', numberPlateSettings.value.reserved_numbers)
-    
     if (!number) {
         uni.showToast({
             title: '请输入保留号码',
@@ -5145,9 +5133,6 @@ const addReservedNumber = () => {
     
     numberPlateSettings.value.reserved_numbers.push(number)
     tempReservedNumber.value = ''
-    
-    console.log('添加后 reserved_numbers:', numberPlateSettings.value.reserved_numbers)
-    console.log('numberPlateSettings.value:', numberPlateSettings.value)
 }
 
 const removeReservedNumber = (index: number) => {
@@ -5156,10 +5141,6 @@ const removeReservedNumber = (index: number) => {
 
 const addDisabledNumber = () => {
     const number = tempDisabledNumber.value.trim()
-    console.log('=== 添加禁用号码调试 ===')
-    console.log('输入号码:', number)
-    console.log('添加前 disabled_numbers:', numberPlateSettings.value.disabled_numbers)
-    
     if (!number) {
         uni.showToast({
             title: '请输入禁用号码',
@@ -5178,9 +5159,6 @@ const addDisabledNumber = () => {
     
     numberPlateSettings.value.disabled_numbers.push(number)
     tempDisabledNumber.value = ''
-    
-    console.log('添加后 disabled_numbers:', numberPlateSettings.value.disabled_numbers)
-    console.log('numberPlateSettings.value:', numberPlateSettings.value)
 }
 
 const removeDisabledNumber = (index: number) => {
