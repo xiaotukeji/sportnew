@@ -36,6 +36,9 @@ class NumberPlateService
         // 验证赛事是否存在且属于当前用户
         $this->checkEventPermission($eventId);
 
+        // 添加调试日志
+        \think\facade\Log::info('NumberPlateService saveEventNumberRule Debug: eventId=' . $eventId . ', data=' . json_encode($data));
+
         // 验证数据
         $this->validateNumberRuleData($data);
 
@@ -44,12 +47,18 @@ class NumberPlateService
 
         if ($rule) {
             // 更新现有规则
+            \think\facade\Log::info('NumberPlateService 更新现有规则: ' . json_encode($data));
             $rule->save($data);
         } else {
             // 创建新规则
             $data['event_id'] = $eventId;
+            \think\facade\Log::info('NumberPlateService 创建新规则: ' . json_encode($data));
             $rule = SportEventNumberRule::create($data);
         }
+
+        // 保存后检查数据
+        $savedRule = SportEventNumberRule::where('event_id', $eventId)->find();
+        \think\facade\Log::info('NumberPlateService 保存后数据: ' . json_encode($savedRule->toArray()));
 
         return true;
     }
