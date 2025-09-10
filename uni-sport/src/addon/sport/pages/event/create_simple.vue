@@ -1599,6 +1599,7 @@ import {
     addEvent, 
     editEvent,
     getEventInfo,
+    getEventDetailInfo,
     getEventItems,
     getOrganizerList, 
     addOrganizer, 
@@ -3787,8 +3788,8 @@ const loadEventData = async () => {
         uni.showLoading({
             title: '加载中...'
         })
-        // 加载赛事基本信息
-        const eventResponse: any = await getEventInfo(eventId.value)
+        // 加载赛事基本信息（使用详情接口获取完整数据，包括号码牌设置）
+        const eventResponse: any = await getEventDetailInfo(eventId.value)
         const eventData = eventResponse.data
         
         // 处理地址字段
@@ -3913,8 +3914,8 @@ const loadEventData = async () => {
                 start_number: settings.start_number || 1,
                 end_number: settings.end_number || 999,
                 step: settings.step || 1,
-                reserved_numbers: settings.reserved_numbers ? JSON.parse(settings.reserved_numbers) : [],
-                disabled_numbers: settings.disabled_numbers ? JSON.parse(settings.disabled_numbers) : [],
+                reserved_numbers: Array.isArray(settings.reserved_numbers) ? settings.reserved_numbers : (settings.reserved_numbers ? JSON.parse(settings.reserved_numbers) : []),
+                disabled_numbers: Array.isArray(settings.disabled_numbers) ? settings.disabled_numbers : (settings.disabled_numbers ? JSON.parse(settings.disabled_numbers) : []),
                 allow_athlete_choice: settings.allow_athlete_choice === 1,
                 choice_time_window: settings.choice_time_window || 7,
                 choice_rules: settings.choice_rules || 'first_come_first_served',
