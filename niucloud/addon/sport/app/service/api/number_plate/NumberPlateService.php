@@ -296,18 +296,11 @@ class NumberPlateService
             throw new CommonException('编号步长必须大于0');
         }
 
-        // 验证保留号码和禁用号码格式
+        // 验证保留号码格式
         if (isset($data['reserved_numbers']) && is_string($data['reserved_numbers'])) {
             $reservedNumbers = json_decode($data['reserved_numbers'], true);
             if (!is_array($reservedNumbers)) {
                 throw new CommonException('保留号码格式错误');
-            }
-        }
-
-        if (isset($data['disabled_numbers']) && is_string($data['disabled_numbers'])) {
-            $disabledNumbers = json_decode($data['disabled_numbers'], true);
-            if (!is_array($disabledNumbers)) {
-                throw new CommonException('禁用号码格式错误');
             }
         }
     }

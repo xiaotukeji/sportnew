@@ -82,31 +82,6 @@ class SportEventNumberRule extends BaseModel
         return $value;
     }
 
-    /**
-     * 获取器：处理禁用号码列表
-     * @param $value
-     * @return array
-     */
-    public function getDisabledNumbersAttr($value)
-    {
-        if (empty($value)) {
-            return [];
-        }
-        return json_decode($value, true) ?: [];
-    }
-
-    /**
-     * 修改器：处理禁用号码列表
-     * @param $value
-     * @return string
-     */
-    public function setDisabledNumbersAttr($value)
-    {
-        if (is_array($value)) {
-            return json_encode($value, JSON_UNESCAPED_UNICODE);
-        }
-        return $value;
-    }
 
     /**
      * 关联赛事
@@ -183,11 +158,6 @@ class SportEventNumberRule extends BaseModel
     {
         // 检查是否禁用包含4的号码
         if ($this->disable_number_4 && strpos($number, '4') !== false) {
-            return false;
-        }
-
-        // 检查是否在禁用列表中
-        if (in_array($number, $this->disabled_numbers)) {
             return false;
         }
 

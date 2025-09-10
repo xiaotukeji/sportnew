@@ -1086,28 +1086,6 @@
                             </view>
         </view>
         
-                        <!-- 禁用号码 -->
-                        <view class="form-item">
-                            <view class="number-tags">
-                                <view 
-                                    v-for="(number, index) in disabledNumbers" 
-                                    :key="index"
-                                    class="number-tag disabled"
-                                >
-                                    <text class="tag-text">{{ number }}</text>
-                                    <text class="tag-remove" @tap="removeDisabledNumber(index)">×</text>
-                                </view>
-                            </view>
-                            <view class="number-input-section">
-                                <input 
-                                    v-model="tempDisabledNumber"
-                                    placeholder="请输入禁用号码，如：4、44、444"
-                                    class="form-input full-width"
-                                    @confirm="addDisabledNumber"
-                                />
-                                <button class="add-btn full-width" @tap="addDisabledNumber">添加禁用号码</button>
-                            </view>
-                        </view>
                     </view>
 
                     <!-- 用户自选设置 -->
@@ -1791,7 +1769,6 @@ const numberPlateSettings = ref({
     end_number: 999, // 结束号码
     step: 1, // 编号步长
     reserved_numbers: [] as string[], // 保留号码列表
-    disabled_numbers: [] as string[], // 禁用号码列表
     allow_athlete_choice: false, // 是否允许运动员自选
     choice_time_window: 7, // 自选时间窗口（天）
     choice_rules: 'first_come_first_served', // 自选规则
@@ -1808,11 +1785,9 @@ const choiceRuleIndex = ref(0) // 默认先到先得
 
 // 临时输入数据
 const tempReservedNumber = ref('')
-const tempDisabledNumber = ref('')
 
 // 计算属性
 const reservedNumbers = computed(() => numberPlateSettings.value.reserved_numbers)
-const disabledNumbers = computed(() => numberPlateSettings.value.disabled_numbers)
 
 // 号码预览
 const numberPreview = computed(() => {
@@ -2193,11 +2168,11 @@ const handleSubmit = async () => {
                 end_number: numberPlateSettings.value.end_number,
                 step: numberPlateSettings.value.step,
                 reserved_numbers: JSON.stringify(numberPlateSettings.value.reserved_numbers),
-                disabled_numbers: JSON.stringify(numberPlateSettings.value.disabled_numbers),
                 allow_athlete_choice: numberPlateSettings.value.allow_athlete_choice ? 1 : 0,
                 choice_time_window: numberPlateSettings.value.choice_time_window,
                 choice_rules: numberPlateSettings.value.choice_rules,
-                auto_assign_after_registration: numberPlateSettings.value.auto_assign_after_registration ? 1 : 0
+                auto_assign_after_registration: numberPlateSettings.value.auto_assign_after_registration ? 1 : 0,
+                disable_number_4: numberPlateSettings.value.disable_number_4 ? 1 : 0
             }
         }
         
@@ -2226,11 +2201,11 @@ const handleSubmit = async () => {
                         end_number: numberPlateSettings.value.end_number,
                         step: numberPlateSettings.value.step,
                         reserved_numbers: JSON.stringify(numberPlateSettings.value.reserved_numbers),
-                        disabled_numbers: JSON.stringify(numberPlateSettings.value.disabled_numbers),
                         allow_athlete_choice: numberPlateSettings.value.allow_athlete_choice ? 1 : 0,
                         choice_time_window: numberPlateSettings.value.choice_time_window,
                         choice_rules: numberPlateSettings.value.choice_rules,
-                        auto_assign_after_registration: numberPlateSettings.value.auto_assign_after_registration ? 1 : 0
+                        auto_assign_after_registration: numberPlateSettings.value.auto_assign_after_registration ? 1 : 0,
+                        disable_number_4: numberPlateSettings.value.disable_number_4 ? 1 : 0
                     },
                     update_time: Date.now() / 1000 // 添加更新时间
                 }
@@ -3930,7 +3905,6 @@ const loadEventData = async () => {
                 end_number: settings.end_number || 999,
                 step: settings.step || 1,
                 reserved_numbers: Array.isArray(settings.reserved_numbers) ? settings.reserved_numbers : (settings.reserved_numbers ? JSON.parse(settings.reserved_numbers) : []),
-                disabled_numbers: Array.isArray(settings.disabled_numbers) ? settings.disabled_numbers : (settings.disabled_numbers ? JSON.parse(settings.disabled_numbers) : []),
                 allow_athlete_choice: settings.allow_athlete_choice === 1,
                 choice_time_window: settings.choice_time_window || 7,
                 choice_rules: settings.choice_rules || 'first_come_first_served',
@@ -5163,31 +5137,6 @@ const removeReservedNumber = (index: number) => {
     numberPlateSettings.value.reserved_numbers.splice(index, 1)
 }
 
-const addDisabledNumber = () => {
-    const number = tempDisabledNumber.value.trim()
-    if (!number) {
-        uni.showToast({
-            title: '请输入禁用号码',
-            icon: 'none'
-        })
-        return
-    }
-    
-    if (numberPlateSettings.value.disabled_numbers.includes(number)) {
-        uni.showToast({
-            title: '该号码已存在',
-            icon: 'none'
-        })
-        return
-    }
-    
-    numberPlateSettings.value.disabled_numbers.push(number)
-    tempDisabledNumber.value = ''
-}
-
-const removeDisabledNumber = (index: number) => {
-    numberPlateSettings.value.disabled_numbers.splice(index, 1)
-}
 
 // 协办单位管理相关方法
 const handleShowCoOrganizerManager = () => {

@@ -438,18 +438,6 @@
                     </view>
                 </view>
                 
-                <view v-if="eventInfo.number_plate_settings.disabled_numbers && eventInfo.number_plate_settings.disabled_numbers.length > 0" class="detail-item">
-                    <text class="label">禁用号码</text>
-                    <view class="numbers-container">
-                        <view 
-                            v-for="number in eventInfo.number_plate_settings.disabled_numbers" 
-                            :key="number" 
-                            class="number-tag disabled"
-                        >
-                            <text class="number-text">{{ number }}</text>
-                        </view>
-                    </view>
-                </view>
             </view>
             
             <!-- 赛事状态 -->

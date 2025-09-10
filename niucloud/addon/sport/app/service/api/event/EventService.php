@@ -131,7 +131,7 @@ class EventService extends BaseApiService
                 ->toArray();
             
             if (!empty($numberPlateSettings)) {
-                // 处理保留号码和禁用号码
+                // 处理保留号码
                 if (!empty($numberPlateSettings['reserved_numbers'])) {
                     if (is_string($numberPlateSettings['reserved_numbers'])) {
                         $numberPlateSettings['reserved_numbers'] = json_decode($numberPlateSettings['reserved_numbers'], true) ?: [];
@@ -140,16 +140,6 @@ class EventService extends BaseApiService
                     }
                 } else {
                     $numberPlateSettings['reserved_numbers'] = [];
-                }
-                
-                if (!empty($numberPlateSettings['disabled_numbers'])) {
-                    if (is_string($numberPlateSettings['disabled_numbers'])) {
-                        $numberPlateSettings['disabled_numbers'] = json_decode($numberPlateSettings['disabled_numbers'], true) ?: [];
-                    } elseif (!is_array($numberPlateSettings['disabled_numbers'])) {
-                        $numberPlateSettings['disabled_numbers'] = [];
-                    }
-                } else {
-                    $numberPlateSettings['disabled_numbers'] = [];
                 }
             }
             
@@ -200,7 +190,7 @@ class EventService extends BaseApiService
                 ->toArray();
             
             if (!empty($numberPlateSettings)) {
-                // 处理保留号码和禁用号码
+                // 处理保留号码
                 if (!empty($numberPlateSettings['reserved_numbers'])) {
                     if (is_string($numberPlateSettings['reserved_numbers'])) {
                         $numberPlateSettings['reserved_numbers'] = json_decode($numberPlateSettings['reserved_numbers'], true) ?: [];
@@ -209,16 +199,6 @@ class EventService extends BaseApiService
                     }
                 } else {
                     $numberPlateSettings['reserved_numbers'] = [];
-                }
-                
-                if (!empty($numberPlateSettings['disabled_numbers'])) {
-                    if (is_string($numberPlateSettings['disabled_numbers'])) {
-                        $numberPlateSettings['disabled_numbers'] = json_decode($numberPlateSettings['disabled_numbers'], true) ?: [];
-                    } elseif (!is_array($numberPlateSettings['disabled_numbers'])) {
-                        $numberPlateSettings['disabled_numbers'] = [];
-                    }
-                } else {
-                    $numberPlateSettings['disabled_numbers'] = [];
                 }
             }
             
