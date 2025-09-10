@@ -1147,95 +1147,6 @@
 
         </view>
         
-        <!-- 联系方式设置 -->
-        <view class="settings-card">
-            <view class="card-header">
-                <view class="card-title">联系方式设置</view>
-                <view class="card-subtitle">设置赛事联系人和客服信息</view>
-            </view>
-            <view class="card-content">
-                <!-- 联系人姓名 -->
-                <view class="form-item">
-                    <view class="form-label">联系人姓名 <text class="required">*</text></view>
-                    <input 
-                        v-model="formData.contact_name"
-                        placeholder="请输入联系人姓名"
-                        class="form-input with-bg"
-                        maxlength="50"
-                    />
-                </view>
-                
-                <!-- 联系电话 -->
-                <view class="form-item">
-                    <view class="form-label">联系电话 <text class="required">*</text></view>
-                    <input 
-                        v-model="formData.contact_phone"
-                        placeholder="请输入联系电话"
-                        class="form-input with-bg"
-                        maxlength="20"
-                        type="number"
-                    />
-                </view>
-                
-                <!-- 微信号 -->
-                <view class="form-item">
-                    <view class="form-label">微信号</view>
-                    <input 
-                        v-model="formData.contact_wechat"
-                        placeholder="请输入微信号"
-                        class="form-input with-bg"
-                        maxlength="50"
-                    />
-                </view>
-                
-                <!-- QQ号 -->
-                <view class="form-item">
-                    <view class="form-label">QQ号</view>
-                    <input 
-                        v-model="formData.contact_qq"
-                        placeholder="请输入QQ号"
-                        class="form-input with-bg"
-                        maxlength="20"
-                        type="number"
-                    />
-                </view>
-                
-                <!-- 邮箱 -->
-                <view class="form-item">
-                    <view class="form-label">邮箱</view>
-                    <input 
-                        v-model="formData.contact_email"
-                        placeholder="请输入邮箱地址"
-                        class="form-input with-bg"
-                        maxlength="100"
-                    />
-                </view>
-                
-                <!-- 服务时间 -->
-                <view class="form-item">
-                    <view class="form-label">服务时间</view>
-                    <input 
-                        v-model="formData.service_hours"
-                        placeholder="如：周一至周五 9:00-18:00"
-                        class="form-input with-bg"
-                        maxlength="100"
-                    />
-                    <text class="form-hint">设置客服服务时间，方便参赛者联系</text>
-                </view>
-                
-                <!-- 快速填充按钮 -->
-                <view class="form-item">
-                    <button 
-                        class="quick-fill-btn" 
-                        @tap="fillContactFromOrganizer"
-                        :disabled="!selectedOrganizer"
-                    >
-                        <text class="btn-text">从主办方信息快速填充</text>
-                    </button>
-                    <text class="form-hint">如果主办方已设置联系方式，可快速填充</text>
-                </view>
-            </view>
-        </view>
         
 
         <!-- 底部操作栏 -->
@@ -1773,13 +1684,6 @@ interface FormData {
     custom_groups: CustomGroup[]
     co_organizers: CoOrganizer[]
     signup_fields: SignupField[]
-    // 联系方式字段
-    contact_name: string
-    contact_phone: string
-    contact_wechat: string
-    contact_qq: string
-    contact_email: string
-    service_hours: string
 }
 
 interface SignupField {
@@ -1843,14 +1747,7 @@ const formData = ref<FormData>({
     items: [],                 // 比赛项目
     custom_groups: [],         // 自定义分组
     co_organizers: [],          // 协办方
-    signup_fields: [],
-    // 联系方式字段
-    contact_name: '',          // 联系人姓名
-    contact_phone: '',         // 联系电话
-    contact_wechat: '',        // 微信号
-    contact_qq: '',            // QQ号
-    contact_email: '',         // 邮箱
-    service_hours: ''          // 服务时间
+    signup_fields: []
 })
 
 // 项目选择相关数据
@@ -2146,14 +2043,7 @@ const initFormData = () => {
         age_groups: ['不限年龄'],
         items: [],
         co_organizers: [],
-        signup_fields: [],
-        // 联系方式字段
-        contact_name: '',
-        contact_phone: '',
-        contact_wechat: '',
-        contact_qq: '',
-        contact_email: '',
-        service_hours: ''
+        signup_fields: []
     }
     
     // 设置默认时间
@@ -2221,42 +2111,6 @@ watch(selectedItems, () => {
     saveFormDataToCache()
 }, { deep: true })
 
-// 从主办方信息快速填充联系方式
-const fillContactFromOrganizer = () => {
-    if (!selectedOrganizer.value) {
-        uni.showToast({
-            title: '请先选择主办方',
-            icon: 'none'
-        })
-        return
-    }
-    
-    // 从主办方信息填充联系方式
-    if (selectedOrganizer.value?.contact_name) {
-        formData.value.contact_name = selectedOrganizer.value.contact_name
-    }
-    if (selectedOrganizer.value?.contact_phone) {
-        formData.value.contact_phone = selectedOrganizer.value.contact_phone
-    }
-    if ((selectedOrganizer.value as any)?.contact_wechat) {
-        formData.value.contact_wechat = (selectedOrganizer.value as any).contact_wechat
-    }
-    if ((selectedOrganizer.value as any)?.contact_qq) {
-        formData.value.contact_qq = (selectedOrganizer.value as any).contact_qq
-    }
-    if ((selectedOrganizer.value as any)?.contact_email) {
-        formData.value.contact_email = (selectedOrganizer.value as any).contact_email
-    }
-    if ((selectedOrganizer.value as any)?.service_hours) {
-        formData.value.service_hours = (selectedOrganizer.value as any).service_hours
-    }
-    
-    uni.showToast({
-        title: '联系方式已填充',
-        icon: 'success'
-    })
-}
-
 // 表单提交
 const handleSubmit = async () => {
     // 验证表单
@@ -2291,14 +2145,7 @@ const handleSubmit = async () => {
             year: formData.value.year,
             age_groups: JSON.stringify(formData.value.age_groups),
             age_group_display: formData.value.age_groups.length > 1 && !formData.value.age_groups.includes('不限年龄') ? 1 : 0,
-            signup_fields: formData.value.signup_fields,
-            // 联系方式字段
-            contact_name: formData.value.contact_name,
-            contact_phone: formData.value.contact_phone,
-            contact_wechat: formData.value.contact_wechat,
-            contact_qq: formData.value.contact_qq,
-            contact_email: formData.value.contact_email,
-            service_hours: formData.value.service_hours
+            signup_fields: formData.value.signup_fields
         }
         
         // 如果是第7步，添加显示设置和号码牌设置
@@ -3971,14 +3818,7 @@ const loadEventData = async () => {
             items: [],
             custom_groups: [],
             co_organizers: [],
-            signup_fields: eventData.signup_fields || [],
-            // 联系方式字段
-            contact_name: eventData.contact_name || '',
-            contact_phone: eventData.contact_phone || '',
-            contact_wechat: eventData.contact_wechat || '',
-            contact_qq: eventData.contact_qq || '',
-            contact_email: eventData.contact_email || '',
-            service_hours: eventData.service_hours || ''
+            signup_fields: eventData.signup_fields || []
         }
         
         // 设置时间选择器的值
@@ -4135,14 +3975,7 @@ onMounted(() => {
                 items: [],
                 custom_groups: [],
                 co_organizers: [],
-                signup_fields: [],
-                // 联系方式字段
-                contact_name: '',
-                contact_phone: '',
-                contact_wechat: '',
-                contact_qq: '',
-                contact_email: '',
-                service_hours: ''
+                signup_fields: []
             }
             
             // 清空选择的数据
@@ -4207,14 +4040,7 @@ onMounted(() => {
                 items: [],
                 custom_groups: [],
                 co_organizers: [],
-                signup_fields: [],
-                // 联系方式字段
-                contact_name: '',
-                contact_phone: '',
-                contact_wechat: '',
-                contact_qq: '',
-                contact_email: '',
-                service_hours: ''
+                signup_fields: []
             }
             
             // 清空选择的数据
@@ -4343,11 +4169,6 @@ const selectedOrganizerName = computed(() => {
     return organizer ? organizer.organizer_name : ''
 })
 
-// 选中的主办方对象
-const selectedOrganizer = computed(() => {
-    return organizerList.value.find((item: any) => item.id === formData.value.organizer_id)
-})
-
 const selectedSeriesName = computed(() => {
     const series = seriesList.value.find((item: any) => item.id === formData.value.series_id)
     return series ? series.name : ''
@@ -4406,45 +4227,6 @@ const validateForm = () => {
                 })
                 return false
             }
-        }
-    }
-    
-    // 验证联系方式（必填项）
-    if (!formData.value.contact_name || formData.value.contact_name.trim() === '') {
-        uni.showToast({
-            title: '请输入联系人姓名',
-            icon: 'none'
-        })
-        return false
-    }
-    
-    if (!formData.value.contact_phone || formData.value.contact_phone.trim() === '') {
-        uni.showToast({
-            title: '请输入联系电话',
-            icon: 'none'
-        })
-        return false
-    }
-    
-    // 验证手机号格式
-    const phoneRegex = /^1[3-9]\d{9}$/
-    if (formData.value.contact_phone && !phoneRegex.test(formData.value.contact_phone)) {
-        uni.showToast({
-            title: '请输入正确的手机号码',
-            icon: 'none'
-        })
-        return false
-    }
-    
-    // 验证邮箱格式（如果填写了）
-    if (formData.value.contact_email && formData.value.contact_email.trim() !== '') {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(formData.value.contact_email)) {
-            uni.showToast({
-                title: '请输入正确的邮箱地址',
-                icon: 'none'
-            })
-            return false
         }
     }
     
@@ -8867,38 +8649,5 @@ picker {
     color: #999;
     margin-top: 8rpx;
     line-height: 1.4;
-}
-
-.quick-fill-btn {
-    width: 100%;
-    height: 80rpx;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border: none;
-    border-radius: 12rpx;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 16rpx;
-    transition: all 0.3s ease;
-}
-
-.quick-fill-btn:disabled {
-    background: #f5f5f5;
-    color: #ccc;
-}
-
-.quick-fill-btn:not(:disabled):active {
-    transform: scale(0.98);
-    opacity: 0.8;
-}
-
-.quick-fill-btn .btn-text {
-    color: #fff;
-    font-size: 28rpx;
-    font-weight: 500;
-}
-
-.quick-fill-btn:disabled .btn-text {
-    color: #ccc;
 }
 </style> 
