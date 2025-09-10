@@ -153,7 +153,7 @@ class EventService extends BaseApiService
     }
 
     /**
-     * 获取赛事详情页完整信息（包含协办方和号码牌设置）
+     * 获取赛事详情页完整信息（包含协办方、号码牌设置和项目场地分配）
      * @param int $id
      * @return array
      */
@@ -206,6 +206,30 @@ class EventService extends BaseApiService
         } catch (\Exception $e) {
             // 如果号码牌设置表不存在或查询失败，设置为空数组
             $info['number_plate_settings'] = [];
+        }
+        
+        // 获取项目列表并添加场地分配信息
+        try {
+            $eventItemService = new \addon\sport\app\service\api\event\EventItemService();
+            $eventItemService->member_id = $this->member_id; // 设置member_id用于权限验证
+            $eventItems = $eventItemService->getEventItems(['event_id' => $id]);
+            
+            // 为每个项目添加场地分配信息
+            foreach ($eventItems as &$item) {
+                try {
+                    $itemVenues = $eventItemService->getItemVenues($item['id']);
+                    $item['venues'] = $itemVenues;
+                } catch (\Exception $e) {
+                    // 如果获取场地分配失败，设置为空数组
+                    $item['venues'] = [];
+                }
+            }
+            unset($item);
+            
+            $info['event_items'] = $eventItems;
+        } catch (\Exception $e) {
+            // 如果获取项目列表失败，设置为空数组
+            $info['event_items'] = [];
         }
         
         return $info;
