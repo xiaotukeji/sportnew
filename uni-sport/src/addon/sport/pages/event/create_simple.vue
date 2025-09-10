@@ -3788,8 +3788,8 @@ const loadEventData = async () => {
         uni.showLoading({
             title: '加载中...'
         })
-        // 加载赛事基本信息（使用详情接口获取完整数据，包括号码牌设置）
-        const eventResponse: any = await getEventDetailInfo(eventId.value)
+        // 加载赛事基本信息
+        const eventResponse: any = await getEventInfo(eventId.value)
         const eventData = eventResponse.data
         
         // 处理地址字段

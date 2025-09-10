@@ -120,6 +120,32 @@ class EventService extends BaseApiService
             $info['signup_fields'] = [];
         }
         
+        // 安全地添加号码牌设置数据（不影响原有功能）
+        try {
+            $numberPlateSettings = (new \addon\sport\app\model\number_rule\SportEventNumberRule())
+                ->where([
+                    ['event_id', '=', $id],
+                    ['status', '=', 1]
+                ])
+                ->findOrEmpty()
+                ->toArray();
+            
+            if (!empty($numberPlateSettings)) {
+                // 处理保留号码和禁用号码
+                if (!empty($numberPlateSettings['reserved_numbers'])) {
+                    $numberPlateSettings['reserved_numbers'] = json_decode($numberPlateSettings['reserved_numbers'], true) ?: [];
+                }
+                if (!empty($numberPlateSettings['disabled_numbers'])) {
+                    $numberPlateSettings['disabled_numbers'] = json_decode($numberPlateSettings['disabled_numbers'], true) ?: [];
+                }
+            }
+            
+            $info['number_plate_settings'] = $numberPlateSettings;
+        } catch (\Exception $e) {
+            // 如果号码牌设置表不存在或查询失败，设置为空数组，不影响原有功能
+            $info['number_plate_settings'] = [];
+        }
+        
         return $info;
     }
 
