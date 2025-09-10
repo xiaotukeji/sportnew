@@ -2210,7 +2210,12 @@ const handleSubmit = async () => {
             year: formData.value.year,
             age_groups: JSON.stringify(formData.value.age_groups),
             age_group_display: formData.value.age_groups.length > 1 && !formData.value.age_groups.includes('不限年龄') ? 1 : 0,
-            signup_fields: formData.value.signup_fields
+            signup_fields: formData.value.signup_fields,
+            // 联系方式设置 - 始终包含
+            contact_name: formData.value.contact_name,
+            contact_phone: formData.value.contact_phone,
+            contact_wechat: formData.value.contact_wechat,
+            contact_email: formData.value.contact_email
         }
         
         // 如果是第7步，添加显示设置和号码牌设置
@@ -2240,12 +2245,17 @@ const handleSubmit = async () => {
                 disable_number_4: numberPlateSettings.value.disable_number_4 ? 1 : 0
             }
             
-            // 联系方式设置
-            submitData.contact_name = formData.value.contact_name
-            submitData.contact_phone = formData.value.contact_phone
-            submitData.contact_wechat = formData.value.contact_wechat
-            submitData.contact_email = formData.value.contact_email
+            console.log('第7步联系方式数据:', {
+                contact_name: formData.value.contact_name,
+                contact_phone: formData.value.contact_phone,
+                contact_wechat: formData.value.contact_wechat,
+                contact_email: formData.value.contact_email
+            })
         }
+        
+        console.log('完整提交数据:', submitData)
+        console.log('当前步骤:', currentStep.value)
+        console.log('是否编辑模式:', isEditMode.value)
         
         let result: any
         
@@ -2285,6 +2295,14 @@ const handleSubmit = async () => {
                     contact_email: formData.value.contact_email,
                     update_time: Date.now() / 1000 // 添加更新时间
                 }
+                
+                console.log('编辑模式第7步联系方式数据:', {
+                    contact_name: formData.value.contact_name,
+                    contact_phone: formData.value.contact_phone,
+                    contact_wechat: formData.value.contact_wechat,
+                    contact_email: formData.value.contact_email
+                })
+                console.log('编辑模式第7步完整数据:', finalSettingsData)
                 
                 // 第7步：保存最终设置
                 result = await editEvent(eventId.value, finalSettingsData)

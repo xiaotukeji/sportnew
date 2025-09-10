@@ -274,6 +274,14 @@ class EventService extends BaseApiService
         $data['sort'] = 0;
         $data['member_id'] = $this->member_id;  // 设置发布者ID
         
+        // 调试信息
+        \think\facade\Log::info('EventService add - 联系方式数据: ' . json_encode([
+            'contact_name' => $data['contact_name'] ?? '未设置',
+            'contact_phone' => $data['contact_phone'] ?? '未设置',
+            'contact_wechat' => $data['contact_wechat'] ?? '未设置',
+            'contact_email' => $data['contact_email'] ?? '未设置'
+        ]));
+        
         // 开启事务
         $this->model->startTrans();
         try {
@@ -398,6 +406,12 @@ class EventService extends BaseApiService
         \think\facade\Log::info('EventService edit - 步骤: ' . $step);
         \think\facade\Log::info('EventService edit - 准备更新数据: ' . json_encode($updateData));
         \think\facade\Log::info('EventService edit - 赛事ID: ' . $id);
+        \think\facade\Log::info('EventService edit - 联系方式数据: ' . json_encode([
+            'contact_name' => $data['contact_name'] ?? '未设置',
+            'contact_phone' => $data['contact_phone'] ?? '未设置',
+            'contact_wechat' => $data['contact_wechat'] ?? '未设置',
+            'contact_email' => $data['contact_email'] ?? '未设置'
+        ]));
         
         try {
             $result = $this->model->where([['id', '=', $id]])->update($updateData);
