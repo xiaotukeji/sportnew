@@ -1151,7 +1151,7 @@
                 <view class="card-content">
                     <!-- 联系人姓名 -->
                     <view class="form-item">
-                        <view class="form-label">联系人姓名</view>
+                        <view class="form-label">联系人姓名11</view>
                         <input 
                             class="form-input basic-input" 
                             v-model="formData.contact_name" 
@@ -3875,6 +3875,14 @@ const loadEventData = async () => {
         // 加载赛事基本信息
         const eventResponse: any = await getEventInfo(eventId.value)
         const eventData = eventResponse.data
+        
+        // 调试：查看后端返回的联系方式数据
+        console.log('后端返回的联系方式数据:', {
+            contact_name: eventData.contact_name,
+            contact_phone: eventData.contact_phone,
+            contact_wechat: eventData.contact_wechat,
+            contact_email: eventData.contact_email
+        })
         
         // 处理地址字段
         let fullAddress = eventData.location || ''

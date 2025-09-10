@@ -99,6 +99,14 @@ class EventService extends BaseApiService
             ->findOrEmpty()
             ->toArray();
             
+        // 调试：查看数据库查询结果中的联系方式数据
+        \think\facade\Log::info('EventService getInfo - 联系方式数据: ' . json_encode([
+            'contact_name' => $info['contact_name'] ?? '未设置',
+            'contact_phone' => $info['contact_phone'] ?? '未设置',
+            'contact_wechat' => $info['contact_wechat'] ?? '未设置',
+            'contact_email' => $info['contact_email'] ?? '未设置'
+        ]));
+            
         if (empty($info)) {
             throw new CommonException('SPORT_EVENT_NOT_EXIST');
         }
