@@ -1141,6 +1141,81 @@
                     </view>
                 </view>
             </view>
+            
+            <!-- 联系方式设置 -->
+            <view class="settings-card">
+                <view class="card-header">
+                    <view class="card-title">联系方式设置</view>
+                    <view class="card-subtitle">设置赛事联系方式和客服信息</view>
+                </view>
+                <view class="card-content">
+                    <!-- 联系人姓名 -->
+                    <view class="form-item">
+                        <view class="form-label">联系人姓名</view>
+                        <input 
+                            class="form-input" 
+                            v-model="formData.contact_name" 
+                            placeholder="请输入联系人姓名"
+                            maxlength="50"
+                        />
+                    </view>
+                    
+                    <!-- 联系电话 -->
+                    <view class="form-item">
+                        <view class="form-label">联系电话</view>
+                        <input 
+                            class="form-input" 
+                            v-model="formData.contact_phone" 
+                            placeholder="请输入联系电话"
+                            maxlength="20"
+                        />
+                    </view>
+                    
+                    <!-- 微信号 -->
+                    <view class="form-item">
+                        <view class="form-label">微信号</view>
+                        <input 
+                            class="form-input" 
+                            v-model="formData.contact_wechat" 
+                            placeholder="请输入微信号"
+                            maxlength="50"
+                        />
+                    </view>
+                    
+                    <!-- QQ号 -->
+                    <view class="form-item">
+                        <view class="form-label">QQ号</view>
+                        <input 
+                            class="form-input" 
+                            v-model="formData.contact_qq" 
+                            placeholder="请输入QQ号"
+                            maxlength="20"
+                        />
+                    </view>
+                    
+                    <!-- 邮箱 -->
+                    <view class="form-item">
+                        <view class="form-label">邮箱</view>
+                        <input 
+                            class="form-input" 
+                            v-model="formData.contact_email" 
+                            placeholder="请输入邮箱"
+                            maxlength="100"
+                        />
+                    </view>
+                    
+                    <!-- 服务时间 -->
+                    <view class="form-item">
+                        <view class="form-label">服务时间</view>
+                        <input 
+                            class="form-input" 
+                            v-model="formData.service_hours" 
+                            placeholder="如：周一至周五 9:00-18:00"
+                            maxlength="100"
+                        />
+                    </view>
+                </view>
+            </view>
 
         </view>
 
@@ -1684,6 +1759,12 @@ interface FormData {
     custom_groups: CustomGroup[]
     co_organizers: CoOrganizer[]
     signup_fields: SignupField[]
+    contact_name: string
+    contact_phone: string
+    contact_wechat: string
+    contact_qq: string
+    contact_email: string
+    service_hours: string
 }
 
 interface SignupField {
@@ -1747,7 +1828,13 @@ const formData = ref<FormData>({
     items: [],                 // 比赛项目
     custom_groups: [],         // 自定义分组
     co_organizers: [],          // 协办方
-    signup_fields: []
+    signup_fields: [],
+    contact_name: '',          // 联系人姓名
+    contact_phone: '',         // 联系电话
+    contact_wechat: '',        // 微信号
+    contact_qq: '',            // QQ号
+    contact_email: '',         // 邮箱
+    service_hours: ''          // 服务时间
 })
 
 // 项目选择相关数据
@@ -2043,7 +2130,13 @@ const initFormData = () => {
         age_groups: ['不限年龄'],
         items: [],
         co_organizers: [],
-        signup_fields: []
+        signup_fields: [],
+        contact_name: '',
+        contact_phone: '',
+        contact_wechat: '',
+        contact_qq: '',
+        contact_email: '',
+        service_hours: ''
     }
     
     // 设置默认时间
@@ -2174,6 +2267,14 @@ const handleSubmit = async () => {
                 auto_assign_after_registration: numberPlateSettings.value.auto_assign_after_registration ? 1 : 0,
                 disable_number_4: numberPlateSettings.value.disable_number_4 ? 1 : 0
             }
+            
+            // 联系方式设置
+            submitData.contact_name = formData.value.contact_name
+            submitData.contact_phone = formData.value.contact_phone
+            submitData.contact_wechat = formData.value.contact_wechat
+            submitData.contact_qq = formData.value.contact_qq
+            submitData.contact_email = formData.value.contact_email
+            submitData.service_hours = formData.value.service_hours
         }
         
         let result: any
@@ -2207,6 +2308,13 @@ const handleSubmit = async () => {
                         auto_assign_after_registration: numberPlateSettings.value.auto_assign_after_registration ? 1 : 0,
                         disable_number_4: numberPlateSettings.value.disable_number_4 ? 1 : 0
                     },
+                    // 联系方式设置
+                    contact_name: formData.value.contact_name,
+                    contact_phone: formData.value.contact_phone,
+                    contact_wechat: formData.value.contact_wechat,
+                    contact_qq: formData.value.contact_qq,
+                    contact_email: formData.value.contact_email,
+                    service_hours: formData.value.service_hours,
                     update_time: Date.now() / 1000 // 添加更新时间
                 }
                 
@@ -3818,7 +3926,13 @@ const loadEventData = async () => {
             items: [],
             custom_groups: [],
             co_organizers: [],
-            signup_fields: eventData.signup_fields || []
+            signup_fields: eventData.signup_fields || [],
+            contact_name: eventData.contact_name || '',
+            contact_phone: eventData.contact_phone || '',
+            contact_wechat: eventData.contact_wechat || '',
+            contact_qq: eventData.contact_qq || '',
+            contact_email: eventData.contact_email || '',
+            service_hours: eventData.service_hours || ''
         }
         
         // 设置时间选择器的值
@@ -3975,7 +4089,13 @@ onMounted(() => {
                 items: [],
                 custom_groups: [],
                 co_organizers: [],
-                signup_fields: []
+                signup_fields: [],
+                contact_name: '',
+                contact_phone: '',
+                contact_wechat: '',
+                contact_qq: '',
+                contact_email: '',
+                service_hours: ''
             }
             
             // 清空选择的数据
@@ -4040,7 +4160,13 @@ onMounted(() => {
                 items: [],
                 custom_groups: [],
                 co_organizers: [],
-                signup_fields: []
+                signup_fields: [],
+                contact_name: '',
+                contact_phone: '',
+                contact_wechat: '',
+                contact_qq: '',
+                contact_email: '',
+                service_hours: ''
             }
             
             // 清空选择的数据

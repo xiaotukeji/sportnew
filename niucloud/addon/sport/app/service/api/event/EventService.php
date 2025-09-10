@@ -87,7 +87,7 @@ class EventService extends BaseApiService
      */
     public function getInfo(int $id)
     {
-        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.address_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.signup_fields, se.registration_start_time, se.registration_end_time, se.registration_fee, se.max_participants, se.group_size, se.rounds, se.allow_duplicate_registration, se.show_participant_count, se.show_progress, se.create_time, se.update_time';
+        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.address_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.signup_fields, se.registration_start_time, se.registration_end_time, se.registration_fee, se.max_participants, se.group_size, se.rounds, se.allow_duplicate_registration, se.show_participant_count, se.show_progress, se.contact_name, se.contact_phone, se.contact_wechat, se.contact_qq, se.contact_email, se.service_hours, se.create_time, se.update_time';
         
         $info = $this->model
             ->alias('se')
@@ -383,6 +383,12 @@ class EventService extends BaseApiService
                 // 第7步：最终设置
                 if (isset($data['number_plate_settings'])) $updateData['number_plate_settings'] = $data['number_plate_settings'];
                 if (isset($data['remark'])) $updateData['remark'] = $data['remark'];
+                if (isset($data['contact_name'])) $updateData['contact_name'] = $data['contact_name'];
+                if (isset($data['contact_phone'])) $updateData['contact_phone'] = $data['contact_phone'];
+                if (isset($data['contact_wechat'])) $updateData['contact_wechat'] = $data['contact_wechat'];
+                if (isset($data['contact_qq'])) $updateData['contact_qq'] = $data['contact_qq'];
+                if (isset($data['contact_email'])) $updateData['contact_email'] = $data['contact_email'];
+                if (isset($data['service_hours'])) $updateData['service_hours'] = $data['service_hours'];
                 break;
             default:
                 // 默认：更新所有字段（兼容旧版本）
