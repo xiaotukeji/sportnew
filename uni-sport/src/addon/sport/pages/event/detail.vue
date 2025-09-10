@@ -717,15 +717,16 @@ const getAutoAssignText = (autoAssign: number, numberingMode: number) => {
 }
 
 /**
- * 加载赛事项目列表
+ * 加载赛事项目列表（从详情接口获取，包含场地分配信息）
  */
 const loadEventItems = async () => {
     if (!eventId.value) return
     
     try {
-        const response: any = await getEventItems(eventId.value)
-        eventItems.value = response.data || []
-        console.log('赛事项目列表:', eventItems.value)
+        // 使用详情接口获取项目列表，包含场地分配信息
+        const response: any = await getEventDetailInfo(eventId.value)
+        eventItems.value = response.data?.event_items || []
+        console.log('赛事项目列表（含场地）:', eventItems.value)
     } catch (error) {
         console.error('加载赛事项目失败:', error)
         eventItems.value = []
