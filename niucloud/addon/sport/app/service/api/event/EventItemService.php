@@ -687,11 +687,19 @@ class EventItemService extends BaseApiService
         \think\facade\Log::info('EventItemService updateItemSettings Debug: item_id=' . $id . ', update_data=' . json_encode($update_data) . ', original_data=' . json_encode($data));
         \think\facade\Log::info('EventItemService 字段检查: group_size=' . $group_size . ', venue_count=' . $update_data['venue_count'] . ', venue_type=' . $update_data['venue_type']);
         
+        // 检查项目是否存在
+        $item_before = SportItem::where('id', $id)->find();
+        \think\facade\Log::info('EventItemService 更新前项目数据: ' . json_encode($item_before));
+        
         // 执行更新并记录影响行数
         $affected_rows = SportItem::where('id', $id)->update($update_data);
         
         // 记录更新结果
         \think\facade\Log::info('EventItemService updateItemSettings Result: item_id=' . $id . ', affected_rows=' . $affected_rows);
+        
+        // 检查更新后的数据
+        $item_after = SportItem::where('id', $id)->find();
+        \think\facade\Log::info('EventItemService 更新后项目数据: ' . json_encode($item_after));
         
         if ($affected_rows === 0) {
             \think\facade\Log::warning('EventItemService updateItemSettings Warning: No rows affected for item_id=' . $id);

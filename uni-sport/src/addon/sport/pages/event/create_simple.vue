@@ -4629,10 +4629,16 @@ const onItemSwitchChangeEvt = (e: any) => {
     const field = e.target.dataset.field
     const value = e.detail.value
     
+    console.log(`开关变更: itemId=${itemId}, field=${field}, value=${value}`)
+    
     const item = eventItems.value.find(item => item.id === itemId)
     if (item) {
+        console.log(`找到项目: ${item.name}, 更新前: ${item[field]}`)
         item[field] = value
         item.is_configured = true
+        console.log(`更新后: ${item[field]}`)
+    } else {
+        console.error(`未找到项目: itemId=${itemId}`)
     }
 }
 
@@ -4792,9 +4798,10 @@ const saveItemSettings = async () => {
     try {
         // 保存每个项目的设置
         for (const item of eventItems.value) {
-            // 准备保存的数据
+            // 准备保存的数据 - 修复ID字段问题
+            const itemId = item.id // 直接使用id字段，因为后端接口返回的id就是sport_item_id
             const saveData = {
-                item_id: item.sport_item_id || item.id,
+                item_id: itemId,
                 registration_fee: item.registration_fee || 0,
                 max_participants: item.max_participants || 0,
                 rounds: item.rounds || 0,
@@ -4806,13 +4813,14 @@ const saveItemSettings = async () => {
                 remark: item.remark || ''
             }
             
+            console.log(`保存项目设置: ${item.name} (ID: ${itemId})`, saveData)
+            
             // 调用接口保存
             const response: any = await updateItemSettings(saveData)
             
             // 检查响应状态
             if (response && (response.code === 200 || response.code === 1)) {
                 // 保存场地分配
-                const itemId = item.sport_item_id || item.id
                 const selectedVenues = itemVenueAssignments.value[item.id] || []
                 
                 if (selectedVenues.length > 0) {
