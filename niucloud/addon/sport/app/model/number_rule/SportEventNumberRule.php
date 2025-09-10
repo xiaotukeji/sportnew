@@ -50,6 +50,7 @@ class SportEventNumberRule extends BaseModel
         'allow_athlete_choice' => 'integer',
         'choice_time_window' => 'integer',
         'auto_assign_after_registration' => 'integer',
+        'disable_number_4' => 'integer',
         'status' => 'integer',
         'create_time' => 'integer',
         'update_time' => 'integer'
@@ -180,6 +181,11 @@ class SportEventNumberRule extends BaseModel
      */
     public function isNumberAvailable($number)
     {
+        // 检查是否禁用包含4的号码
+        if ($this->disable_number_4 && strpos($number, '4') !== false) {
+            return false;
+        }
+
         // 检查是否在禁用列表中
         if (in_array($number, $this->disabled_numbers)) {
             return false;

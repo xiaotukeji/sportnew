@@ -415,6 +415,11 @@
                     <text class="value">{{ eventInfo.number_plate_settings.end_number }}</text>
                 </view>
                 
+                <view class="detail-item">
+                    <text class="label">是否禁用4</text>
+                    <text class="value">{{ eventInfo.number_plate_settings.disable_number_4 ? '是' : '否' }}</text>
+                </view>
+                
                 <view v-if="eventInfo.number_plate_settings.numbering_mode === 2" class="detail-item">
                     <text class="label">自选时间窗口</text>
                     <text class="value">{{ eventInfo.number_plate_settings.choice_time_window }}天</text>

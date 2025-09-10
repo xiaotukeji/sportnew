@@ -1032,8 +1032,22 @@
                                     class="form-input with-bg"
                                     @input="onStepChange"
                                 />
-            </view>
-        </view>
+                            </view>
+                        </view>
+
+                        <!-- 禁用4设置 -->
+                        <view class="form-item">
+                            <view class="form-label">是否禁用4</view>
+                            <view class="switch-container">
+                                <switch 
+                                    :checked="numberPlateSettings.disable_number_4"
+                                    @change="onDisableNumber4Change"
+                                    color="#007AFF"
+                                />
+                                <text class="switch-text">禁用包含数字4的号码</text>
+                            </view>
+                            <text class="form-hint">开启后，所有生成的号码都不会包含数字4</text>
+                        </view>
 
                         <!-- 号码预览 -->
                         <view class="form-item">
@@ -1781,7 +1795,8 @@ const numberPlateSettings = ref({
     allow_athlete_choice: false, // 是否允许运动员自选
     choice_time_window: 7, // 自选时间窗口（天）
     choice_rules: 'first_come_first_served', // 自选规则
-    auto_assign_after_registration: true // 报名后是否自动分配
+    auto_assign_after_registration: true, // 报名后是否自动分配
+    disable_number_4: false // 是否禁用包含4的号码
 })
 
 // 号码牌设置相关数据
@@ -3919,7 +3934,8 @@ const loadEventData = async () => {
                 allow_athlete_choice: settings.allow_athlete_choice === 1,
                 choice_time_window: settings.choice_time_window || 7,
                 choice_rules: settings.choice_rules || 'first_come_first_served',
-                auto_assign_after_registration: settings.auto_assign_after_registration === 1
+                auto_assign_after_registration: settings.auto_assign_after_registration === 1,
+                disable_number_4: settings.disable_number_4 === 1
             }
             
             // 设置数字位数选择器的索引
@@ -5100,6 +5116,14 @@ const onStepChange = () => {
     if (numberPlateSettings.value.step < 1) {
         numberPlateSettings.value.step = 1
     }
+}
+
+/**
+ * 禁用4开关变化处理
+ */
+const onDisableNumber4Change = (e: any) => {
+    numberPlateSettings.value.disable_number_4 = e.detail.value
+    console.log('禁用4设置变更:', numberPlateSettings.value.disable_number_4)
 }
 
 const onChoiceRuleChange = (e: any) => {
@@ -8652,6 +8676,26 @@ picker {
 }
 
 .form-desc {
+    font-size: 24rpx;
+    color: #999;
+    margin-top: 8rpx;
+    line-height: 1.4;
+}
+
+/* 开关容器样式 */
+.switch-container {
+    display: flex;
+    align-items: center;
+    gap: 16rpx;
+}
+
+.switch-text {
+    font-size: 28rpx;
+    color: #333;
+    font-weight: 500;
+}
+
+.form-hint {
     font-size: 24rpx;
     color: #999;
     margin-top: 8rpx;
