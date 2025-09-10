@@ -304,6 +304,7 @@ class EventService extends BaseApiService
         
         // 处理号码牌设置
         $number_plate_settings = $data['number_plate_settings'] ?? null;
+        \think\facade\Log::info('EventService edit - 提取的number_plate_settings: ' . json_encode($number_plate_settings));
         unset($data['number_plate_settings'], $data['step']);
         
         $data['update_time'] = time();

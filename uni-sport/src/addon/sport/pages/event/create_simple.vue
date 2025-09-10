@@ -2220,6 +2220,14 @@ const handleSubmit = async () => {
                     update_time: Date.now() / 1000 // 添加更新时间
                 }
                 
+                // 添加调试日志
+                console.log('=== 第7步提交数据调试 ===')
+                console.log('numberPlateSettings.value:', numberPlateSettings.value)
+                console.log('reserved_numbers:', numberPlateSettings.value.reserved_numbers)
+                console.log('disabled_numbers:', numberPlateSettings.value.disabled_numbers)
+                console.log('finalSettingsData:', finalSettingsData)
+                console.log('number_plate_settings:', finalSettingsData.number_plate_settings)
+                
                 // 第7步：保存最终设置
                 result = await editEvent(eventId.value, finalSettingsData)
             } else {
