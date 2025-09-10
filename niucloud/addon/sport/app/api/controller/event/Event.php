@@ -89,8 +89,20 @@ class Event extends BaseApiController
             ['signup_fields', []],     // 报名字段配置
             ['number_plate_settings', []], // 号码牌设置
             ['remark', ''],            // 备注
+            ['contact_name', ''],      // 联系人姓名
+            ['contact_phone', ''],     // 联系电话
+            ['contact_wechat', ''],    // 微信号
+            ['contact_email', ''],     // 邮箱
         ]);
 
+        // 调试信息
+        \think\facade\Log::info('Event Controller add - 联系方式数据: ' . json_encode([
+            'contact_name' => $data['contact_name'] ?? '未设置',
+            'contact_phone' => $data['contact_phone'] ?? '未设置',
+            'contact_wechat' => $data['contact_wechat'] ?? '未设置',
+            'contact_email' => $data['contact_email'] ?? '未设置'
+        ]));
+        
         // 根据步骤验证必填字段
         $this->validateStepData($data);
         
@@ -130,8 +142,20 @@ class Event extends BaseApiController
             ['signup_fields', []],     // 报名字段配置
             ['number_plate_settings', []], // 号码牌设置
             ['remark', ''],            // 备注
+            ['contact_name', ''],      // 联系人姓名
+            ['contact_phone', ''],     // 联系电话
+            ['contact_wechat', ''],    // 微信号
+            ['contact_email', ''],     // 邮箱
         ]);
 
+        // 调试信息
+        \think\facade\Log::info('Event Controller edit - 联系方式数据: ' . json_encode([
+            'contact_name' => $data['contact_name'] ?? '未设置',
+            'contact_phone' => $data['contact_phone'] ?? '未设置',
+            'contact_wechat' => $data['contact_wechat'] ?? '未设置',
+            'contact_email' => $data['contact_email'] ?? '未设置'
+        ]));
+        
         // 根据步骤验证必填字段
         $this->validateStepData($data);
         
