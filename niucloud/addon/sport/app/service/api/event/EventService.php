@@ -133,10 +133,23 @@ class EventService extends BaseApiService
             if (!empty($numberPlateSettings)) {
                 // 处理保留号码和禁用号码
                 if (!empty($numberPlateSettings['reserved_numbers'])) {
-                    $numberPlateSettings['reserved_numbers'] = json_decode($numberPlateSettings['reserved_numbers'], true) ?: [];
+                    if (is_string($numberPlateSettings['reserved_numbers'])) {
+                        $numberPlateSettings['reserved_numbers'] = json_decode($numberPlateSettings['reserved_numbers'], true) ?: [];
+                    } elseif (!is_array($numberPlateSettings['reserved_numbers'])) {
+                        $numberPlateSettings['reserved_numbers'] = [];
+                    }
+                } else {
+                    $numberPlateSettings['reserved_numbers'] = [];
                 }
+                
                 if (!empty($numberPlateSettings['disabled_numbers'])) {
-                    $numberPlateSettings['disabled_numbers'] = json_decode($numberPlateSettings['disabled_numbers'], true) ?: [];
+                    if (is_string($numberPlateSettings['disabled_numbers'])) {
+                        $numberPlateSettings['disabled_numbers'] = json_decode($numberPlateSettings['disabled_numbers'], true) ?: [];
+                    } elseif (!is_array($numberPlateSettings['disabled_numbers'])) {
+                        $numberPlateSettings['disabled_numbers'] = [];
+                    }
+                } else {
+                    $numberPlateSettings['disabled_numbers'] = [];
                 }
             }
             
@@ -189,10 +202,23 @@ class EventService extends BaseApiService
             if (!empty($numberPlateSettings)) {
                 // 处理保留号码和禁用号码
                 if (!empty($numberPlateSettings['reserved_numbers'])) {
-                    $numberPlateSettings['reserved_numbers'] = json_decode($numberPlateSettings['reserved_numbers'], true) ?: [];
+                    if (is_string($numberPlateSettings['reserved_numbers'])) {
+                        $numberPlateSettings['reserved_numbers'] = json_decode($numberPlateSettings['reserved_numbers'], true) ?: [];
+                    } elseif (!is_array($numberPlateSettings['reserved_numbers'])) {
+                        $numberPlateSettings['reserved_numbers'] = [];
+                    }
+                } else {
+                    $numberPlateSettings['reserved_numbers'] = [];
                 }
+                
                 if (!empty($numberPlateSettings['disabled_numbers'])) {
-                    $numberPlateSettings['disabled_numbers'] = json_decode($numberPlateSettings['disabled_numbers'], true) ?: [];
+                    if (is_string($numberPlateSettings['disabled_numbers'])) {
+                        $numberPlateSettings['disabled_numbers'] = json_decode($numberPlateSettings['disabled_numbers'], true) ?: [];
+                    } elseif (!is_array($numberPlateSettings['disabled_numbers'])) {
+                        $numberPlateSettings['disabled_numbers'] = [];
+                    }
+                } else {
+                    $numberPlateSettings['disabled_numbers'] = [];
                 }
             }
             
