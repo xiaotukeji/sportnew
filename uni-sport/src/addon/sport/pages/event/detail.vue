@@ -9,13 +9,13 @@
         <view v-else-if="eventInfo" class="event-detail">
             <!-- 页面标题 -->
             <view class="page-header">
-                <text class="page-title">赛事详情</text>
+                <text class="page-title">赛事详情111</text>
             </view>
             
             <!-- 赛事基本信息 -->
             <view class="detail-card">
                 <view class="card-title">
-                    <text class="title-text">基本信息</text>
+                    <text class="title-text">基本信息111</text>
                 </view>
                 
                 <view class="detail-item">
