@@ -157,6 +157,23 @@ class EventService extends BaseApiService
             $info['number_plate_settings'] = [];
         }
         
+        // 安全地添加自定义分组数据（参考号码牌设置的方式）
+        try {
+            $eventGroups = (new \addon\sport\app\model\group\SportEventGroup())
+                ->where([
+                    ['event_id', '=', $id],
+                    ['status', '=', 1]
+                ])
+                ->order('sort asc, id asc')
+                ->select()
+                ->toArray();
+            
+            $info['custom_groups'] = $eventGroups;
+        } catch (\Exception $e) {
+            // 如果分组表不存在或查询失败，设置为空数组，不影响原有功能
+            $info['custom_groups'] = [];
+        }
+        
         return $info;
     }
 
