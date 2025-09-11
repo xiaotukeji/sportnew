@@ -3959,6 +3959,11 @@ const loadEventData = async () => {
             contact_email: eventData.contact_email
         })
         
+        // 调试：查看后端返回的分组数据
+        console.log('后端返回的分组数据:', eventData.custom_groups)
+        console.log('分组数据类型:', typeof eventData.custom_groups)
+        console.log('分组数据是否为数组:', Array.isArray(eventData.custom_groups))
+        
         // 处理地址字段
         let fullAddress = eventData.location || ''
         let addressDetail = eventData.address_detail || ''
@@ -3993,7 +3998,7 @@ const loadEventData = async () => {
             year: eventData.year || new Date().getFullYear(),
             age_groups: eventData.age_groups ? (typeof eventData.age_groups === 'string' ? JSON.parse(eventData.age_groups) : eventData.age_groups) : ['不限年龄'],
             items: [],
-            custom_groups: eventData.custom_groups || [],
+            custom_groups: eventData.custom_groups ? (typeof eventData.custom_groups === 'string' ? JSON.parse(eventData.custom_groups) : eventData.custom_groups) : [],
             co_organizers: [],
             signup_fields: eventData.signup_fields || [],
             contact_name: eventData.contact_name || '',
@@ -4001,6 +4006,10 @@ const loadEventData = async () => {
             contact_wechat: eventData.contact_wechat || '',
             contact_email: eventData.contact_email || ''
         }
+        
+        // 调试：查看设置后的分组数据
+        console.log('设置后的formData.custom_groups:', formData.value.custom_groups)
+        console.log('设置后的分组数据长度:', formData.value.custom_groups.length)
         
         // 设置时间选择器的值
         if (eventData.start_time) {

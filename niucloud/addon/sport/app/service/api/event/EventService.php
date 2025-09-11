@@ -691,10 +691,19 @@ class EventService extends BaseApiService
      */
     private function saveEventGroups(int $event_id, array $groups)
     {
-        $group_model = new SportEventGroup();
+        \think\facade\Log::info('=== saveEventGroups 调试开始 ===');
+        \think\facade\Log::info('赛事ID: ' . $event_id);
+        \think\facade\Log::info('分组数据: ' . json_encode($groups, JSON_UNESCAPED_UNICODE));
         
+        // 先删除该赛事的所有现有分组
+        $deletedCount = SportEventGroup::where('event_id', $event_id)->delete();
+        \think\facade\Log::info('删除现有分组数量: ' . $deletedCount);
+        
+        // 然后重新创建分组
+        $createdCount = 0;
         foreach ($groups as $index => $group) {
             if (empty($group['group_name'])) {
+                \think\facade\Log::info('跳过空分组名称: ' . json_encode($group));
                 continue;
             }
             
@@ -709,9 +718,21 @@ class EventService extends BaseApiService
                 'update_time' => time()
             ];
             
-            $group_model->save($group_data);
-            $group_model = new SportEventGroup(); // 重新实例化
+            \think\facade\Log::info('准备保存分组数据: ' . json_encode($group_data, JSON_UNESCAPED_UNICODE));
+            
+            $group_model = new SportEventGroup();
+            $result = $group_model->save($group_data);
+            
+            if ($result) {
+                $createdCount++;
+                \think\facade\Log::info('分组保存成功，ID: ' . $group_model->id);
+            } else {
+                \think\facade\Log::error('分组保存失败: ' . json_encode($group_data));
+            }
         }
+        
+        \think\facade\Log::info('=== saveEventGroups 调试结束 ===');
+        \think\facade\Log::info('创建分组数量: ' . $createdCount);
     }
 
     /**
