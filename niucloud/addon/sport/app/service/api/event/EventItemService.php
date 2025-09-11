@@ -176,22 +176,14 @@ class EventItemService extends BaseApiService
      */
     public function saveEventItems(array $data)
     {
-        // 添加调试日志
-        \think\facade\Log::info('=== saveEventItems 调试开始 ===');
-        \think\facade\Log::info('接收到的原始数据: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
-        
         $event_id = $data['event_id'] ?? 0;
         $base_item_ids = $data['base_item_ids'] ?? [];
-        
-        \think\facade\Log::info('event_id: ' . $event_id);
-        \think\facade\Log::info('base_item_ids: ' . json_encode($base_item_ids, JSON_UNESCAPED_UNICODE));
-        \think\facade\Log::info('base_item_ids 类型: ' . gettype($base_item_ids));
         
         if (empty($event_id)) {
             throw new \Exception('赛事ID不能为空');
         }
         
-        // 验证赛事权限和获取赛事信息
+        // 验证权限：只能操作自己创建的赛事
         $event_service = new EventService();
         $event_info = $event_service->getInfo($event_id);
         
@@ -199,87 +191,31 @@ class EventItemService extends BaseApiService
             throw new \Exception('赛事不存在');
         }
         
-        // 验证权限：只能操作自己创建的赛事
         if ($event_info['member_id'] != $this->member_id) {
             throw new \Exception('无权限操作此赛事');
         }
         
-        // 获取赛事的年龄组设置
-        $age_groups_raw = $event_info['age_groups'] ?? '["不限年龄"]';
-        if (is_string($age_groups_raw)) {
-            $age_groups = json_decode($age_groups_raw, true) ?: ['不限年龄'];
-        } else {
-            $age_groups = $age_groups_raw ?: ['不限年龄'];
-        }
-        $age_group_display = $event_info['age_group_display'] ?? 0;
+        // 第5步：只保存项目选择，删除现有项目，重新创建
+        (new SportItem())->where('event_id', $event_id)->delete();
         
-        // 获取现有的项目记录（只获取启用状态的）
-        $existing_items = (new SportItem())->where([
-            ['event_id', '=', $event_id],
-            ['status', '=', 1]
-        ])->select()->toArray();
-        
-        $existing_base_item_ids = array_column($existing_items, 'base_item_id');
-        
-        // 找出需要删除的项目（不再选择的基础项目）
-        $items_to_delete = array_diff($existing_base_item_ids, $base_item_ids);
-        if (!empty($items_to_delete)) {
-            \think\facade\Log::info('SportItem 软删除项目: ' . json_encode($items_to_delete));
-            // 软删除不再需要的项目（而不是物理删除）
-            (new SportItem())->where([
-                ['event_id', '=', $event_id],
-                ['base_item_id', 'in', $items_to_delete]
-            ])->update([
-                'status' => 0, // 标记为禁用状态
+        foreach ($base_item_ids as $index => $base_item_id) {
+            $base_item = \addon\sport\app\model\item\SportBaseItem::where('id', $base_item_id)->find();
+            if (!$base_item) {
+                continue;
+            }
+            
+            $item_data = [
+                'event_id' => $event_id,
+                'base_item_id' => $base_item_id,
+                'name' => $base_item['name'],
+                'category_id' => $base_item['category_id'],
+                'sort' => $index,
+                'status' => 1,
+                'create_time' => time(),
                 'update_time' => time()
-            ]);
-        }
-        
-        // 找出需要添加的新项目
-        $items_to_add = array_diff($base_item_ids, $existing_base_item_ids);
-        
-        \think\facade\Log::info('SportItem 保存逻辑: 现有项目=' . json_encode($existing_base_item_ids) . ', 新选择=' . json_encode($base_item_ids) . ', 需删除=' . json_encode($items_to_delete) . ', 需添加=' . json_encode($items_to_add));
-        
-        // 添加新的项目选择
-        if (!empty($items_to_add)) {
-            $insert_data = [];
-            $base_items = (new SportBaseItem())->where([
-                ['id', 'in', $base_item_ids],
-                ['status', '=', 1]
-            ])->select();
+            ];
             
-            foreach ($base_items as $base_item) {
-                // 根据年龄组设置生成项目
-                $items_to_create = $this->generateItemsByAgeGroups(
-                    $base_item, 
-                    $age_groups, 
-                    $age_group_display
-                );
-                
-                foreach ($items_to_create as $item_data) {
-                    $insert_data[] = array_merge([
-                        'event_id' => $event_id,
-                        'base_item_id' => $base_item['id'],
-                        'category_id' => $base_item['category_id'],
-                        'competition_type' => $base_item['competition_type'] ?? 1,
-                        'gender_type' => $base_item['gender_type'] ?? 3,
-                        'max_participants' => 50,
-                        'min_participants' => 1,
-                        'registration_fee' => 0,
-                        'rules' => $base_item['rules'] ?? '',
-                        'equipment' => $base_item['equipment'] ?? '',
-                        'venue_requirements' => $base_item['venue_requirements'] ?? '',
-                        'sort' => $base_item['sort'],
-                        'status' => 1,
-                        'create_time' => time(),
-                        'update_time' => time()
-                    ], $item_data);
-                }
-            }
-            
-            if (!empty($insert_data)) {
-                (new SportItem())->insertAll($insert_data);
-            }
+            (new SportItem())->save($item_data);
         }
         
         return true;

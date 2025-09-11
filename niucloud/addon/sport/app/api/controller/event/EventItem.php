@@ -55,16 +55,7 @@ class EventItem extends BaseApiController
             ['base_item_ids', []]
         ]);
         
-        // 临时返回固定值，用于定位问题
-        \think\facade\Log::info('=== EventItem save 接口调试 ===');
-        \think\facade\Log::info('接收到的数据: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
-        \think\facade\Log::info('event_id: ' . $data['event_id']);
-        \think\facade\Log::info('base_item_ids: ' . json_encode($data['base_item_ids'], JSON_UNESCAPED_UNICODE));
-        \think\facade\Log::info('base_item_ids 类型: ' . gettype($data['base_item_ids']));
-        
-        // 暂时注释掉实际保存逻辑，直接返回成功
-        // (new EventItemService())->saveEventItems($data);
-        
+        (new EventItemService())->saveEventItems($data);
         return success('保存成功');
     }
 
