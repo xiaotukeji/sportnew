@@ -199,7 +199,7 @@ class EventItemService extends BaseApiService
         (new SportItem())->where('event_id', $event_id)->delete();
         
         foreach ($base_item_ids as $index => $base_item_id) {
-            $base_item = \addon\sport\app\model\item\SportBaseItem::where('id', $base_item_id)->find();
+            $base_item = \addon\sport\app\model\sport_base_item\SportBaseItem::where('id', $base_item_id)->find();
             if (!$base_item) {
                 continue;
             }
