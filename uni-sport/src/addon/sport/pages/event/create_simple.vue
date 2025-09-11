@@ -307,41 +307,6 @@
                     </view>
                 </view>
                 
-                <!-- 自定义分组 -->
-                <view class="form-section">
-                    <view class="section-title">自定义分组</view>
-                    <view class="form-tip" style="margin: 0 32rpx 16rpx;">
-                        <text class="tip-text">可以创建如"12年级组"、"A组/B组"等自定义分组</text>
-                    </view>
-                    
-                    <view class="form-item">
-                        <view class="group-default">
-                            <text class="group-default-text">默认不分组</text>
-                            <text class="add-link" @tap="addGroup">添加分组</text>
-                        </view>
-                    </view>
-                    
-                    <view v-if="formData.custom_groups.length > 0">
-                        <view 
-                            v-for="(group, index) in formData.custom_groups" 
-                            :key="index"
-                            class="form-item group-form-item"
-                        >
-                            <view class="group-item">
-                                <input 
-                                    class="form-input group-input modal-input" 
-                                    v-model="group.group_name" 
-                                    :placeholder="`分组${index + 1}名称`"
-                                    maxlength="50"
-                                />
-                                <view class="group-actions">
-                                    <text class="action-btn delete" @tap="removeGroup(index)">删除</text>
-                                </view>
-                            </view>
-                        </view>
-                        
-                    </view>
-                </view>
             </view>
 
             <!-- 第4步：报名参数 -->
@@ -863,6 +828,42 @@
 
         <!-- 第7步：更多设置 -->
         <view v-if="currentStep === 7" class="form-wrapper">
+            <!-- 自定义分组设置 -->
+            <view class="settings-card">
+                <view class="card-header">
+                    <view class="card-title">自定义分组</view>
+                    <view class="card-subtitle">可以创建如"12年级组"、"A组/B组"等自定义分组</view>
+                </view>
+                <view class="card-content">
+                    <view class="form-item">
+                        <view class="group-default">
+                            <text class="group-default-text">默认不分组</text>
+                            <text class="add-link" @tap="addGroup">添加分组</text>
+                        </view>
+                    </view>
+                    
+                    <view v-if="formData.custom_groups.length > 0">
+                        <view 
+                            v-for="(group, index) in formData.custom_groups" 
+                            :key="index"
+                            class="form-item group-form-item"
+                        >
+                            <view class="group-item">
+                                <input 
+                                    class="form-input group-input modal-input" 
+                                    v-model="group.group_name" 
+                                    :placeholder="`分组${index + 1}名称`"
+                                    maxlength="50"
+                                />
+                                <view class="group-actions">
+                                    <text class="action-btn delete" @tap="removeGroup(index)">删除</text>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            
             <!-- 显示设置 -->
             <view class="settings-card">
                 <view class="card-header">
@@ -1149,7 +1150,7 @@
                     <view class="card-subtitle">设置赛事联系方式和客服信息</view>
                 </view>
                 <view class="card-content">
-                    <!-- 联系人姓名 -->
+                    <!-- 联系人姓名  -->
                     <view class="form-item">
                         <view class="form-label">联系人姓名</view>
                         <input 
@@ -2224,6 +2225,9 @@ const handleSubmit = async () => {
             const selectedOrganizer = organizerList.value.find((item: any) => item.id === formData.value.organizer_id)
             submitData.organizer_type = selectedOrganizer?.organizer_type || 1
             
+            // 自定义分组设置
+            submitData.custom_groups = JSON.stringify(formData.value.custom_groups)
+            
             // 显示设置
             submitData.age_group_display = eventSettings.value.age_group_display ? 1 : 0
             submitData.show_participant_count = eventSettings.value.show_participant_count ? 1 : 0
@@ -2269,6 +2273,8 @@ const handleSubmit = async () => {
                     step: 7, // 第7步：最终设置
                     // 主办方类型
                     organizer_type: selectedOrganizer?.organizer_type || 1,
+                    // 自定义分组设置
+                    custom_groups: JSON.stringify(formData.value.custom_groups),
                     // 显示设置
                     age_group_display: eventSettings.value.age_group_display ? 1 : 0,
                     show_participant_count: eventSettings.value.show_participant_count ? 1 : 0,
@@ -2556,9 +2562,17 @@ const nextStep = async () => {
             if (formData.value.lng) locationData.longitude = parseFloat(formData.value.lng)
             
             console.log('第2步保存数据:', locationData)
+            console.log('第2步 - formData.value:', {
+                location: formData.value.location,
+                address_detail: formData.value.address_detail,
+                lat: formData.value.lat,
+                lng: formData.value.lng
+            })
             
             const result = await editEvent(eventId.value, locationData)
+            console.log('第2步保存结果:', result)
             if (result) {
+                console.log('第2步保存成功')
                 // 地点信息已保存，无需提示
             }
         } catch (error) {
@@ -2577,19 +2591,6 @@ const nextStep = async () => {
             return
         }
         
-        // 验证分组信息
-        if (formData.value.custom_groups.length > 0) {
-            for (let i = 0; i < formData.value.custom_groups.length; i++) {
-                const group = formData.value.custom_groups[i]
-                if (!group.group_name || group.group_name.trim() === '') {
-                    uni.showToast({ 
-                        title: `请填写分组${i + 1}的名称或删除该分组`, 
-                        icon: 'none' 
-                    })
-                    return
-                }
-            }
-        }
         
         try {
             const timeData: any = {
@@ -2646,6 +2647,37 @@ const nextStep = async () => {
             }
         } catch (error) {
             console.error('第4步保存失败:', error)
+            uni.showToast({ title: '保存失败，请重试', icon: 'none' })
+            return
+        }
+    } else if (currentStep.value === 5) {
+        // 第5步：验证并保存项目选择
+        if (selectedItems.value.length === 0) {
+            uni.showToast({ title: '请至少选择一个比赛项目', icon: 'none' })
+            return
+        }
+        
+        try {
+            const projectData: any = {
+                step: 5,
+                base_item_ids: selectedItems.value
+            }
+            
+            console.log('第5步保存数据:', projectData)
+            console.log('第5步 - selectedItems.value:', selectedItems.value)
+            
+            const result = await saveEventItems({
+                event_id: eventId.value,
+                base_item_ids: selectedItems.value
+            })
+            
+            console.log('第5步保存结果:', result)
+            if (result) {
+                console.log('第5步项目选择保存成功')
+                // 项目选择已保存，无需提示
+            }
+        } catch (error) {
+            console.error('第5步保存失败:', error)
             uni.showToast({ title: '保存失败，请重试', icon: 'none' })
             return
         }
@@ -3847,6 +3879,11 @@ const validateSubmitForm = () => {
 const initDefaultTimeValues = () => {
     const now = new Date()
     const today = now.toISOString().slice(0, 10) // YYYY-MM-DD
+    
+    console.log('=== initDefaultTimeValues 开始执行 ===')
+    console.log('今天日期:', today)
+    
+    // 设置比赛时间默认值
     startDateValue.value = today
     startTimeValue.value = '00:00'
     endDateValue.value = today
@@ -3856,9 +3893,44 @@ const initDefaultTimeValues = () => {
     endDateDisplay.value = formatDate(today)
     endTimeDisplay.value = '23:59'
     
+    console.log('比赛时间设置完成:', {
+        startDateDisplay: startDateDisplay.value,
+        startTimeDisplay: startTimeDisplay.value,
+        endDateDisplay: endDateDisplay.value,
+        endTimeDisplay: endTimeDisplay.value
+    })
+    
+    // 设置报名时间默认值（与比赛时间相同）
+    registrationStartDateValue.value = today
+    registrationStartTimeValue.value = '00:00'
+    registrationEndDateValue.value = today
+    registrationEndTimeValue.value = '23:59'
+    registrationStartDateDisplay.value = formatDate(today)
+    registrationStartTimeDisplay.value = '00:00'
+    registrationEndDateDisplay.value = formatDate(today)
+    registrationEndTimeDisplay.value = '23:59'
+    
+    console.log('报名时间设置完成:', {
+        registrationStartDateDisplay: registrationStartDateDisplay.value,
+        registrationStartTimeDisplay: registrationStartTimeDisplay.value,
+        registrationEndDateDisplay: registrationEndDateDisplay.value,
+        registrationEndTimeDisplay: registrationEndTimeDisplay.value
+    })
+    
+    // 设置表单数据中的报名时间
+    formData.value.registration_start_time = `${today} 00:00`
+    formData.value.registration_end_time = `${today} 23:59`
+    
+    console.log('表单数据报名时间设置完成:', {
+        registration_start_time: formData.value.registration_start_time,
+        registration_end_time: formData.value.registration_end_time
+    })
+    
     // 更新时间戳
     updateStartTimestamp()
     updateEndTimestamp()
+    
+    console.log('=== initDefaultTimeValues 执行完成 ===')
 }
 
 /**
@@ -4185,6 +4257,29 @@ onMounted(() => {
                         // 更新时间戳
                         updateStartTimestamp()
                         updateEndTimestamp()
+                    }
+                    
+                    // 恢复报名时间选择器
+                    if (parsedData.registrationStartDateValue) {
+                        registrationStartDateValue.value = parsedData.registrationStartDateValue
+                        registrationStartTimeValue.value = parsedData.registrationStartTimeValue
+                        registrationEndDateValue.value = parsedData.registrationEndDateValue
+                        registrationEndTimeValue.value = parsedData.registrationEndTimeValue
+                        registrationStartDateDisplay.value = formatDate(parsedData.registrationStartDateValue)
+                        registrationStartTimeDisplay.value = parsedData.registrationStartTimeValue
+                        registrationEndDateDisplay.value = formatDate(parsedData.registrationEndDateValue)
+                        registrationEndTimeDisplay.value = parsedData.registrationEndTimeValue
+                    } else {
+                        // 如果没有缓存报名时间，使用默认值（与比赛时间相同）
+                        const today = parsedData.startDateValue || new Date().toISOString().slice(0, 10)
+                        registrationStartDateValue.value = today
+                        registrationStartTimeValue.value = '00:00'
+                        registrationEndDateValue.value = today
+                        registrationEndTimeValue.value = '23:59'
+                        registrationStartDateDisplay.value = formatDate(today)
+                        registrationStartTimeDisplay.value = '00:00'
+                        registrationEndDateDisplay.value = formatDate(today)
+                        registrationEndTimeDisplay.value = '23:59'
                     }
                     
                     console.log('创建模式：从缓存恢复数据成功')

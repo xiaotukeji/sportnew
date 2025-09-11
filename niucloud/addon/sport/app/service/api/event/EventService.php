@@ -397,6 +397,10 @@ class EventService extends BaseApiService
                 break;
             case 7:
                 // 第7步：最终设置
+                if (isset($data['custom_groups'])) $updateData['custom_groups'] = $data['custom_groups'];
+                if (isset($data['age_group_display'])) $updateData['age_group_display'] = $data['age_group_display'];
+                if (isset($data['show_participant_count'])) $updateData['show_participant_count'] = $data['show_participant_count'];
+                if (isset($data['show_progress'])) $updateData['show_progress'] = $data['show_progress'];
                 if (isset($data['number_plate_settings'])) $updateData['number_plate_settings'] = $data['number_plate_settings'];
                 if (isset($data['remark'])) $updateData['remark'] = $data['remark'];
                 if (isset($data['contact_name'])) $updateData['contact_name'] = $data['contact_name'];

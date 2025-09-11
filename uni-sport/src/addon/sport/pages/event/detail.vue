@@ -87,6 +87,29 @@
                     <text class="label">详细地址</text>
                     <text class="value">{{ getAddressDetail(eventInfo) }}</text>
                 </view>
+                
+                <!-- 联系方式信息 -->
+                <view v-if="eventInfo.contact_name || eventInfo.contact_phone || eventInfo.contact_wechat || eventInfo.contact_email" class="detail-item">
+                    <text class="label">联系方式</text>
+                    <view class="contact-info-container">
+                        <view v-if="eventInfo.contact_name" class="contact-item">
+                            <text class="contact-label">联系人：</text>
+                            <text class="contact-value">{{ eventInfo.contact_name }}</text>
+                        </view>
+                        <view v-if="eventInfo.contact_phone" class="contact-item">
+                            <text class="contact-label">电话：</text>
+                            <text class="contact-value">{{ eventInfo.contact_phone }}</text>
+                        </view>
+                        <view v-if="eventInfo.contact_wechat" class="contact-item">
+                            <text class="contact-label">微信：</text>
+                            <text class="contact-value">{{ eventInfo.contact_wechat }}</text>
+                        </view>
+                        <view v-if="eventInfo.contact_email" class="contact-item">
+                            <text class="contact-label">邮箱：</text>
+                            <text class="contact-value">{{ eventInfo.contact_email }}</text>
+                        </view>
+                    </view>
+                </view>
             </view>
             
             <!-- 主办方信息 -->
@@ -100,14 +123,14 @@
                     <text class="value">{{ eventInfo.organizer_name }}</text>
                 </view>
                 
-                <view v-if="eventInfo.contact_name" class="detail-item">
+                <view v-if="eventInfo.organizer_contact_name" class="detail-item">
                     <text class="label">联系人</text>
-                    <text class="value">{{ eventInfo.contact_name }}</text>
+                    <text class="value">{{ eventInfo.organizer_contact_name }}</text>
                 </view>
                 
-                <view v-if="eventInfo.contact_phone" class="detail-item">
+                <view v-if="eventInfo.organizer_contact_phone" class="detail-item">
                     <text class="label">联系电话</text>
-                    <text class="value">{{ eventInfo.contact_phone }}</text>
+                    <text class="value">{{ eventInfo.organizer_contact_phone }}</text>
                 </view>
             </view>
             
@@ -891,6 +914,31 @@ onMounted(() => {
             font-size: 28rpx;
             color: #333;
             word-break: break-all;
+        }
+        
+        // 联系方式信息样式
+        .contact-info-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12rpx;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            font-size: 28rpx;
+            
+            .contact-label {
+                color: #666;
+                margin-right: 8rpx;
+                min-width: 80rpx;
+            }
+            
+            .contact-value {
+                color: #333;
+                font-weight: 500;
+            }
             
             &.status {
                 display: inline-block;
