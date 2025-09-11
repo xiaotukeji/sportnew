@@ -33,7 +33,7 @@
             <view v-if="currentStep === 1" class="form-wrapper">
                 <!-- 系列赛设置 -->
                 <view class="form-section">
-                    <view class="section-title">系列赛设置</view>
+                    <view class="section-title">系列赛设置11</view>
                     
                     <!-- 是否系列赛 -->
                     <view class="form-item">
@@ -2041,16 +2041,30 @@ const initFormData = () => {
             // 恢复时间显示
             if (parsedData.start_time) {
                 const startDate = new Date(parsedData.start_time * 1000)
-                startDateValue.value = startDate.toISOString().split('T')[0]
-                startTimeValue.value = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`
+                // 使用本地时间，避免时区转换问题
+                const year = startDate.getFullYear()
+                const month = String(startDate.getMonth() + 1).padStart(2, '0')
+                const day = String(startDate.getDate()).padStart(2, '0')
+                const hours = String(startDate.getHours()).padStart(2, '0')
+                const minutes = String(startDate.getMinutes()).padStart(2, '0')
+                
+                startDateValue.value = `${year}-${month}-${day}`
+                startTimeValue.value = `${hours}:${minutes}`
                 startDateDisplay.value = formatDate(startDateValue.value)
                 startTimeDisplay.value = startTimeValue.value
             }
             
             if (parsedData.end_time) {
                 const endDate = new Date(parsedData.end_time * 1000)
-                endDateValue.value = endDate.toISOString().split('T')[0]
-                endTimeValue.value = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`
+                // 使用本地时间，避免时区转换问题
+                const year = endDate.getFullYear()
+                const month = String(endDate.getMonth() + 1).padStart(2, '0')
+                const day = String(endDate.getDate()).padStart(2, '0')
+                const hours = String(endDate.getHours()).padStart(2, '0')
+                const minutes = String(endDate.getMinutes()).padStart(2, '0')
+                
+                endDateValue.value = `${year}-${month}-${day}`
+                endTimeValue.value = `${hours}:${minutes}`
                 endDateDisplay.value = formatDate(endDateValue.value)
                 endTimeDisplay.value = endTimeValue.value
             }
@@ -2364,7 +2378,7 @@ const handleSubmit = async () => {
             
             // 延迟跳转到赛事详情页面
             setTimeout(() => {
-                uni.redirectTo({
+                uni.reLaunch({
                     url: `/addon/sport/pages/event/detail?id=${eventId.value}`
                 })
             }, 1500)
@@ -2407,7 +2421,7 @@ const handleSubmit = async () => {
             
             // 延迟跳转到赛事详情页面
             setTimeout(() => {
-                uni.redirectTo({
+                uni.reLaunch({
                     url: `/addon/sport/pages/event/detail?id=${result.data.id}`
                 })
             }, 1500)
@@ -3069,6 +3083,18 @@ const nextStepOld = async () => {
         // 第3步特殊处理：保存时间信息
         if (currentStep.value === 3) {
             try {
+                // 确保时间戳是最新的（从页面显示的时间更新）
+                console.log('=== 第3步：更新时间戳 ===')
+                console.log('更新前 - startDateValue:', startDateValue.value, 'startTimeValue:', startTimeValue.value)
+                console.log('更新前 - endDateValue:', endDateValue.value, 'endTimeValue:', endTimeValue.value)
+                console.log('更新前 - formData.start_time:', formData.value.start_time, 'formData.end_time:', formData.value.end_time)
+                
+                updateStartTimestamp()
+                updateEndTimestamp()
+                
+                console.log('更新后 - formData.start_time:', formData.value.start_time, 'formData.end_time:', formData.value.end_time)
+                console.log('=== 第3步：时间戳更新完成 ===')
+                
                 // 验证时间信息
                 if (!formData.value.start_time || !formData.value.end_time) {
                     uni.showToast({
@@ -3281,7 +3307,8 @@ const onEndTimeChange = (e: any) => {
 const onRegistrationStartDateChange = (e: any) => {
     registrationStartDateValue.value = e.detail.value
     registrationStartDateDisplay.value = formatDate(e.detail.value)
-    formData.value.registration_start_time = e.detail.value
+    // 确保保存完整格式：日期 + 时间
+    formData.value.registration_start_time = `${e.detail.value} ${registrationStartTimeValue.value}`
     
     // 验证报名时间
     validateRegistrationTime()
@@ -3290,7 +3317,8 @@ const onRegistrationStartDateChange = (e: any) => {
 const onRegistrationEndDateChange = (e: any) => {
     registrationEndDateValue.value = e.detail.value
     registrationEndDateDisplay.value = formatDate(e.detail.value)
-    formData.value.registration_end_time = e.detail.value
+    // 确保保存完整格式：日期 + 时间
+    formData.value.registration_end_time = `${e.detail.value} ${registrationEndTimeValue.value}`
     
     // 验证报名时间
     validateRegistrationTime()
@@ -4175,8 +4203,15 @@ const loadEventData = async () => {
         if (eventData.start_time) {
             console.log('数据库中有开始时间，覆盖默认值')
             const startDate = new Date(eventData.start_time * 1000)
-            startDateValue.value = startDate.toISOString().slice(0, 10)
-            startTimeValue.value = startDate.toTimeString().slice(0, 5)
+            // 使用本地时间，避免时区转换问题
+            const year = startDate.getFullYear()
+            const month = String(startDate.getMonth() + 1).padStart(2, '0')
+            const day = String(startDate.getDate()).padStart(2, '0')
+            const hours = String(startDate.getHours()).padStart(2, '0')
+            const minutes = String(startDate.getMinutes()).padStart(2, '0')
+            
+            startDateValue.value = `${year}-${month}-${day}`
+            startTimeValue.value = `${hours}:${minutes}`
             startDateDisplay.value = formatDate(startDateValue.value)
             startTimeDisplay.value = startTimeValue.value
         } else {
@@ -4186,13 +4221,28 @@ const loadEventData = async () => {
         if (eventData.end_time) {
             console.log('数据库中有结束时间，覆盖默认值')
             const endDate = new Date(eventData.end_time * 1000)
-            endDateValue.value = endDate.toISOString().slice(0, 10)
-            endTimeValue.value = endDate.toTimeString().slice(0, 5)
+            // 使用本地时间，避免时区转换问题
+            const year = endDate.getFullYear()
+            const month = String(endDate.getMonth() + 1).padStart(2, '0')
+            const day = String(endDate.getDate()).padStart(2, '0')
+            const hours = String(endDate.getHours()).padStart(2, '0')
+            const minutes = String(endDate.getMinutes()).padStart(2, '0')
+            
+            endDateValue.value = `${year}-${month}-${day}`
+            endTimeValue.value = `${hours}:${minutes}`
             endDateDisplay.value = formatDate(endDateValue.value)
             endTimeDisplay.value = endTimeValue.value
         } else {
             console.log('数据库中没有结束时间，使用默认值')
         }
+        
+        // 重要：同步页面显示的时间到formData中的时间戳
+        console.log('=== 同步页面时间到formData ===')
+        console.log('同步前 - formData.start_time:', formData.value.start_time, 'formData.end_time:', formData.value.end_time)
+        updateStartTimestamp()
+        updateEndTimestamp()
+        console.log('同步后 - formData.start_time:', formData.value.start_time, 'formData.end_time:', formData.value.end_time)
+        console.log('=== 时间同步完成 ===')
         
         console.log('最终比赛时间显示值:')
         console.log('startDateDisplay.value:', startDateDisplay.value)
@@ -4202,13 +4252,21 @@ const loadEventData = async () => {
         console.log('=== 比赛时间设置完成 ===')
         
         // 设置报名时间选择器的值
+        console.log('=== 设置报名时间 ===')
+        console.log('eventData.registration_start_time:', eventData.registration_start_time)
+        console.log('eventData.registration_end_time:', eventData.registration_end_time)
+        
         if (eventData.registration_start_time) {
+            console.log('数据库中有报名开始时间，使用数据库值')
             const [date, time] = eventData.registration_start_time.split(' ')
             registrationStartDateValue.value = date
             registrationStartTimeValue.value = time || '00:00'
             registrationStartDateDisplay.value = formatDate(date)
             registrationStartTimeDisplay.value = time || '00:00'
+            // 同步到formData，确保完整格式
+            formData.value.registration_start_time = `${date} ${time || '00:00'}`
         } else {
+            console.log('数据库中没有报名开始时间，使用默认值（与比赛时间相同）')
             // 如果报名时间为空，默认与比赛时间相同
             registrationStartDateValue.value = startDateValue.value
             registrationStartTimeValue.value = startTimeValue.value
@@ -4218,12 +4276,16 @@ const loadEventData = async () => {
         }
         
         if (eventData.registration_end_time) {
+            console.log('数据库中有报名结束时间，使用数据库值')
             const [date, time] = eventData.registration_end_time.split(' ')
             registrationEndDateValue.value = date
             registrationEndTimeValue.value = time || '23:59'
             registrationEndDateDisplay.value = formatDate(date)
             registrationEndTimeDisplay.value = time || '23:59'
+            // 同步到formData，确保完整格式
+            formData.value.registration_end_time = `${date} ${time || '23:59'}`
         } else {
+            console.log('数据库中没有报名结束时间，使用默认值（与比赛时间相同）')
             // 如果报名时间为空，默认与比赛时间相同
             registrationEndDateValue.value = endDateValue.value
             registrationEndTimeValue.value = endTimeValue.value
@@ -4231,6 +4293,12 @@ const loadEventData = async () => {
             registrationEndTimeDisplay.value = endTimeDisplay.value
             formData.value.registration_end_time = `${endDateValue.value} ${endTimeValue.value}`
         }
+        
+        console.log('报名时间设置完成:', {
+            registration_start_time: formData.value.registration_start_time,
+            registration_end_time: formData.value.registration_end_time
+        })
+        console.log('=== 报名时间设置完成 ===')
         
         // 加载赛事项目
         const itemsResponse: any = await getEventItems(eventId.value)
