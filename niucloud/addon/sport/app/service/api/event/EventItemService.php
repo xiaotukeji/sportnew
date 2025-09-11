@@ -176,8 +176,16 @@ class EventItemService extends BaseApiService
      */
     public function saveEventItems(array $data)
     {
+        // 添加调试日志
+        \think\facade\Log::info('=== saveEventItems 调试开始 ===');
+        \think\facade\Log::info('接收到的原始数据: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
+        
         $event_id = $data['event_id'] ?? 0;
         $base_item_ids = $data['base_item_ids'] ?? [];
+        
+        \think\facade\Log::info('event_id: ' . $event_id);
+        \think\facade\Log::info('base_item_ids: ' . json_encode($base_item_ids, JSON_UNESCAPED_UNICODE));
+        \think\facade\Log::info('base_item_ids 类型: ' . gettype($base_item_ids));
         
         if (empty($event_id)) {
             throw new \Exception('赛事ID不能为空');
@@ -197,7 +205,12 @@ class EventItemService extends BaseApiService
         }
         
         // 获取赛事的年龄组设置
-        $age_groups = json_decode($event_info['age_groups'] ?? '["不限年龄"]', true);
+        $age_groups_raw = $event_info['age_groups'] ?? '["不限年龄"]';
+        if (is_string($age_groups_raw)) {
+            $age_groups = json_decode($age_groups_raw, true) ?: ['不限年龄'];
+        } else {
+            $age_groups = $age_groups_raw ?: ['不限年龄'];
+        }
         $age_group_display = $event_info['age_group_display'] ?? 0;
         
         // 获取现有的项目记录（只获取启用状态的）

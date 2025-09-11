@@ -2663,11 +2663,16 @@ const nextStep = async () => {
                 base_item_ids: selectedItems.value
             })
             console.log('第5步 - selectedItems.value:', selectedItems.value)
+            console.log('第5步 - selectedItems.value 类型:', typeof selectedItems.value)
+            console.log('第5步 - selectedItems.value 是否为数组:', Array.isArray(selectedItems.value))
             
-            const result = await saveEventItems({
+            const saveData = {
                 event_id: eventId.value,
                 base_item_ids: selectedItems.value
-            })
+            }
+            console.log('第5步 - 准备提交的数据:', saveData)
+            
+            const result = await saveEventItems(saveData)
             
             console.log('第5步保存结果:', result)
             if (result) {
