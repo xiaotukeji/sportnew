@@ -33,7 +33,7 @@
             <view v-if="currentStep === 1" class="form-wrapper">
                 <!-- 系列赛设置 -->
                 <view class="form-section">
-                    <view class="section-title">系列赛设置11</view>
+                    <view class="section-title">系列赛设置</view>
                     
                     <!-- 是否系列赛 -->
                     <view class="form-item">
@@ -2459,40 +2459,32 @@ const goToStep = (step: number) => {
         
                     // 如果跳转到第5步，确保加载分类数据
             if (step === 5) {
-                // 第5步保护：如果selectedItems已有数据，则不重新加载，避免覆盖用户选择
-                if (selectedItems.value && selectedItems.value.length > 0) {
-                    console.log('=== 跳转到第5步：selectedItems已有数据，跳过重新加载 ===')
-                    console.log('当前selectedItems数量:', selectedItems.value.length)
-                    console.log('保持现有项目选择，避免覆盖用户修改')
+                // 如果是编辑模式且还没有加载赛事数据，先加载赛事数据
+                if (isEditMode.value && eventId.value && selectedItems.value.length === 0) {
+                    console.log('=== 跳转到第5步：加载赛事数据 ===')
+                    loadEventData().then(() => {
+                        // 赛事数据加载完成后，再加载分类数据
+                        if (categories.value.length === 0) {
+                            console.log('=== 跳转到第5步：加载分类数据 ===')
+                            loadCategories()
+                        }
+                    })
+                } else if (categories.value.length === 0) {
+                    console.log('=== 跳转到第5步：加载分类数据 ===')
+                    loadCategories()
                 } else {
-                    // 如果是编辑模式且还没有加载赛事数据，先加载赛事数据
-                    if (isEditMode.value && eventId.value && selectedItems.value.length === 0) {
-                        console.log('=== 跳转到第5步：加载赛事数据 ===')
-                        loadEventData().then(() => {
-                            // 赛事数据加载完成后，再加载分类数据
-                            if (categories.value.length === 0) {
-                                console.log('=== 跳转到第5步：加载分类数据 ===')
-                                loadCategories()
-                            }
-                        })
-                    } else if (categories.value.length === 0) {
-                        console.log('=== 跳转到第5步：加载分类数据 ===')
-                        loadCategories()
-                    } else {
-                        console.log('=== 跳转到第5步：分类数据已存在，跳过加载 ===')
-                    }
+                    console.log('=== 跳转到第5步：分类数据已存在，跳过加载 ===')
                 }
             }
         
         // 如果跳转到第6步，确保初始化项目数据
         if (step === 6) {
-            // 第6步保护：如果eventItems已有数据，则不重新初始化，避免覆盖用户修改
+            // 第6步保护：如果eventItems已有数据，则不重新初始化
             if (eventItems.value && eventItems.value.length > 0) {
                 console.log('=== 跳转到第6步：eventItems已有数据，跳过初始化 ===')
                 console.log('当前eventItems数量:', eventItems.value.length)
                 console.log('保持现有项目设置，避免覆盖用户修改')
             } else if (selectedItems.value.length > 0) {
-                // 只有在eventItems为空且selectedItems有数据时才初始化
                 console.log('=== 跳转到第6步：初始化项目数据 ===')
                 console.log('selectedItems数量:', selectedItems.value.length)
                 initEventItems()
@@ -2797,22 +2789,17 @@ const performNextStep = async () => {
     
     // 进入第5步时加载分类数据
     if (currentStep.value === 5) {
-        // 第5步保护：如果selectedItems已有数据，则不重新加载
-        if (selectedItems.value && selectedItems.value.length > 0) {
-            console.log('=== 下一步到第5步：selectedItems已有数据，跳过重新加载 ===')
-            console.log('当前selectedItems数量:', selectedItems.value.length)
-        } else {
-            console.log('=== 下一步到第5步：加载分类数据 ===')
-            loadCategories()
-        }
+        console.log('=== 下一步到第5步：加载分类数据 ===')
+        loadCategories()
     }
     
     // 进入第6步时初始化项目数据
     if (currentStep.value === 6) {
         // 第6步保护：如果eventItems已有数据，则不重新初始化
         if (eventItems.value && eventItems.value.length > 0) {
-            console.log('=== 下一步到第6步：eventItems已有数据，跳过重新初始化 ===')
+            console.log('=== 下一步到第6步：eventItems已有数据，跳过初始化 ===')
             console.log('当前eventItems数量:', eventItems.value.length)
+            console.log('保持现有项目设置，避免覆盖用户修改')
         } else if (selectedItems.value && selectedItems.value.length > 0) {
             console.log('=== 下一步到第6步：初始化项目数据 ===')
             initEventItems()
@@ -3216,8 +3203,25 @@ const prevStep = () => {
     if (currentStep.value > 1) {
         console.log('=== 点击上一步 ===')
         console.log('从步骤', currentStep.value, '返回到步骤', currentStep.value - 1)
-        console.log('上一步不重新加载数据，保持用户当前设置')
         currentStep.value--
+        
+        // 上一步也需要重新加载数据，确保显示正确的数据
+        if (currentStep.value === 5) {
+            console.log('=== 上一步到第5步：加载分类数据 ===')
+            loadCategories()
+        } else if (currentStep.value === 6) {
+            // 第6步保护：如果eventItems已有数据，则不重新初始化
+            if (eventItems.value && eventItems.value.length > 0) {
+                console.log('=== 上一步到第6步：eventItems已有数据，跳过初始化 ===')
+                console.log('当前eventItems数量:', eventItems.value.length)
+                console.log('保持现有项目设置，避免覆盖用户修改')
+            } else if (selectedItems.value.length > 0) {
+                console.log('=== 上一步到第6步：初始化项目数据 ===')
+                initEventItems()
+            } else {
+                console.log('=== 上一步到第6步：没有选中的项目，跳过初始化 ===')
+            }
+        }
     }
 }
 
@@ -5306,6 +5310,22 @@ const saveItemSettings = async () => {
             
             // 准备保存的数据 - 修复ID字段问题
             const itemId = item.id // 直接使用id字段，因为后端接口返回的id就是sport_item_id
+            
+            // 详细调试项目ID
+            console.log('=== 项目ID调试 ===')
+            console.log('项目名称:', item.name)
+            console.log('项目ID (item.id):', itemId)
+            console.log('项目ID类型:', typeof itemId)
+            console.log('项目ID是否有效:', itemId && itemId > 0)
+            console.log('项目完整数据中的ID字段:', item.id)
+            console.log('项目完整数据中的sport_item_id字段:', item.sport_item_id)
+            console.log('=== 项目ID调试结束 ===')
+            
+            if (!itemId || itemId <= 0) {
+                console.error(`项目 ${item.name} 的ID无效:`, itemId)
+                continue // 跳过这个项目
+            }
+            
             const saveData = {
                 item_id: itemId,
                 registration_fee: item.registration_fee || 0,
