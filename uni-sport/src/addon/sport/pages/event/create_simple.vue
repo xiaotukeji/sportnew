@@ -831,7 +831,7 @@
             <!-- 自定义分组设置 -->
             <view class="settings-card">
                 <view class="card-header">
-                    <view class="card-title">自定义分组</view>
+                    <view class="card-title">自定义分组11</view>
                     <view class="card-subtitle">可以创建如"12年级组"、"A组/B组"等自定义分组</view>
                 </view>
                 <view class="card-content">
@@ -3960,9 +3960,13 @@ const loadEventData = async () => {
         })
         
         // 调试：查看后端返回的分组数据
+        console.log('=== 分组数据调试开始 ===')
+        console.log('后端返回的完整eventData:', eventData)
         console.log('后端返回的分组数据:', eventData.custom_groups)
         console.log('分组数据类型:', typeof eventData.custom_groups)
         console.log('分组数据是否为数组:', Array.isArray(eventData.custom_groups))
+        console.log('分组数据长度:', eventData.custom_groups ? eventData.custom_groups.length : 'undefined')
+        console.log('=== 分组数据调试结束 ===')
         
         // 处理地址字段
         let fullAddress = eventData.location || ''
@@ -3998,7 +4002,11 @@ const loadEventData = async () => {
             year: eventData.year || new Date().getFullYear(),
             age_groups: eventData.age_groups ? (typeof eventData.age_groups === 'string' ? JSON.parse(eventData.age_groups) : eventData.age_groups) : ['不限年龄'],
             items: [],
-            custom_groups: eventData.custom_groups ? (typeof eventData.custom_groups === 'string' ? JSON.parse(eventData.custom_groups) : eventData.custom_groups) : [],
+            custom_groups: eventData.custom_groups ? (typeof eventData.custom_groups === 'string' ? JSON.parse(eventData.custom_groups) : eventData.custom_groups.map((group: any) => ({
+                id: group.id,
+                group_name: group.group_name,
+                sort: group.sort || 0
+            }))) : [],
             co_organizers: [],
             signup_fields: eventData.signup_fields || [],
             contact_name: eventData.contact_name || '',
@@ -4008,8 +4016,15 @@ const loadEventData = async () => {
         }
         
         // 调试：查看设置后的分组数据
+        console.log('=== 设置后的分组数据调试 ===')
         console.log('设置后的formData.custom_groups:', formData.value.custom_groups)
         console.log('设置后的分组数据长度:', formData.value.custom_groups.length)
+        console.log('设置后的分组数据类型:', typeof formData.value.custom_groups)
+        console.log('设置后的分组数据是否为数组:', Array.isArray(formData.value.custom_groups))
+        if (formData.value.custom_groups.length > 0) {
+            console.log('第一个分组数据:', formData.value.custom_groups[0])
+        }
+        console.log('=== 设置后的分组数据调试结束 ===')
         
         // 设置时间选择器的值
         if (eventData.start_time) {
