@@ -88,7 +88,6 @@ class Event extends BaseApiController
             ['show_participant_count', 0], // 显示报名人数
             ['show_progress', 0],      // 显示比赛进度
             ['signup_fields', []],     // 报名字段配置
-            ['base_item_ids', []],     // 基础项目ID列表
             ['number_plate_settings', []], // 号码牌设置
             ['remark', ''],            // 备注
             ['contact_name', ''],      // 联系人姓名
@@ -143,7 +142,6 @@ class Event extends BaseApiController
             ['show_participant_count', 0], // 显示报名人数
             ['show_progress', 0],      // 显示比赛进度
             ['signup_fields', []],     // 报名字段配置
-            ['base_item_ids', []],     // 基础项目ID列表
             ['number_plate_settings', []], // 号码牌设置
             ['remark', ''],            // 备注
             ['contact_name', ''],      // 联系人姓名

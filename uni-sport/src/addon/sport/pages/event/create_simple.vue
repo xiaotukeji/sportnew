@@ -2658,12 +2658,10 @@ const nextStep = async () => {
         }
         
         try {
-            const projectData: any = {
-                step: 5,
+            console.log('第5步保存数据:', {
+                event_id: eventId.value,
                 base_item_ids: selectedItems.value
-            }
-            
-            console.log('第5步保存数据:', projectData)
+            })
             console.log('第5步 - selectedItems.value:', selectedItems.value)
             
             const result = await saveEventItems({
