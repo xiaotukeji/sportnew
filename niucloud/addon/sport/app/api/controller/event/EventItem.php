@@ -55,9 +55,7 @@ class EventItem extends BaseApiController
             ['base_item_ids', []]
         ]);
         
-        $service = new EventItemService();
-        $service->member_id = $this->member_id;
-        $service->saveEventItems($data);
+        (new EventItemService())->saveEventItems($data);
         return success('保存成功');
     }
 
@@ -75,9 +73,7 @@ class EventItem extends BaseApiController
         \think\facade\Log::info('=== EventItem Controller getEventItems 调试 ===');
         \think\facade\Log::info('接收到的参数: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
         
-        $service = new EventItemService();
-        $service->member_id = $this->member_id;
-        $result = $service->getEventItems($data);
+        $result = (new EventItemService())->getEventItems($data);
         
         \think\facade\Log::info('服务层返回结果: ' . json_encode($result, JSON_UNESCAPED_UNICODE));
         \think\facade\Log::info('=== 控制器调试结束 ===');
@@ -104,9 +100,7 @@ class EventItem extends BaseApiController
             ['venue_type', ''],                     // 场地类型
         ]);
         
-        $service = new EventItemService();
-        $service->member_id = $this->member_id;
-        $service->updateItemSettings($id, $data);
+        (new EventItemService())->updateItemSettings($id, $data);
         return success('UPDATE_SUCCESS');
     }
     
@@ -117,9 +111,7 @@ class EventItem extends BaseApiController
      */
     public function getItemVenues(int $id)
     {
-        $service = new EventItemService();
-        $service->member_id = $this->member_id;
-        return success($service->getItemVenues($id));
+        return success((new EventItemService())->getItemVenues($id));
     }
     
     /**
@@ -142,9 +134,7 @@ class EventItem extends BaseApiController
             return error('请选择要分配的场地');
         }
         
-        $service = new EventItemService();
-        $service->member_id = $this->member_id;
-        $service->assignVenueToItem($id, $data);
+        (new EventItemService())->assignVenueToItem($id, $data);
         return success('ASSIGN_SUCCESS');
     }
     
@@ -156,9 +146,7 @@ class EventItem extends BaseApiController
      */
     public function removeVenueAssignment(int $id, int $venueId)
     {
-        $service = new EventItemService();
-        $service->member_id = $this->member_id;
-        $service->removeVenueFromItem($id, $venueId);
+        (new EventItemService())->removeVenueFromItem($id, $venueId);
         return success('REMOVE_SUCCESS');
     }
     
@@ -181,9 +169,7 @@ class EventItem extends BaseApiController
             return error('请选择要分配的场地');
         }
         
-        $service = new EventItemService();
-        $service->member_id = $this->member_id;
-        $service->batchAssignVenuesToItem($id, $data);
+        (new EventItemService())->batchAssignVenuesToItem($id, $data);
         return success('BATCH_ASSIGN_SUCCESS');
     }
     
@@ -201,8 +187,6 @@ class EventItem extends BaseApiController
             ['limit', 15],                         // 每页数量
         ]);
         
-        $service = new EventItemService();
-        $service->member_id = $this->member_id;
-        return success($service->getAvailableVenuesForItem($id, $data));
+        return success((new EventItemService())->getAvailableVenuesForItem($id, $data));
     }
 } 
