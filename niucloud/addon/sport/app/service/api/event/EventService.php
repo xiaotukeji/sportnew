@@ -406,6 +406,14 @@ class EventService extends BaseApiService
                 if (isset($data['contact_phone'])) $updateData['contact_phone'] = $data['contact_phone'];
                 if (isset($data['contact_wechat'])) $updateData['contact_wechat'] = $data['contact_wechat'];
                 if (isset($data['contact_email'])) $updateData['contact_email'] = $data['contact_email'];
+                
+                // 保存自定义分组
+                if (isset($data['custom_groups'])) {
+                    $custom_groups = is_string($data['custom_groups']) ? json_decode($data['custom_groups'], true) : $data['custom_groups'];
+                    if (!empty($custom_groups)) {
+                        $this->saveEventGroups($id, $custom_groups);
+                    }
+                }
                 break;
             default:
                 // 默认：更新所有字段（兼容旧版本）

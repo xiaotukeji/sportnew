@@ -83,6 +83,7 @@ class Event extends BaseApiController
             ['year', 0],               // 举办年份
             ['season', ''],            // 赛季
             ['age_groups', ''],        // 年龄组设置
+            ['custom_groups', ''],     // 自定义分组设置
             ['age_group_display', 0],  // 年龄组显示方式
             ['show_participant_count', 0], // 显示报名人数
             ['show_progress', 0],      // 显示比赛进度
@@ -136,6 +137,7 @@ class Event extends BaseApiController
             ['year', 0],               // 举办年份
             ['season', ''],            // 赛季
             ['age_groups', ''],        // 年龄组设置
+            ['custom_groups', ''],     // 自定义分组设置
             ['age_group_display', 0],  // 年龄组显示方式
             ['show_participant_count', 0], // 显示报名人数
             ['show_progress', 0],      // 显示比赛进度
