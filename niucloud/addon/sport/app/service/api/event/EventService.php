@@ -87,7 +87,7 @@ class EventService extends BaseApiService
      */
     public function getInfo(int $id)
     {
-        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.address_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.signup_fields, se.registration_start_time, se.registration_end_time, se.registration_fee, se.max_participants, se.group_size, se.rounds, se.allow_duplicate_registration, se.show_participant_count, se.show_progress, se.contact_name, se.contact_phone, se.contact_wechat, se.contact_email, se.create_time, se.update_time';
+        $field = 'se.id, se.series_id, se.name, se.event_type, se.year, se.season, se.start_time, se.end_time, se.location, se.location_detail, se.address_detail, se.latitude, se.longitude, se.organizer_id, se.organizer_type, se.member_id, se.sort, se.status, se.remark, se.age_groups, se.age_group_display, se.signup_fields, se.base_item_ids, se.registration_start_time, se.registration_end_time, se.registration_fee, se.max_participants, se.group_size, se.rounds, se.allow_duplicate_registration, se.show_participant_count, se.show_progress, se.contact_name, se.contact_phone, se.contact_wechat, se.contact_email, se.create_time, se.update_time';
         
         $info = $this->model
             ->alias('se')
@@ -126,6 +126,15 @@ class EventService extends BaseApiService
             }
         } else {
             $info['signup_fields'] = [];
+        }
+        
+        // 处理基础项目ID列表
+        if (!empty($info['base_item_ids'])) {
+            if (is_string($info['base_item_ids'])) {
+                $info['base_item_ids'] = json_decode($info['base_item_ids'], true) ?: [];
+            }
+        } else {
+            $info['base_item_ids'] = [];
         }
         
         // 安全地添加号码牌设置数据（不影响原有功能）
