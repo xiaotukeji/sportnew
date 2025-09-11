@@ -240,6 +240,19 @@ class EventService extends BaseApiService
             $info['event_items'] = [];
         }
         
+        // 获取自定义分组信息
+        try {
+            $eventGroups = \addon\sport\app\model\group\SportEventGroup::where([
+                ['event_id', '=', $id],
+                ['status', '=', 1]
+            ])->order('sort asc, id asc')->select()->toArray();
+            
+            $info['custom_groups'] = $eventGroups;
+        } catch (\Exception $e) {
+            // 如果获取分组信息失败，设置为空数组
+            $info['custom_groups'] = [];
+        }
+        
         return $info;
     }
 

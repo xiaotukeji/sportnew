@@ -3993,7 +3993,7 @@ const loadEventData = async () => {
             year: eventData.year || new Date().getFullYear(),
             age_groups: eventData.age_groups ? (typeof eventData.age_groups === 'string' ? JSON.parse(eventData.age_groups) : eventData.age_groups) : ['不限年龄'],
             items: [],
-            custom_groups: [],
+            custom_groups: eventData.custom_groups || [],
             co_organizers: [],
             signup_fields: eventData.signup_fields || [],
             contact_name: eventData.contact_name || '',
