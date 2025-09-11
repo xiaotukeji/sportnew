@@ -272,6 +272,11 @@ class EventService extends BaseApiService
             $data['signup_fields'] = json_encode($data['signup_fields'], JSON_UNESCAPED_UNICODE);
         }
         
+        // 处理基础项目ID列表
+        if (isset($data['base_item_ids']) && is_array($data['base_item_ids'])) {
+            $data['base_item_ids'] = json_encode($data['base_item_ids'], JSON_UNESCAPED_UNICODE);
+        }
+        
         // 处理号码牌设置
         $number_plate_settings = $data['number_plate_settings'] ?? null;
         unset($data['number_plate_settings']);
@@ -346,6 +351,11 @@ class EventService extends BaseApiService
         // 处理报名字段配置
         if (isset($data['signup_fields']) && is_array($data['signup_fields'])) {
             $data['signup_fields'] = json_encode($data['signup_fields'], JSON_UNESCAPED_UNICODE);
+        }
+        
+        // 处理基础项目ID列表
+        if (isset($data['base_item_ids']) && is_array($data['base_item_ids'])) {
+            $data['base_item_ids'] = json_encode($data['base_item_ids'], JSON_UNESCAPED_UNICODE);
         }
         
         // 处理号码牌设置
