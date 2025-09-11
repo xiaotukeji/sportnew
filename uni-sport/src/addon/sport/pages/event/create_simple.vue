@@ -2754,14 +2754,9 @@ const nextStep = async () => {
         initEventItems()
     }
     
-    // 步骤跳转调试
-    console.log('=== 步骤跳转调试 ===')
-    console.log('当前步骤:', currentStep.value)
-    console.log('即将跳转到步骤:', currentStep.value + 1)
-    
-    // 从第6步进入第7步时，打印分组信息（在跳转前检查）
-    if (currentStep.value === 6) {
-        console.log('=== 从第6步即将进入第7步 - 分组信息调试 ===')
+    // 从第6步进入第7步时，打印分组信息
+    if (currentStep.value === 7) {
+        console.log('=== 从第6步进入第7步 - 分组信息调试 ===')
         console.log('当前formData.custom_groups:', formData.value.custom_groups)
         console.log('分组数据长度:', formData.value.custom_groups.length)
         console.log('分组数据类型:', typeof formData.value.custom_groups)
@@ -2774,11 +2769,6 @@ const nextStep = async () => {
         }
         console.log('=== 分组信息调试结束 ===')
     }
-    
-    // 跳转到下一步
-    currentStep.value++
-    console.log('跳转后当前步骤:', currentStep.value)
-    console.log('=== 步骤跳转调试结束 ===')
 }
 
 const nextStepOld = async () => {
