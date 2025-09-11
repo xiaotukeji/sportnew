@@ -386,8 +386,7 @@ class EventService extends BaseApiService
                 if (isset($data['signup_fields'])) $updateData['signup_fields'] = $data['signup_fields'];
                 break;
             case 5:
-                // 第5步：项目选择
-                if (isset($data['custom_groups'])) $updateData['custom_groups'] = $data['custom_groups'];
+                // 第5步：项目选择（不需要更新sport_event表，项目选择由EventItemService处理）
                 break;
             case 6:
                 // 第6步：项目设置
@@ -398,7 +397,6 @@ class EventService extends BaseApiService
                 break;
             case 7:
                 // 第7步：最终设置
-                if (isset($data['custom_groups'])) $updateData['custom_groups'] = $data['custom_groups'];
                 if (isset($data['age_group_display'])) $updateData['age_group_display'] = $data['age_group_display'];
                 if (isset($data['show_participant_count'])) $updateData['show_participant_count'] = $data['show_participant_count'];
                 if (isset($data['show_progress'])) $updateData['show_progress'] = $data['show_progress'];
