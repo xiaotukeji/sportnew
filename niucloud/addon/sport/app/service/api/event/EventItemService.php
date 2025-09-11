@@ -567,17 +567,19 @@ class EventItemService extends BaseApiService
      */
     public function updateItemSettings(int $id, array $data)
     {
+        // 添加调试日志
+        \think\facade\Log::info('=== updateItemSettings 调试开始 ===');
+        \think\facade\Log::info('项目ID: ' . $id);
+        \think\facade\Log::info('接收到的数据: ' . json_encode($data, JSON_UNESCAPED_UNICODE));
+        
         // 验证项目是否存在
         $item = SportItem::where('id', $id)->find();
         if (!$item) {
+            \think\facade\Log::error('项目不存在: ' . $id);
             throw new \core\exception\CommonException('项目不存在');
         }
         
-        // 验证权限：只能修改自己创建的赛事中的项目
-        $event = SportEvent::where('id', $item['event_id'])->find();
-        if (!$event || $event['member_id'] != $this->member_id) {
-            throw new \core\exception\CommonException('无权限操作此项目');
-        }
+        \think\facade\Log::info('找到项目: ' . json_encode($item, JSON_UNESCAPED_UNICODE));
         
         // 验证数据
         if (isset($data['registration_fee']) && $data['registration_fee'] < 0) {
