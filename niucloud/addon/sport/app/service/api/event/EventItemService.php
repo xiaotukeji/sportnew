@@ -195,10 +195,37 @@ class EventItemService extends BaseApiService
             throw new \Exception('无权限操作此赛事');
         }
         
-        // 第5步：只保存项目选择，删除现有项目，重新创建
-        (new SportItem())->where('event_id', $event_id)->delete();
+        // 第5步：增量更新项目选择，只删除取消的项目，只新增新选择的项目
+        // 获取现有的项目列表
+        $existing_items = (new SportItem())->where('event_id', $event_id)->select();
+        $existing_base_item_ids = array_column($existing_items->toArray(), 'base_item_id');
+        
+        \think\facade\Log::info('=== saveEventItems 增量更新调试 ===');
+        \think\facade\Log::info('现有项目ID列表: ' . json_encode($existing_base_item_ids));
+        \think\facade\Log::info('新选择项目ID列表: ' . json_encode($base_item_ids));
+        
+        // 找出需要删除的项目（现有但不在新选择中的）
+        $to_delete = array_diff($existing_base_item_ids, $base_item_ids);
+        if (!empty($to_delete)) {
+            \think\facade\Log::info('需要删除的项目ID: ' . json_encode($to_delete));
+            (new SportItem())->where('event_id', $event_id)->whereIn('base_item_id', $to_delete)->delete();
+        } else {
+            \think\facade\Log::info('没有需要删除的项目');
+        }
+        
+        // 找出需要新增的项目（新选择但不在现有中的）
+        $to_add = array_diff($base_item_ids, $existing_base_item_ids);
+        if (!empty($to_add)) {
+            \think\facade\Log::info('需要新增的项目ID: ' . json_encode($to_add));
+        } else {
+            \think\facade\Log::info('没有需要新增的项目');
+        }
         
         foreach ($base_item_ids as $index => $base_item_id) {
+            // 只处理需要新增的项目
+            if (!in_array($base_item_id, $to_add)) {
+                continue;
+            }
             $base_item = \addon\sport\app\model\sport_base_item\SportBaseItem::where('id', $base_item_id)->find();
             if (!$base_item) {
                 continue;
