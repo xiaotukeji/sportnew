@@ -209,6 +209,8 @@ class EventItemService extends BaseApiService
                 'base_item_id' => $base_item_id,
                 'name' => $base_item['name'],
                 'category_id' => $base_item['category_id'],
+                'competition_type' => $base_item['competition_type'] ?? 1,
+                'gender_type' => $base_item['gender_type'] ?? 3,
                 'sort' => $index,
                 'status' => 1,
                 'create_time' => time(),
