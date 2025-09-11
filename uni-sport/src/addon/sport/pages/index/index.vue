@@ -65,7 +65,7 @@ const buttonStyle = computed(() => ({
 const handleCreateEvent = () => {
   requireLogin(() => {
     uni.navigateTo({
-      url: '/addon/sport/pages/event/create_simple'
+      url: '/addon/sport/pages/event/create_simple?clearCache=1'
     })
   }, '/addon/sport/pages/index/index')
 }

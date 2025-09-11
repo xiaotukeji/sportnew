@@ -342,7 +342,7 @@ const handleSubmit = async () => {
         align-items: center;
         justify-content: space-between;
         padding: 24rpx 32rpx;
-        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        background: linear-gradient(135deg, #4a90e2, #357abd);
         color: white;
     }
     
@@ -377,7 +377,7 @@ const handleSubmit = async () => {
     .popup-confirm-btn {
         width: 100%;
         height: 80rpx;
-        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        background: linear-gradient(135deg, #4a90e2, #357abd);
         color: white;
         border: none;
         border-radius: 12rpx;
@@ -392,7 +392,7 @@ const handleSubmit = async () => {
     .add-btn {
         width: 100%;
         height: 80rpx;
-        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        background: linear-gradient(135deg, #4a90e2, #357abd);
         color: white;
         border: none;
         border-radius: 12rpx;
@@ -426,7 +426,7 @@ const handleSubmit = async () => {
             margin-bottom: 16rpx;
             background: #f8f9fa;
             border-radius: 12rpx;
-            border-left: 4rpx solid #ff6b35;
+            border-left: 4rpx solid #4a90e2;
         }
         
         .item-content {
@@ -448,7 +448,7 @@ const handleSubmit = async () => {
         
         .item-type {
             padding: 4rpx 12rpx;
-            background: #ff6b35;
+            background: #4a90e2;
             color: white;
             border-radius: 8rpx;
             font-size: 22rpx;
@@ -478,6 +478,7 @@ const handleSubmit = async () => {
             display: flex;
             flex-direction: column;
             gap: 8rpx;
+            align-items: center;
         }
         
         .edit-btn, .delete-btn {
@@ -486,6 +487,11 @@ const handleSubmit = async () => {
             border: none;
             border-radius: 8rpx;
             font-size: 24rpx;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0;
         }
         
         .edit-btn {
@@ -557,7 +563,7 @@ const handleSubmit = async () => {
     }
     
     .confirm-btn {
-        background: linear-gradient(135deg, #ff6b35, #f7931e);
+        background: linear-gradient(135deg, #4a90e2, #357abd);
         color: white;
         
         &:disabled {

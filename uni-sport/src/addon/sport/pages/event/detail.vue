@@ -153,9 +153,6 @@
                                 <text class="type-text">{{ getCoOrganizerTypeText(coOrg.organizer_type) }}</text>
                             </view>
                         </view>
-                        <view class="co-org-type-desc">
-                            <text class="type-desc-text">{{ getCoOrganizerTypeDesc(coOrg.organizer_type) }}</text>
-                        </view>
                         <view v-if="coOrg.contact_name" class="co-org-detail">
                             <text class="co-org-label">联系人：</text>
                             <text class="co-org-value">{{ coOrg.contact_name }}</text>
@@ -232,17 +229,6 @@
                         
                         <view v-if="group.description" class="group-description">
                             <text class="description-text">{{ group.description }}</text>
-                        </view>
-                        
-                        <view class="group-details">
-                            <view class="group-detail-row">
-                                <text class="detail-label">分组类型：</text>
-                                <text class="detail-value">{{ getGroupTypeText(group.group_type) }}</text>
-                            </view>
-                            <view class="group-detail-row">
-                                <text class="detail-label">排序：</text>
-                                <text class="detail-value">{{ group.sort || 0 }}</text>
-                            </view>
                         </view>
                     </view>
                 </view>
@@ -710,36 +696,15 @@ const getCoOrganizerTypeText = (type: number) => {
     const typeMap: Record<number, string> = {
         1: '协办单位',
         2: '赞助商',
-        3: '支持单位'
+        3: '支持单位',
+        11: '赞助商',  // 兼容旧数据
+        12: '赞助商',  // 兼容旧数据
+        13: '赞助商'   // 兼容旧数据
     }
     return typeMap[type] || '未知'
 }
 
-/**
- * 获取协办方类型描述
- */
-const getCoOrganizerTypeDesc = (type: number) => {
-    const descMap: Record<number, string> = {
-        1: '协助主办方组织和管理赛事',
-        2: '为赛事提供资金或物资支持',
-        3: '为赛事提供技术或服务支持'
-    }
-    return descMap[type] || ''
-}
 
-/**
- * 获取分组类型文本
- */
-const getGroupTypeText = (type: string) => {
-    const typeMap: Record<string, string> = {
-        'custom': '自定义分组',
-        'age': '年龄分组',
-        'level': '水平分组',
-        'region': '地区分组',
-        'other': '其他分组'
-    }
-    return typeMap[type] || type || '自定义分组'
-}
 
 /**
  * 检查是否有场地安排
@@ -1097,6 +1062,13 @@ onMounted(() => {
                 
                 &.type-3 {
                     background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                }
+                
+                // 兼容旧数据的赞助商类型
+                &.type-11,
+                &.type-12,
+                &.type-13 {
+                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
                 }
                 
                 .type-text {
@@ -1616,39 +1588,13 @@ onMounted(() => {
             }
             
             .group-description {
-                margin-bottom: 12rpx;
+                margin-bottom: 0;
                 
                 .description-text {
                     font-size: 26rpx;
                     color: #666;
                     line-height: 1.5;
                     font-style: italic;
-                }
-            }
-            
-            .group-details {
-                .group-detail-row {
-                    display: flex;
-                    align-items: center;
-                    margin-bottom: 8rpx;
-                    
-                    &:last-child {
-                        margin-bottom: 0;
-                    }
-                    
-                    .detail-label {
-                        font-size: 24rpx;
-                        color: #666;
-                        margin-right: 8rpx;
-                        width: 120rpx;
-                        flex-shrink: 0;
-                    }
-                    
-                    .detail-value {
-                        font-size: 24rpx;
-                        color: #333;
-                        flex: 1;
-                    }
                 }
             }
         }

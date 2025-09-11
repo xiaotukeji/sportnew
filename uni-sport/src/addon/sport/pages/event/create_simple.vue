@@ -33,7 +33,7 @@
             <view v-if="currentStep === 1" class="form-wrapper">
                 <!-- 系列赛设置 -->
                 <view class="form-section">
-                    <view class="section-title">系列赛设置</view>
+                    <view class="section-title">系列赛设置11</view>
                     
                     <!-- 是否系列赛 -->
                     <view class="form-item">
@@ -60,7 +60,7 @@
                     >
                         <view class="form-label required">系列赛</view>
                         <input 
-                            class="form-input readonly" 
+                            class="form-input basic-input readonly" 
                             :value="selectedSeriesName" 
                             placeholder="请选择系列赛"
                             disabled
@@ -1905,6 +1905,9 @@ const batchVenue = ref({
 // 赛事项目数据
 const eventItems = ref<any[]>([])
 
+// 防止重复点击的标志
+const isSaving = ref(false)
+
 // 添加自定义分组
 const handleAddCustomGroup = () => {
     const newGroup: CustomGroup = {
@@ -2456,24 +2459,45 @@ const goToStep = (step: number) => {
         
                     // 如果跳转到第5步，确保加载分类数据
             if (step === 5) {
-                // 如果是编辑模式且还没有加载赛事数据，先加载赛事数据
-                if (isEditMode.value && eventId.value && selectedItems.value.length === 0) {
-                    loadEventData().then(() => {
-                        // 赛事数据加载完成后，再加载分类数据
-                        if (categories.value.length === 0) {
-                            loadCategories()
-                        }
-                    })
-                } else if (categories.value.length === 0) {
-                    loadCategories()
+                // 第5步保护：如果selectedItems已有数据，则不重新加载，避免覆盖用户选择
+                if (selectedItems.value && selectedItems.value.length > 0) {
+                    console.log('=== 跳转到第5步：selectedItems已有数据，跳过重新加载 ===')
+                    console.log('当前selectedItems数量:', selectedItems.value.length)
+                    console.log('保持现有项目选择，避免覆盖用户修改')
+                } else {
+                    // 如果是编辑模式且还没有加载赛事数据，先加载赛事数据
+                    if (isEditMode.value && eventId.value && selectedItems.value.length === 0) {
+                        console.log('=== 跳转到第5步：加载赛事数据 ===')
+                        loadEventData().then(() => {
+                            // 赛事数据加载完成后，再加载分类数据
+                            if (categories.value.length === 0) {
+                                console.log('=== 跳转到第5步：加载分类数据 ===')
+                                loadCategories()
+                            }
+                        })
+                    } else if (categories.value.length === 0) {
+                        console.log('=== 跳转到第5步：加载分类数据 ===')
+                        loadCategories()
+                    } else {
+                        console.log('=== 跳转到第5步：分类数据已存在，跳过加载 ===')
+                    }
                 }
             }
         
         // 如果跳转到第6步，确保初始化项目数据
         if (step === 6) {
-            // 确保有选中的项目
-            if (selectedItems.value.length > 0) {
+            // 第6步保护：如果eventItems已有数据，则不重新初始化，避免覆盖用户修改
+            if (eventItems.value && eventItems.value.length > 0) {
+                console.log('=== 跳转到第6步：eventItems已有数据，跳过初始化 ===')
+                console.log('当前eventItems数量:', eventItems.value.length)
+                console.log('保持现有项目设置，避免覆盖用户修改')
+            } else if (selectedItems.value.length > 0) {
+                // 只有在eventItems为空且selectedItems有数据时才初始化
+                console.log('=== 跳转到第6步：初始化项目数据 ===')
+                console.log('selectedItems数量:', selectedItems.value.length)
                 initEventItems()
+            } else {
+                console.log('=== 跳转到第6步：没有选中的项目，跳过初始化 ===')
             }
         }
         
@@ -2491,6 +2515,26 @@ const nextStep = async () => {
     console.log('canProceedToNext.value:', canProceedToNext.value)
     console.log('eventItems.value:', eventItems.value)
     console.log('eventItems数量:', eventItems.value?.length || 0)
+    console.log('isSaving.value:', isSaving.value)
+    
+    // 防止重复点击
+    if (isSaving.value) {
+        console.log('正在保存中，忽略重复点击')
+        return
+    }
+    
+    isSaving.value = true
+    
+    try {
+        await performNextStep()
+    } finally {
+        // 无论成功还是失败，都要重置保存标志
+        isSaving.value = false
+        console.log('nextStep执行完成，重置isSaving标志')
+    }
+}
+
+const performNextStep = async () => {
     
     // 验证当前步骤数据
     if (!canProceedToNext.value) {
@@ -2753,12 +2797,28 @@ const nextStep = async () => {
     
     // 进入第5步时加载分类数据
     if (currentStep.value === 5) {
-        loadCategories()
+        // 第5步保护：如果selectedItems已有数据，则不重新加载
+        if (selectedItems.value && selectedItems.value.length > 0) {
+            console.log('=== 下一步到第5步：selectedItems已有数据，跳过重新加载 ===')
+            console.log('当前selectedItems数量:', selectedItems.value.length)
+        } else {
+            console.log('=== 下一步到第5步：加载分类数据 ===')
+            loadCategories()
+        }
     }
     
     // 进入第6步时初始化项目数据
     if (currentStep.value === 6) {
-        initEventItems()
+        // 第6步保护：如果eventItems已有数据，则不重新初始化
+        if (eventItems.value && eventItems.value.length > 0) {
+            console.log('=== 下一步到第6步：eventItems已有数据，跳过重新初始化 ===')
+            console.log('当前eventItems数量:', eventItems.value.length)
+        } else if (selectedItems.value && selectedItems.value.length > 0) {
+            console.log('=== 下一步到第6步：初始化项目数据 ===')
+            initEventItems()
+        } else {
+            console.log('=== 下一步到第6步：没有选中的项目，跳过初始化 ===')
+        }
     }
     
     // 从第6步进入第7步时，打印分组信息
@@ -3154,6 +3214,9 @@ const nextStepOld = async () => {
 
 const prevStep = () => {
     if (currentStep.value > 1) {
+        console.log('=== 点击上一步 ===')
+        console.log('从步骤', currentStep.value, '返回到步骤', currentStep.value - 1)
+        console.log('上一步不重新加载数据，保持用户当前设置')
         currentStep.value--
     }
 }
@@ -4378,8 +4441,15 @@ onMounted(() => {
             selectedItems.value = []
             tempSelectedItems.value = []
             
-            // 读取缓存数据（如果有）
-            const cachedData = uni.getStorageSync('sport_event_form_data')
+            // 检查是否需要清除缓存（通过URL参数控制）
+            const shouldClearCache = options.clearCache === '1' || options.clearCache === 'true'
+            if (shouldClearCache) {
+                console.log('=== 清除缓存数据 ===')
+                uni.removeStorageSync('sport_event_form_data')
+            }
+            
+            // 读取缓存数据（如果有且未要求清除缓存）
+            const cachedData = shouldClearCache ? null : uni.getStorageSync('sport_event_form_data')
             if (cachedData) {
                 try {
                     const parsedData = JSON.parse(cachedData)
@@ -5200,6 +5270,31 @@ const saveItemSettings = async () => {
         return false
     }
     
+    // 检查项目设置保护：如果所有项目设置都是默认值（空），则停止更新
+    const hasNonDefaultSettings = eventItems.value.some(item => {
+        const hasCustomSettings = (
+            (item.registration_fee && parseFloat(item.registration_fee) > 0) ||
+            (item.max_participants && parseInt(item.max_participants) > 0) ||
+            (item.rounds && parseInt(item.rounds) > 0) ||
+            (item.group_size && parseInt(item.group_size) > 0) ||
+            (item.venue_count && parseInt(item.venue_count) > 0) ||
+            (item.venue_type && item.venue_type.trim() !== '') ||
+            (item.remark && item.remark.trim() !== '') ||
+            item.allow_duplicate_registration === true ||
+            item.is_round_robin === true
+        )
+        console.log(`项目 ${item.name} 是否有自定义设置:`, hasCustomSettings)
+        return hasCustomSettings
+    })
+    
+    if (!hasNonDefaultSettings) {
+        console.log('=== 项目设置保护：所有项目都是默认值，跳过保存 ===')
+        console.log('避免覆盖用户可能需要的默认设置')
+        return true // 返回true表示"保存成功"，但实际没有保存
+    }
+    
+    console.log('=== 检测到用户自定义设置，继续保存 ===')
+    
     try {
         console.log(`开始保存 ${eventItems.value.length} 个项目的设置`)
         
@@ -5539,13 +5634,34 @@ const newVenueTypeIndex = computed(() => {
 
 // 初始化赛事项目数据
 const initEventItems = async () => {
+    console.log('=== initEventItems 开始执行 ===')
+    console.log('selectedItems.value:', selectedItems.value)
+    console.log('selectedItems.value.length:', selectedItems.value.length)
+    console.log('isEditMode.value:', isEditMode.value)
+    console.log('eventId.value:', eventId.value)
+    
     if (selectedItems.value.length === 0) {
-        eventItems.value = []
+        console.log('selectedItems为空，检查是否应该清空eventItems')
+        // 只有在非编辑模式下才清空，编辑模式下可能数据还在加载中
+        if (!isEditMode.value) {
+            console.log('非编辑模式，清空eventItems')
+            eventItems.value = []
+        } else {
+            console.log('编辑模式，保持eventItems不变，等待数据加载')
+        }
         return
     }
     
     // 如果是编辑模式，从getEventItems接口获取真实的项目数据
     if (isEditMode.value && eventId.value) {
+        // 检查是否已经有eventItems数据，如果有则不重新加载，避免覆盖用户修改
+        if (eventItems.value && eventItems.value.length > 0) {
+            console.log('=== 编辑模式：eventItems已有数据，跳过重新加载 ===')
+            console.log('当前eventItems数量:', eventItems.value.length)
+            console.log('保持现有数据，避免覆盖用户修改')
+            return
+        }
+        
         try {
             console.log('=== 编辑模式：从getEventItems接口获取项目数据 ===')
             const response: any = await getEventItems(eventId.value)
