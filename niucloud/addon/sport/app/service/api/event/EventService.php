@@ -244,11 +244,12 @@ class EventService extends BaseApiService
         \think\facade\Log::info('=== getInfo 获取分组信息开始 ===');
         \think\facade\Log::info('赛事ID: ' . $id);
         
-        // 直接查询，不使用try-catch，让错误暴露出来
-        $eventGroups = \addon\sport\app\model\group\SportEventGroup::where([
-            ['event_id', '=', $id],
-            ['status', '=', 1]
-        ])->order('sort asc, id asc')->select()->toArray();
+        // 使用更简单的查询方式
+        $eventGroups = \addon\sport\app\model\group\SportEventGroup::where('event_id', $id)
+            ->where('status', 1)
+            ->order('sort asc, id asc')
+            ->select()
+            ->toArray();
         
         \think\facade\Log::info('查询到的分组数据: ' . json_encode($eventGroups, JSON_UNESCAPED_UNICODE));
         \think\facade\Log::info('分组数据数量: ' . count($eventGroups));
