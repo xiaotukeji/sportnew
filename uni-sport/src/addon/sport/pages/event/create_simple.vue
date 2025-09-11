@@ -4049,6 +4049,14 @@ const loadEventData = async () => {
             startTimeValue.value = startDate.toTimeString().slice(0, 5)
             startDateDisplay.value = formatDate(startDateValue.value)
             startTimeDisplay.value = startTimeValue.value
+        } else {
+            // 如果比赛开始时间为空，设置默认值
+            const now = new Date()
+            const today = now.toISOString().slice(0, 10)
+            startDateValue.value = today
+            startTimeValue.value = '00:00'
+            startDateDisplay.value = formatDate(today)
+            startTimeDisplay.value = '00:00'
         }
         
         if (eventData.end_time) {
@@ -4057,6 +4065,14 @@ const loadEventData = async () => {
             endTimeValue.value = endDate.toTimeString().slice(0, 5)
             endDateDisplay.value = formatDate(endDateValue.value)
             endTimeDisplay.value = endTimeValue.value
+        } else {
+            // 如果比赛结束时间为空，设置默认值
+            const now = new Date()
+            const today = now.toISOString().slice(0, 10)
+            endDateValue.value = today
+            endTimeValue.value = '23:59'
+            endDateDisplay.value = formatDate(today)
+            endTimeDisplay.value = '23:59'
         }
         
         // 设置报名时间选择器的值
