@@ -831,7 +831,7 @@
             <!-- 自定义分组设置 -->
             <view class="settings-card">
                 <view class="card-header">
-                    <view class="card-title">自定义分组11</view>
+                    <view class="card-title">自定义分组</view>
                     <view class="card-subtitle">可以创建如"12年级组"、"A组/B组"等自定义分组</view>
                 </view>
                 <view class="card-content">
@@ -2753,6 +2753,22 @@ const nextStep = async () => {
     if (currentStep.value === 6) {
         initEventItems()
     }
+    
+    // 从第6步进入第7步时，打印分组信息
+    if (currentStep.value === 7) {
+        console.log('=== 从第6步进入第7步 - 分组信息调试 ===')
+        console.log('当前formData.custom_groups:', formData.value.custom_groups)
+        console.log('分组数据长度:', formData.value.custom_groups.length)
+        console.log('分组数据类型:', typeof formData.value.custom_groups)
+        console.log('分组数据是否为数组:', Array.isArray(formData.value.custom_groups))
+        if (formData.value.custom_groups.length > 0) {
+            console.log('第一个分组:', formData.value.custom_groups[0])
+            console.log('所有分组:', formData.value.custom_groups)
+        } else {
+            console.log('没有分组数据！')
+        }
+        console.log('=== 分组信息调试结束 ===')
+    }
 }
 
 const nextStepOld = async () => {
@@ -4124,6 +4140,33 @@ const loadEventData = async () => {
             const rules = ['first_come_first_served', 'random', 'by_registration_order']
             const ruleIndex = rules.indexOf(settings.choice_rules || 'first_come_first_served')
             choiceRuleIndex.value = ruleIndex >= 0 ? ruleIndex : 0
+            
+            console.log('=== 号码牌设置加载成功 ===')
+            console.log('号码牌设置:', numberPlateSettings.value)
+        } else {
+            console.log('=== 没有号码牌设置数据 ===')
+        }
+        
+        // 加载分组设置 - 参考号码牌设置的方式
+        console.log('=== 开始加载分组设置 ===')
+        console.log('eventData.custom_groups:', eventData.custom_groups)
+        if (eventData.custom_groups && eventData.custom_groups.length > 0) {
+            console.log('找到分组数据，数量:', eventData.custom_groups.length)
+            console.log('原始分组数据:', eventData.custom_groups)
+            
+            // 确保分组数据格式正确
+            const groups = eventData.custom_groups.map((group: any) => ({
+                id: group.id,
+                group_name: group.group_name,
+                sort: group.sort || 0
+            }))
+            
+            formData.value.custom_groups = groups
+            console.log('处理后的分组数据:', formData.value.custom_groups)
+            console.log('=== 分组设置加载成功 ===')
+        } else {
+            console.log('=== 没有分组数据，使用空数组 ===')
+            formData.value.custom_groups = []
         }
         
         // 更新步骤状态 - 编辑模式下允许访问所有步骤
