@@ -257,38 +257,11 @@ class EventService extends BaseApiService
             $info['event_items'] = [];
         }
         
-        // 获取自定义分组信息 - 先返回虚拟数据测试接口
-        \think\facade\Log::info('=== getInfo 获取分组信息开始 ===');
+        // 注意：分组信息已经在getInfo方法中获取，这里不需要重复获取
+        // 如果需要调试分组信息，可以添加日志
+        \think\facade\Log::info('=== getDetailInfo 分组信息 ===');
         \think\facade\Log::info('赛事ID: ' . $id);
-        
-        // 先返回虚拟数据测试接口是否通畅
-        $info['custom_groups'] = [
-            [
-                'id' => 999,
-                'event_id' => $id,
-                'group_name' => '测试分组A',
-                'group_type' => 'custom',
-                'description' => '',
-                'sort' => 1,
-                'status' => 1,
-                'create_time' => time(),
-                'update_time' => time()
-            ],
-            [
-                'id' => 998,
-                'event_id' => $id,
-                'group_name' => '测试分组B',
-                'group_type' => 'custom',
-                'description' => '',
-                'sort' => 2,
-                'status' => 1,
-                'create_time' => time(),
-                'update_time' => time()
-            ]
-        ];
-        
-        \think\facade\Log::info('设置虚拟分组数据: ' . json_encode($info['custom_groups'], JSON_UNESCAPED_UNICODE));
-        \think\facade\Log::info('=== getInfo 获取分组信息结束 ===');
+        \think\facade\Log::info('分组数据: ' . json_encode($info['custom_groups'] ?? [], JSON_UNESCAPED_UNICODE));
         
         return $info;
     }

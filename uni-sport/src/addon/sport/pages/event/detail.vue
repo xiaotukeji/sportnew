@@ -207,6 +207,47 @@
                 </view>
             </view>
             
+            <!-- 自定义分组信息 -->
+            <view v-if="eventInfo.custom_groups && eventInfo.custom_groups.length > 0" class="detail-card">
+                <view class="card-title">
+                    <text class="title-text">自定义分组</text>
+                    <text class="item-count">({{ eventInfo.custom_groups.length }}个)</text>
+                </view>
+                
+                <view class="custom-groups-container">
+                    <view 
+                        v-for="(group, index) in eventInfo.custom_groups" 
+                        :key="group.id" 
+                        class="custom-group-item"
+                    >
+                        <view class="group-header">
+                            <view class="group-info">
+                                <text class="group-index">{{ index + 1 }}</text>
+                                <text class="group-name">{{ group.group_name }}</text>
+                            </view>
+                            <view class="group-status-badge" :class="'status-' + group.status">
+                                <text class="status-text">{{ group.status === 1 ? '启用' : '禁用' }}</text>
+                            </view>
+                        </view>
+                        
+                        <view v-if="group.description" class="group-description">
+                            <text class="description-text">{{ group.description }}</text>
+                        </view>
+                        
+                        <view class="group-details">
+                            <view class="group-detail-row">
+                                <text class="detail-label">分组类型：</text>
+                                <text class="detail-value">{{ getGroupTypeText(group.group_type) }}</text>
+                            </view>
+                            <view class="group-detail-row">
+                                <text class="detail-label">排序：</text>
+                                <text class="detail-value">{{ group.sort || 0 }}</text>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            
             <!-- 其他信息 -->
             <view v-if="eventInfo.remark" class="detail-card">
                 <view class="card-title">
@@ -684,6 +725,20 @@ const getCoOrganizerTypeDesc = (type: number) => {
         3: '为赛事提供技术或服务支持'
     }
     return descMap[type] || ''
+}
+
+/**
+ * 获取分组类型文本
+ */
+const getGroupTypeText = (type: string) => {
+    const typeMap: Record<string, string> = {
+        'custom': '自定义分组',
+        'age': '年龄分组',
+        'level': '水平分组',
+        'region': '地区分组',
+        'other': '其他分组'
+    }
+    return typeMap[type] || type || '自定义分组'
 }
 
 /**
@@ -1483,6 +1538,117 @@ onMounted(() => {
                     padding: 4rpx 8rpx;
                     border-radius: 6rpx;
                     font-family: 'Courier New', monospace;
+                }
+            }
+        }
+    }
+    
+    .custom-groups-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16rpx;
+        
+        .custom-group-item {
+            background-color: #f8f9fa;
+            border-radius: 12rpx;
+            padding: 20rpx;
+            border: 1rpx solid #e9ecef;
+            transition: all 0.3s ease;
+            
+            &:hover {
+                transform: translateY(-2rpx);
+                box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.12);
+            }
+            
+            .group-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 12rpx;
+                
+                .group-info {
+                    display: flex;
+                    align-items: center;
+                    flex: 1;
+                    
+                    .group-index {
+                        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                        color: white;
+                        font-size: 20rpx;
+                        font-weight: bold;
+                        width: 32rpx;
+                        height: 32rpx;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-right: 16rpx;
+                        flex-shrink: 0;
+                    }
+                    
+                    .group-name {
+                        font-size: 30rpx;
+                        font-weight: bold;
+                        color: #333;
+                        flex: 1;
+                    }
+                }
+                
+                .group-status-badge {
+                    padding: 6rpx 12rpx;
+                    border-radius: 20rpx;
+                    margin-left: 16rpx;
+                    
+                    &.status-1 {
+                        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                    }
+                    
+                    &.status-0 {
+                        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+                    }
+                    
+                    .status-text {
+                        font-size: 20rpx;
+                        color: white;
+                        font-weight: bold;
+                    }
+                }
+            }
+            
+            .group-description {
+                margin-bottom: 12rpx;
+                
+                .description-text {
+                    font-size: 26rpx;
+                    color: #666;
+                    line-height: 1.5;
+                    font-style: italic;
+                }
+            }
+            
+            .group-details {
+                .group-detail-row {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 8rpx;
+                    
+                    &:last-child {
+                        margin-bottom: 0;
+                    }
+                    
+                    .detail-label {
+                        font-size: 24rpx;
+                        color: #666;
+                        margin-right: 8rpx;
+                        width: 120rpx;
+                        flex-shrink: 0;
+                    }
+                    
+                    .detail-value {
+                        font-size: 24rpx;
+                        color: #333;
+                        flex: 1;
+                    }
                 }
             }
         }

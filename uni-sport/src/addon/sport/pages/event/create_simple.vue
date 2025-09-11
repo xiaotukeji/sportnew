@@ -33,7 +33,7 @@
             <view v-if="currentStep === 1" class="form-wrapper">
                 <!-- 系列赛设置 -->
                 <view class="form-section">
-                    <view class="section-title">系列赛设置11</view>
+                    <view class="section-title">系列赛设置</view>
                     
                     <!-- 是否系列赛 -->
                     <view class="form-item">
@@ -2532,11 +2532,18 @@ const nextStep = async () => {
                     // 基础信息已保存，无需提示
                 }
             } else {
+                console.log('=== 第1步：开始创建赛事 ===')
                 const result: any = await addEvent(basicEventData)
+                console.log('第1步创建赛事结果:', result)
                 if (result && result.data && result.data.id) {
                     eventId.value = result.data.id
                     isEditMode.value = true
-                    // 赛事已创建，无需提示
+                    console.log('第1步完成，切换到编辑模式，eventId:', eventId.value)
+                    console.log('第1步完成，切换到编辑模式，开始加载数据')
+                    await loadEventData()
+                    console.log('第1步完成，数据加载完成')
+                } else {
+                    console.error('第1步创建赛事失败，没有返回ID')
                 }
             }
         } catch (error) {
@@ -3286,11 +3293,16 @@ const validateRegistrationTime = () => {
  * 更新开始时间戳
  */
 const updateStartTimestamp = () => {
+    console.log('updateStartTimestamp: startDateValue:', startDateValue.value, 'startTimeValue:', startTimeValue.value)
     if (startDateValue.value && startTimeValue.value) {
         const [hours, minutes] = startTimeValue.value.split(':')
         const date = new Date(startDateValue.value)
         date.setHours(parseInt(hours), parseInt(minutes))
-        formData.value.start_time = Math.floor(date.getTime() / 1000)
+        const timestamp = Math.floor(date.getTime() / 1000)
+        formData.value.start_time = timestamp
+        console.log('updateStartTimestamp: 设置start_time为:', timestamp)
+    } else {
+        console.log('updateStartTimestamp: 条件不满足，跳过更新')
     }
 }
 
@@ -3298,11 +3310,16 @@ const updateStartTimestamp = () => {
  * 更新结束时间戳
  */
 const updateEndTimestamp = () => {
+    console.log('updateEndTimestamp: endDateValue:', endDateValue.value, 'endTimeValue:', endTimeValue.value)
     if (endDateValue.value && endTimeValue.value) {
         const [hours, minutes] = endTimeValue.value.split(':')
         const date = new Date(endDateValue.value)
         date.setHours(parseInt(hours), parseInt(minutes))
-        formData.value.end_time = Math.floor(date.getTime() / 1000)
+        const timestamp = Math.floor(date.getTime() / 1000)
+        formData.value.end_time = timestamp
+        console.log('updateEndTimestamp: 设置end_time为:', timestamp)
+    } else {
+        console.log('updateEndTimestamp: 条件不满足，跳过更新')
     }
 }
 
@@ -3946,9 +3963,15 @@ const initDefaultTimeValues = () => {
     })
     
     // 更新时间戳
+    console.log('=== 开始更新时间戳 ===')
+    console.log('更新前 - startDateValue:', startDateValue.value, 'startTimeValue:', startTimeValue.value)
+    console.log('更新前 - endDateValue:', endDateValue.value, 'endTimeValue:', endTimeValue.value)
+    console.log('更新前 - formData.start_time:', formData.value.start_time, 'formData.end_time:', formData.value.end_time)
+    
     updateStartTimestamp()
     updateEndTimestamp()
     
+    console.log('更新后 - formData.start_time:', formData.value.start_time, 'formData.end_time:', formData.value.end_time)
     console.log('=== initDefaultTimeValues 执行完成 ===')
 }
 
@@ -3956,9 +3979,16 @@ const initDefaultTimeValues = () => {
  * 加载现有赛事数据（编辑模式）
  */
 const loadEventData = async () => {
-    if (!eventId.value) return
+    if (!eventId.value) {
+        console.log('loadEventData: eventId为空，跳过加载')
+        return
+    }
     
     try {
+        console.log('=== loadEventData 开始执行 ===')
+        console.log('loadEventData: eventId:', eventId.value)
+        console.log('loadEventData: isEditMode:', isEditMode.value)
+        
         // 显示加载提示
         uni.showLoading({
             title: '加载中...'
@@ -4024,7 +4054,25 @@ const loadEventData = async () => {
                 sort: group.sort || 0
             }))) : [],
             co_organizers: [],
-            signup_fields: eventData.signup_fields || [],
+            signup_fields: (() => {
+                console.log('=== 设置报名字段 ===')
+                console.log('eventData.signup_fields:', eventData.signup_fields)
+                console.log('eventData.signup_fields长度:', eventData.signup_fields ? eventData.signup_fields.length : 0)
+                
+                if (eventData.signup_fields && eventData.signup_fields.length > 0) {
+                    console.log('使用后端返回的报名字段')
+                    return eventData.signup_fields
+                } else {
+                    console.log('后端没有报名字段，设置默认值')
+                    const defaults = [
+                        { key: 'name', label: '姓名', required: true },
+                        { key: 'mobile', label: '手机号', required: true },
+                        { key: 'id_card', label: '身份证号', required: true }
+                    ]
+                    console.log('设置的默认报名字段:', defaults)
+                    return defaults
+                }
+            })(),
             contact_name: eventData.contact_name || '',
             contact_phone: eventData.contact_phone || '',
             contact_wechat: eventData.contact_wechat || '',
@@ -4042,38 +4090,49 @@ const loadEventData = async () => {
         }
         console.log('=== 设置后的分组数据调试结束 ===')
         
-        // 设置时间选择器的值
+        // 设置时间选择器的值 - 先初始化默认值，再覆盖数据库中的值
+        console.log('=== 开始设置比赛时间 ===')
+        console.log('eventData.start_time:', eventData.start_time)
+        console.log('eventData.end_time:', eventData.end_time)
+        
+        // 先调用initDefaultTimeValues确保有默认值
+        initDefaultTimeValues()
+        
+        console.log('initDefaultTimeValues调用后:')
+        console.log('startDateDisplay.value:', startDateDisplay.value)
+        console.log('startTimeDisplay.value:', startTimeDisplay.value)
+        console.log('endDateDisplay.value:', endDateDisplay.value)
+        console.log('endTimeDisplay.value:', endTimeDisplay.value)
+        
+        // 如果数据库中有时间值，则覆盖默认值
         if (eventData.start_time) {
+            console.log('数据库中有开始时间，覆盖默认值')
             const startDate = new Date(eventData.start_time * 1000)
             startDateValue.value = startDate.toISOString().slice(0, 10)
             startTimeValue.value = startDate.toTimeString().slice(0, 5)
             startDateDisplay.value = formatDate(startDateValue.value)
             startTimeDisplay.value = startTimeValue.value
         } else {
-            // 如果比赛开始时间为空，设置默认值
-            const now = new Date()
-            const today = now.toISOString().slice(0, 10)
-            startDateValue.value = today
-            startTimeValue.value = '00:00'
-            startDateDisplay.value = formatDate(today)
-            startTimeDisplay.value = '00:00'
+            console.log('数据库中没有开始时间，使用默认值')
         }
         
         if (eventData.end_time) {
+            console.log('数据库中有结束时间，覆盖默认值')
             const endDate = new Date(eventData.end_time * 1000)
             endDateValue.value = endDate.toISOString().slice(0, 10)
             endTimeValue.value = endDate.toTimeString().slice(0, 5)
             endDateDisplay.value = formatDate(endDateValue.value)
             endTimeDisplay.value = endTimeValue.value
         } else {
-            // 如果比赛结束时间为空，设置默认值
-            const now = new Date()
-            const today = now.toISOString().slice(0, 10)
-            endDateValue.value = today
-            endTimeValue.value = '23:59'
-            endDateDisplay.value = formatDate(today)
-            endTimeDisplay.value = '23:59'
+            console.log('数据库中没有结束时间，使用默认值')
         }
+        
+        console.log('最终比赛时间显示值:')
+        console.log('startDateDisplay.value:', startDateDisplay.value)
+        console.log('startTimeDisplay.value:', startTimeDisplay.value)
+        console.log('endDateDisplay.value:', endDateDisplay.value)
+        console.log('endTimeDisplay.value:', endTimeDisplay.value)
+        console.log('=== 比赛时间设置完成 ===')
         
         // 设置报名时间选择器的值
         if (eventData.registration_start_time) {
@@ -4389,16 +4448,7 @@ onMounted(() => {
     // 初始化项目选择等其他逻辑
     tempSelectedItems.value = [...selectedItems.value]
 
-    // 创建模式默认选择：姓名、手机、身份证号（三个必填）
-    // 编辑模式保持原有设置，不设置默认值
-    if (!isEditMode.value && (!formData.value.signup_fields || formData.value.signup_fields.length === 0)) {
-        const defaults = ['name','mobile','id_card']
-        formData.value.signup_fields = defaults.map(k => {
-            const opt = allSignupFieldOptions.find(o => o.key === k)!
-            return { key: k, label: opt.label, required: true }
-        })
-        console.log('创建模式设置默认报名字段:', formData.value.signup_fields)
-    }
+    // 注意：默认报名字段现在在loadEventData中设置，这里不再重复设置
 
     // 注意：uni-app不支持直接操作DOM，文本对齐通过CSS处理
 })
