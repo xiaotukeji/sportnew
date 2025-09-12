@@ -3,7 +3,7 @@
 namespace addon\sport\app\api\controller\diy;
 
 use addon\sport\app\service\api\diy\BannerService;
-use app\BaseController;
+use core\base\BaseApiController;
 use core\exception\CommonException;
 
 /**
@@ -11,7 +11,7 @@ use core\exception\CommonException;
  * Class Banner
  * @package addon\sport\app\api\controller\diy
  */
-class Banner extends BaseController
+class Banner extends BaseApiController
 {
     /**
      * 获取赛事的Banner列表

@@ -3,7 +3,7 @@
 namespace addon\sport\app\api\controller\diy;
 
 use addon\sport\app\service\api\diy\ContentService;
-use app\BaseController;
+use core\base\BaseApiController;
 use core\exception\CommonException;
 
 /**
@@ -11,7 +11,7 @@ use core\exception\CommonException;
  * Class Content
  * @package addon\sport\app\api\controller\diy
  */
-class Content extends BaseController
+class Content extends BaseApiController
 {
     /**
      * 获取赛事的详情内容

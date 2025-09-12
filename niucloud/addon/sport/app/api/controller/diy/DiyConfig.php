@@ -3,7 +3,7 @@
 namespace addon\sport\app\api\controller\diy;
 
 use addon\sport\app\service\api\diy\DiyConfigService;
-use app\BaseController;
+use core\base\BaseApiController;
 use core\exception\CommonException;
 
 /**
@@ -11,7 +11,7 @@ use core\exception\CommonException;
  * Class DiyConfig
  * @package addon\sport\app\api\controller\diy
  */
-class DiyConfig extends BaseController
+class DiyConfig extends BaseApiController
 {
     /**
      * 获取赛事的DIY配置
