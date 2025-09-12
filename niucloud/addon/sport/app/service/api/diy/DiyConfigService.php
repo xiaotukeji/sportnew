@@ -181,7 +181,7 @@ class DiyConfigService
      */
     private function checkEventPermission($eventId)
     {
-        if (!$this->member_id) {
+        if ($this->member_id <= 0) {
             throw new CommonException('请先登录');
         }
 

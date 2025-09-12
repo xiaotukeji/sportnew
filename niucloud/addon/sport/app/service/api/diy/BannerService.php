@@ -206,7 +206,7 @@ class BannerService
      */
     private function checkEventPermission($eventId)
     {
-        if (!$this->member_id) {
+        if ($this->member_id <= 0) {
             throw new CommonException('请先登录');
         }
 
@@ -227,7 +227,7 @@ class BannerService
      */
     private function checkBannerPermission($bannerId)
     {
-        if (!$this->member_id) {
+        if ($this->member_id <= 0) {
             throw new CommonException('请先登录');
         }
 
