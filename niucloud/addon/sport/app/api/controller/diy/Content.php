@@ -23,19 +23,19 @@ class Content extends BaseApiController
             $eventId = $this->request->param('event_id', 0, 'intval');
             
             if (!$eventId) {
-                return $this->error('赛事ID不能为空');
+                return error('赛事ID不能为空');
             }
 
             $memberId = $this->request->uid ?? 0;
             $contentService = new ContentService($memberId);
             $result = $contentService->getEventDetailContent($eventId);
 
-            return $this->success($result, '获取详情内容成功');
+            return success($result, '获取详情内容成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -54,7 +54,7 @@ class Content extends BaseApiController
             ]);
 
             if (!$data['event_id']) {
-                return $this->error('赛事ID不能为空');
+                return error('赛事ID不能为空');
             }
 
             $memberId = $this->request->uid ?? 0;
@@ -66,12 +66,12 @@ class Content extends BaseApiController
                 $data['content_images']
             );
 
-            return $this->success($result, '保存详情内容成功');
+            return success($result, '保存详情内容成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -91,19 +91,19 @@ class Content extends BaseApiController
             ]);
 
             if (!$data['content_id']) {
-                return $this->error('内容ID不能为空');
+                return error('内容ID不能为空');
             }
 
             $memberId = $this->request->uid ?? 0;
             $contentService = new ContentService($memberId);
             $result = $contentService->updateDetailContent($data['content_id'], $data);
 
-            return $this->success($result, '更新详情内容成功');
+            return success($result, '更新详情内容成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -117,19 +117,19 @@ class Content extends BaseApiController
             $eventId = $this->request->param('event_id', 0, 'intval');
             
             if (!$eventId) {
-                return $this->error('赛事ID不能为空');
+                return error('赛事ID不能为空');
             }
 
             $memberId = $this->request->uid ?? 0;
             $contentService = new ContentService($memberId);
             $result = $contentService->deleteEventDetailContent($eventId);
 
-            return $this->success($result, '删除详情内容成功');
+            return success($result, '删除详情内容成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -144,24 +144,24 @@ class Content extends BaseApiController
             $imageTitle = $this->request->param('image_title', '', 'trim');
             
             if (!$eventId) {
-                return $this->error('赛事ID不能为空');
+                return error('赛事ID不能为空');
             }
 
             $file = $this->request->file('image');
             if (!$file) {
-                return $this->error('请选择要上传的图片');
+                return error('请选择要上传的图片');
             }
 
             $memberId = $this->request->uid ?? 0;
             $contentService = new ContentService($memberId);
             $result = $contentService->uploadContentImage($eventId, $file, $imageTitle);
 
-            return $this->success($result, '上传内容图片成功');
+            return success($result, '上传内容图片成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -176,23 +176,23 @@ class Content extends BaseApiController
             $imageUrl = $this->request->param('image_url', '', 'trim');
             
             if (!$eventId) {
-                return $this->error('赛事ID不能为空');
+                return error('赛事ID不能为空');
             }
 
             if (!$imageUrl) {
-                return $this->error('图片URL不能为空');
+                return error('图片URL不能为空');
             }
 
             $memberId = $this->request->uid ?? 0;
             $contentService = new ContentService($memberId);
             $result = $contentService->removeContentImage($eventId, $imageUrl);
 
-            return $this->success($result, '删除内容图片成功');
+            return success($result, '删除内容图片成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 }

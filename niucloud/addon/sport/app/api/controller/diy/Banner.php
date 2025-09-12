@@ -23,19 +23,19 @@ class Banner extends BaseApiController
             $eventId = $this->request->param('event_id', 0, 'intval');
             
             if (!$eventId) {
-                return $this->error('赛事ID不能为空');
+                return error('赛事ID不能为空');
             }
 
             $memberId = $this->request->uid ?? 0;
             $bannerService = new BannerService($memberId);
             $result = $bannerService->getEventBanners($eventId);
 
-            return $this->success($result, '获取Banner列表成功');
+            return success($result, '获取Banner列表成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -51,7 +51,7 @@ class Banner extends BaseApiController
             $imageLink = $this->request->param('image_link', '', 'trim');
             
             if (!$eventId) {
-                return $this->error('赛事ID不能为空');
+                return error('赛事ID不能为空');
             }
 
             $file = $this->request->file('image');
@@ -63,12 +63,12 @@ class Banner extends BaseApiController
             $bannerService = new BannerService($memberId);
             $result = $bannerService->uploadBanner($eventId, $file, $imageTitle, $imageLink);
 
-            return $this->success($result, '上传Banner成功');
+            return success($result, '上传Banner成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -94,12 +94,12 @@ class Banner extends BaseApiController
             $bannerService = new BannerService($memberId);
             $result = $bannerService->updateBanner($data['banner_id'], $data);
 
-            return $this->success($result, '更新Banner信息成功');
+            return success($result, '更新Banner信息成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -120,12 +120,12 @@ class Banner extends BaseApiController
             $bannerService = new BannerService($memberId);
             $result = $bannerService->deleteBanner($bannerId);
 
-            return $this->success($result, '删除Banner成功');
+            return success($result, '删除Banner成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -140,7 +140,7 @@ class Banner extends BaseApiController
             $sortData = $this->request->param('sort_data', []);
             
             if (!$eventId) {
-                return $this->error('赛事ID不能为空');
+                return error('赛事ID不能为空');
             }
 
             if (!is_array($sortData) || empty($sortData)) {
@@ -151,12 +151,12 @@ class Banner extends BaseApiController
             $bannerService = new BannerService($memberId);
             $result = $bannerService->updateBannerSort($eventId, $sortData);
 
-            return $this->success($result, '更新Banner排序成功');
+            return success($result, '更新Banner排序成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -170,19 +170,19 @@ class Banner extends BaseApiController
             $eventId = $this->request->param('event_id', 0, 'intval');
             
             if (!$eventId) {
-                return $this->error('赛事ID不能为空');
+                return error('赛事ID不能为空');
             }
 
             $memberId = $this->request->uid ?? 0;
             $bannerService = new BannerService($memberId);
             $result = $bannerService->deleteEventBanners($eventId);
 
-            return $this->success($result, '删除赛事Banner成功');
+            return success($result, '删除赛事Banner成功');
 
         } catch (CommonException $e) {
-            return $this->error($e->getMessage());
+            return error($e->getMessage());
         } catch (\Exception $e) {
-            return $this->error('系统错误: ' . $e->getMessage());
+            return error('系统错误: ' . $e->getMessage());
         }
     }
 }
