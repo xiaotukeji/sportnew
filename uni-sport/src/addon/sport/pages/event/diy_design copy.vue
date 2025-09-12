@@ -1,158 +1,189 @@
 <template>
-    <view class="container">
-        <!-- 页面头部 -->
-        <view class="page-header">
-            <view class="header-left" @click="goBack">
-                <text class="nc-iconfont nc-icon-zuoV6xx"></text>
-                <text class="header-title">DIY设计</text>
+  <view class="diy-design-page">
+    <!-- 页面头部 -->
+    <view class="page-header">
+      <view class="header-left" @click="goBack">
+        <text class="nc-iconfont nc-icon-zuoV6xx"></text>
+        <text class="header-title">DIY设计</text>
+      </view>
+      <view class="header-right">
+        <button class="preview-btn" @click="previewPage">预览</button>
+        <button class="save-btn" @click="saveConfig" :disabled="isSaving">
+          {{ isSaving ? '保存中...' : '保存' }}
+        </button>
+      </view>
+    </view>
+
+    <!-- 主要内容区域 - 直接显示所有元素 -->
+    <view class="main-content">
+      <view class="diy-preview-container">
+        <!-- Banner轮播图模块 -->
+        <view class="diy-module banner-module" :class="{ 'module-disabled': !enabledModules.includes('banner') }">
+          <view class="module-controls" v-if="selectedModule === 'banner'">
+            <button class="control-btn add-btn" @click="addBanner">+ 添加图片</button>
+            <button class="control-btn delete-btn" @click="deleteBanner">删除</button>
+            <button class="control-btn edit-btn" @click="editBanner">编辑</button>
+          </view>
+          <view class="module-content" @click="selectModule('banner')">
+            <view v-if="bannerList.length > 0" class="banner-carousel">
+              <swiper class="banner-swiper" :indicator-dots="true" :autoplay="true">
+                <swiper-item v-for="(banner, index) in bannerList" :key="index">
+                  <image :src="banner.image_url" class="banner-image" mode="aspectFill" />
+                </swiper-item>
+              </swiper>
             </view>
-            <view class="header-right">
-                <button class="preview-btn" @click="previewPage">预览</button>
-                <button class="save-btn" @click="saveConfig" :disabled="isSaving">
-                    {{ isSaving ? '保存中...' : '保存' }}
-                </button>
+            <view v-else class="banner-placeholder">
+              <text class="placeholder-text">点击添加Banner图片</text>
             </view>
+          </view>
+          <view class="module-toggle" @click="toggleModule('banner')">
+            <switch :checked="enabledModules.includes('banner')" />
+          </view>
         </view>
 
-        <!-- 加载状态 -->
-        <view v-if="loading" class="loading-container">
-            <text>加载中...</text>
-        </view>
-        
-        <!-- 赛事详情 -->
-        <view v-else-if="eventInfo" class="event-detail">
-            <!-- Banner轮播图模块 -->
-            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.banner.enabled }">
-                <view class="card-title">
-                    <text class="title-text">Banner轮播图</text>
-                    <view class="module-toggle" @click="toggleModule('banner')">
-                        <switch :checked="moduleSettings.banner.enabled" />
-                    </view>
-                </view>
-                <view v-if="moduleSettings.banner.enabled" class="banner-content">
-                    <view v-if="bannerList.length > 0" class="banner-carousel">
-                        <swiper class="banner-swiper" :indicator-dots="true" :autoplay="true">
-                            <swiper-item v-for="(banner, index) in bannerList" :key="index">
-                                <image :src="banner.image_url" class="banner-image" mode="aspectFill" />
-                            </swiper-item>
-                        </swiper>
-                    </view>
-                    <view v-else class="banner-placeholder" @click="addBanner">
-                        <text class="placeholder-text">点击添加Banner图片</text>
-                    </view>
-                </view>
+        <!-- 赛事基本信息模块 -->
+        <view class="diy-module basic-info-module" :class="{ 'module-disabled': !enabledModules.includes('basic_info') }">
+          <view class="module-controls" v-if="selectedModule === 'basic_info'">
+            <button class="control-btn edit-btn" @click="editBasicInfo">编辑信息</button>
+          </view>
+          <view class="module-content" @click="selectModule('basic_info')">
+            <view class="event-basic-info">
+              <text class="event-name">{{ eventInfo.name || '赛事名称' }}</text>
+              <view class="info-row">
+                <text class="info-label">时间：</text>
+                <text class="info-value">{{ eventInfo.start_time || '开始时间' }} - {{ eventInfo.end_time || '结束时间' }}</text>
+              </view>
+              <view class="info-row">
+                <text class="info-label">地点：</text>
+                <text class="info-value">{{ eventInfo.location || '举办地点' }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.address_detail">
+                <text class="info-label">详细地址：</text>
+                <text class="info-value">{{ eventInfo.address_detail }}</text>
+              </view>
+              <view class="info-row">
+                <text class="info-label">主办方：</text>
+                <text class="info-value">{{ eventInfo.organizer_name || '主办单位' }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.co_organizer && eventInfo.co_organizer.length > 0">
+                <text class="info-label">协办方：</text>
+                <text class="info-value">{{ eventInfo.co_organizer.map(item => item.name).join('、') }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.series">
+                <text class="info-label">系列赛：</text>
+                <text class="info-value">{{ eventInfo.series }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.category">
+                <text class="info-label">项目分类：</text>
+                <text class="info-value">{{ eventInfo.category }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.contact_phone">
+                <text class="info-label">联系电话：</text>
+                <text class="info-value">{{ eventInfo.contact_phone }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.contact_email">
+                <text class="info-label">联系邮箱：</text>
+                <text class="info-value">{{ eventInfo.contact_email }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.signup_fields && eventInfo.signup_fields.length > 0">
+                <text class="info-label">报名字段：</text>
+                <text class="info-value">{{ eventInfo.signup_fields.map(field => field.name).join('、') }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.custom_groups && eventInfo.custom_groups.length > 0">
+                <text class="info-label">自定义分组：</text>
+                <text class="info-value">{{ eventInfo.custom_groups.map(group => group.name).join('、') }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.age_groups && eventInfo.age_groups.length > 0">
+                <text class="info-label">年龄分组：</text>
+                <text class="info-value">{{ eventInfo.age_groups.map(group => group.name).join('、') }}</text>
+              </view>
             </view>
+          </view>
+          <view class="module-toggle" @click="toggleModule('basic_info')">
+            <switch :checked="enabledModules.includes('basic_info')" />
+          </view>
+        </view>
 
-            <!-- 赛事基本信息 -->
-            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.basicInfo.enabled }">
-                <view class="card-title">
-                    <text class="title-text">基本信息</text>
-                    <view class="module-toggle" @click="toggleModule('basicInfo')">
-                        <switch :checked="moduleSettings.basicInfo.enabled" />
-                    </view>
+        <!-- 比赛项目模块 -->
+        <view class="diy-module event-items-module" :class="{ 'module-disabled': !enabledModules.includes('event_items') }">
+          <view class="module-controls" v-if="selectedModule === 'event_items'">
+            <button class="control-btn edit-btn" @click="editEventItems">管理项目</button>
+          </view>
+          <view class="module-content" @click="selectModule('event_items')">
+            <view class="event-items-list">
+              <text class="section-title">比赛项目</text>
+              <view v-for="(item, index) in eventItems.slice(0, 3)" :key="index" class="item-row">
+                <view class="item-info">
+                  <text class="item-name">{{ item.name }}</text>
+                  <text class="item-category">{{ item.category_name }}</text>
                 </view>
-                
-                <view v-if="moduleSettings.basicInfo.enabled">
-                    <view class="detail-item">
-                        <text class="label">赛事名称</text>
-                        <text class="value">{{ eventInfo.name }}</text>
-                    </view>
-                    
-                    <view class="detail-item">
-                        <text class="label">赛事类型</text>
-                        <text class="value">{{ eventInfo.event_type === 1 ? '独立赛事' : '系列赛事' }}</text>
-                    </view>
-                    
-                    <view v-if="eventInfo.event_type === 2 && eventInfo.series_name" class="detail-item">
-                        <text class="label">系列赛</text>
-                        <text class="value">{{ eventInfo.series_name }}</text>
-                    </view>
-                    
-                    <view v-if="eventInfo.season" class="detail-item">
-                        <text class="label">赛季</text>
-                        <text class="value">{{ eventInfo.season }}</text>
-                    </view>
-                    
-                    <view v-if="eventInfo.age_groups && eventInfo.age_groups.length > 0" class="detail-item">
-                        <text class="label">年龄组设置</text>
-                        <view class="age-groups-container">
-                            <view 
-                                v-for="(group, index) in eventInfo.age_groups" 
-                                :key="index" 
-                                class="age-group-tag"
-                            >
-                                <text class="age-group-text">{{ group }}</text>
-                            </view>
-                        </view>
-                    </view>
+                <view class="item-details" v-if="item.registration_fee">
+                  <text class="item-fee">报名费：¥{{ item.registration_fee }}</text>
                 </view>
+                <view class="item-details" v-if="item.age_group">
+                  <text class="item-age">年龄组：{{ item.age_group }}</text>
+                </view>
+                <view class="item-details" v-if="item.gender_limit">
+                  <text class="item-gender">性别限制：{{ item.gender_limit }}</text>
+                </view>
+              </view>
+              <text v-if="eventItems.length > 3" class="more-items">还有 {{ eventItems.length - 3 }} 个项目...</text>
             </view>
+          </view>
+          <view class="module-toggle" @click="toggleModule('event_items')">
+            <switch :checked="enabledModules.includes('event_items')" />
+          </view>
+        </view>
 
-            <!-- 时间地点信息 -->
-            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.timeLocation.enabled }">
-                <view class="card-title">
-                    <text class="title-text">时间地点</text>
-                    <view class="module-toggle" @click="toggleModule('timeLocation')">
-                        <switch :checked="moduleSettings.timeLocation.enabled" />
-                    </view>
-                </view>
-                
-                <view v-if="moduleSettings.timeLocation.enabled">
-                    <view class="detail-item">
-                        <text class="label">开始比赛</text>
-                        <text class="value">{{ formatDateTime(eventInfo.start_time) }}</text>
-                    </view>
-                    
-                    <view class="detail-item">
-                        <text class="label">结束比赛</text>
-                        <text class="value">{{ formatDateTime(eventInfo.end_time) }}</text>
-                    </view>
-                    
-                    <view v-if="eventInfo.registration_start_time" class="detail-item">
-                        <text class="label">开始报名</text>
-                        <text class="value">{{ formatRegistrationTime(eventInfo.registration_start_time) }}</text>
-                    </view>
-                    
-                    <view v-if="eventInfo.registration_end_time" class="detail-item">
-                        <text class="label">截至报名</text>
-                        <text class="value">{{ formatRegistrationTime(eventInfo.registration_end_time) }}</text>
-                    </view>
-                    
-                    <view class="detail-item">
-                        <text class="label">举办地点</text>
-                        <text class="value">{{ eventInfo.location }}</text>
-                    </view>
-                    
-                    <view v-if="getAddressDetail(eventInfo)" class="detail-item">
-                        <text class="label">详细地址</text>
-                        <text class="value">{{ getAddressDetail(eventInfo) }}</text>
-                    </view>
-                    
-                    <!-- 联系方式信息 -->
-                    <view v-if="eventInfo.contact_name || eventInfo.contact_phone || eventInfo.contact_wechat || eventInfo.contact_email" class="detail-item">
-                        <text class="label">联系方式</text>
-                        <view class="contact-info-container">
-                            <view v-if="eventInfo.contact_name" class="contact-item">
-                                <text class="contact-label">联系人：</text>
-                                <text class="contact-value">{{ eventInfo.contact_name }}</text>
-                            </view>
-                            <view v-if="eventInfo.contact_phone" class="contact-item">
-                                <text class="contact-label">电话：</text>
-                                <text class="contact-value">{{ eventInfo.contact_phone }}</text>
-                            </view>
-                            <view v-if="eventInfo.contact_wechat" class="contact-item">
-                                <text class="contact-label">微信：</text>
-                                <text class="contact-value">{{ eventInfo.contact_wechat }}</text>
-                            </view>
-                            <view v-if="eventInfo.contact_email" class="contact-item">
-                                <text class="contact-label">邮箱：</text>
-                                <text class="contact-value">{{ eventInfo.contact_email }}</text>
-                            </view>
-                        </view>
-                    </view>
+        <!-- 详情内容模块 -->
+        <view class="diy-module detail-content-module" :class="{ 'module-disabled': !enabledModules.includes('detail_content') }">
+          <view class="module-controls" v-if="selectedModule === 'detail_content'">
+            <button class="control-btn add-btn" @click="addContent">+ 添加内容</button>
+            <button class="control-btn edit-btn" @click="editDetailContent">编辑</button>
+          </view>
+          <view class="module-content" @click="selectModule('detail_content')">
+            <view class="detail-content">
+              <text class="section-title">赛事详情</text>
+              <view v-for="(content, index) in detailContentList" :key="index" class="content-item">
+                <text class="content-title">{{ content.title }}</text>
+                <text class="content-text">{{ content.content }}</text>
+              </view>
+              <text v-if="detailContentList.length === 0" class="placeholder-text">点击添加详情内容</text>
             </view>
+          </view>
+          <view class="module-toggle" @click="toggleModule('detail_content')">
+            <switch :checked="enabledModules.includes('detail_content')" />
+          </view>
         </view>
+
+        <!-- 报名操作模块 -->
+        <view class="diy-module signup-action-module" :class="{ 'module-disabled': !enabledModules.includes('signup_action') }">
+          <view class="module-controls" v-if="selectedModule === 'signup_action'">
+            <button class="control-btn edit-btn" @click="editSignupAction">编辑按钮</button>
+          </view>
+          <view class="module-content" @click="selectModule('signup_action')">
+            <view class="signup-action">
+              <view class="signup-info" v-if="eventInfo.registration_start_time && eventInfo.registration_end_time">
+                <text class="signup-time">报名时间：{{ eventInfo.registration_start_time }} 至 {{ eventInfo.registration_end_time }}</text>
+              </view>
+              <view class="signup-status">
+                <text class="status-text">报名状态：{{ getRegistrationStatus() }}</text>
+              </view>
+              <view class="participant-count" v-if="eventItems.length > 0">
+                <text class="count-text">参赛人数：{{ getTotalParticipants() }} 人</text>
+              </view>
+              <button class="signup-btn" :class="signupButtonStyle">
+                {{ signupButtonText }}
+              </button>
+              <text class="signup-tips">点击上方按钮进行报名</text>
+            </view>
+          </view>
+          <view class="module-toggle" @click="toggleModule('signup_action')">
+            <switch :checked="enabledModules.includes('signup_action')" />
+          </view>
         </view>
+      </view>
+    </view>
 
     <!-- Banner编辑弹窗 -->
     <u-popup :show="bannerEditShow" @close="bannerEditShow = false" mode="bottom" height="80%">
@@ -255,7 +286,6 @@ const login = useLogin()
 const userInfo = computed(() => memberStore.info)
 
 // 状态管理
-const loading = ref(true)
 const isSaving = ref(false)
 const selectedModule = ref<string>('')
 
@@ -264,26 +294,22 @@ const bannerEditShow = ref(false)
 const basicInfoEditShow = ref(false)
 const signupEditShow = ref(false)
 
-// 模块设置
-const moduleSettings = ref({
-  banner: { enabled: true },
-  basicInfo: { enabled: true },
-  timeLocation: { enabled: true },
-  organizer: { enabled: true },
-  coOrganizer: { enabled: true },
-  signupFields: { enabled: true },
-  customGroups: { enabled: true },
-  eventItems: { enabled: true },
-  venueArrangements: { enabled: true },
-  displaySettings: { enabled: true },
-  numberPlate: { enabled: true },
-  eventStatus: { enabled: true },
-  detailContent: { enabled: true },
-  signupAction: { enabled: true }
+// 可用模块列表
+const availableModules = ref<DIYModule[]>([
+  { key: 'banner', name: 'Banner轮播图', icon: '🖼️', enabled: true },
+  { key: 'basic_info', name: '基本信息', icon: '📋', enabled: true },
+  { key: 'event_items', name: '比赛项目', icon: '🏆', enabled: true },
+  { key: 'detail_content', name: '详情内容', icon: '📄', enabled: true },
+  { key: 'signup_action', name: '报名操作', icon: '✍️', enabled: true }
+])
+
+// 启用的模块
+const enabledModules = computed(() => {
+  return availableModules.value.filter(module => module.enabled).map(module => module.key)
 })
 
 // 赛事信息
-const eventInfo = ref<any>({
+const eventInfo = ref({
   name: '',
   start_time: '',
   end_time: '',
@@ -295,16 +321,11 @@ const eventInfo = ref<any>({
   category: '',
   contact_phone: '',
   contact_email: '',
-  contact_name: '',
-  contact_wechat: '',
   signup_fields: [],
   custom_groups: [],
   age_groups: [],
   registration_start_time: '',
-  registration_end_time: '',
-  event_type: 1,
-  series_name: '',
-  season: ''
+  registration_end_time: ''
 })
 
 // Banner数据
@@ -331,7 +352,7 @@ onMounted(() => {
   }
   
   const pages = getCurrentPages()
-  const currentPage = pages[pages.length - 1] as any
+  const currentPage = pages[pages.length - 1]
   eventId.value = currentPage.options?.event_id || 0
   
   if (eventId.value) {
@@ -346,17 +367,13 @@ onMounted(() => {
 // 加载DIY配置
 const loadDiyConfig = async () => {
   try {
-    const response: any = await diyConfigApi.getEventDiyConfig(eventId.value)
+    const response = await diyConfigApi.getEventDiyConfig(eventId.value)
     if (response.data) {
       const config = response.data
-      // 更新模块设置
-      if (config.module_settings) {
-        Object.keys(config.module_settings).forEach(key => {
-          if (moduleSettings.value[key as keyof typeof moduleSettings.value]) {
-            moduleSettings.value[key as keyof typeof moduleSettings.value] = config.module_settings[key]
-          }
-        })
-      }
+      // 更新模块启用状态
+      availableModules.value.forEach(module => {
+        module.enabled = config.enabled_modules?.includes(module.key) ?? true
+      })
       // 更新报名按钮设置
       if (config.signup_button) {
         signupButtonText.value = config.signup_button.text || '立即报名'
@@ -371,7 +388,7 @@ const loadDiyConfig = async () => {
 // 加载Banner图片
 const loadBannerImages = async () => {
   try {
-    const response: any = await bannerApi.getEventBanners(eventId.value)
+    const response = await bannerApi.getEventBanners(eventId.value)
     if (response.data) {
       // 确保 response.data 是数组格式
       bannerList.value = Array.isArray(response.data) ? response.data : []
@@ -387,7 +404,7 @@ const loadBannerImages = async () => {
 // 加载赛事信息
 const loadEventInfo = async () => {
   try {
-    const response: any = await getEventDetailInfo(eventId.value)
+    const response = await getEventDetailInfo(eventId.value)
     if (response.data) {
       const eventData = response.data
       eventInfo.value = {
@@ -402,29 +419,41 @@ const loadEventInfo = async () => {
         category: eventData.category?.name || '',
         contact_phone: eventData.contact_phone || '',
         contact_email: eventData.contact_email || '',
-        contact_name: eventData.contact_name || '',
-        contact_wechat: eventData.contact_wechat || '',
         signup_fields: eventData.signup_fields || [],
         custom_groups: eventData.custom_groups || [],
         age_groups: eventData.age_groups || [],
         registration_start_time: eventData.registration_start_time || '',
-        registration_end_time: eventData.registration_end_time || '',
-        event_type: eventData.event_type || 1,
-        series_name: eventData.series_name || '',
-        season: eventData.season || ''
+        registration_end_time: eventData.registration_end_time || ''
       }
     }
-    loading.value = false
   } catch (error) {
     console.error('加载赛事信息失败:', error)
-    loading.value = false
+    // 使用默认数据
+    eventInfo.value = {
+      name: '赛事名称',
+      start_time: '',
+      end_time: '',
+      location: '',
+      address_detail: '',
+      organizer_name: '',
+      co_organizer: [],
+      series: '',
+      category: '',
+      contact_phone: '',
+      contact_email: '',
+      signup_fields: [],
+      custom_groups: [],
+      age_groups: [],
+      registration_start_time: '',
+      registration_end_time: ''
+    }
   }
 }
 
 // 加载比赛项目
 const loadEventItems = async () => {
   try {
-    const response: any = await getEventItems(eventId.value)
+    const response = await getEventItems(eventId.value)
     if (response.data) {
       eventItems.value = response.data
     } else {
@@ -439,7 +468,7 @@ const loadEventItems = async () => {
 // 加载详情内容
 const loadDetailContent = async () => {
   try {
-    const response: any = await contentApi.getEventDetailContent(eventId.value)
+    const response = await contentApi.getEventDetailContent(eventId.value)
     if (response.data) {
       detailContentList.value = [
         { 
@@ -491,63 +520,11 @@ const getTotalParticipants = () => {
   }, 0)
 }
 
-/**
- * 格式化日期时间
- */
-const formatDateTime = (timestamp: number | string) => {
-    if (!timestamp) return '--'
-    const date = new Date(Number(timestamp) * 1000)
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    return `${year}-${month}-${day} ${hours}:${minutes}`
-}
-
-/**
- * 格式化报名时间
- */
-const formatRegistrationTime = (timeString: string) => {
-    if (!timeString) return '--'
-    // 报名时间格式为 YYYY-MM-DD HH:mm
-    return timeString
-}
-
-/**
- * 获取详细地址
- */
-const getAddressDetail = (eventInfo: any) => {
-    if (!eventInfo) {
-        return ''
-    }
-    
-    // 优先使用address_detail字段
-    if (eventInfo.address_detail) {
-        return eventInfo.address_detail
-    }
-    
-    // 如果没有address_detail字段，尝试从location_detail中分离
-    if (eventInfo.location_detail) {
-        const locationDetail = eventInfo.location_detail
-        const location = eventInfo.location || ''
-        
-        // 如果location_detail包含location，则分离出详细地址
-        if (location && locationDetail.startsWith(location)) {
-            return locationDetail.substring(location.length).trim()
-        } else {
-            // 如果location_detail不包含location，则整个作为详细地址
-            return locationDetail
-        }
-    }
-    
-    return ''
-}
-
 // 切换模块显示状态
 const toggleModule = (moduleKey: string) => {
-  if (moduleSettings.value[moduleKey as keyof typeof moduleSettings.value]) {
-    moduleSettings.value[moduleKey as keyof typeof moduleSettings.value].enabled = !moduleSettings.value[moduleKey as keyof typeof moduleSettings.value].enabled
+  const module = availableModules.value.find(m => m.key === moduleKey)
+  if (module) {
+    module.enabled = !module.enabled
   }
 }
 
@@ -579,14 +556,12 @@ const chooseBannerImage = () => {
       }
       
       // 这里应该上传图片到服务器
-      if (Array.isArray(res.tempFilePaths)) {
-        res.tempFilePaths.forEach((path: string) => {
-          bannerList.value.push({
-            image_url: path,
-            sort: bannerList.value.length
-          })
+      res.tempFilePaths.forEach(path => {
+        bannerList.value.push({
+          image_url: path,
+          sort: bannerList.value.length
         })
-      }
+      })
     }
   })
 }
@@ -638,13 +613,10 @@ const saveConfig = async () => {
   try {
     const configData = {
       event_id: eventId.value,
-      config_data: {
-        module_settings: moduleSettings.value,
-        banner_list: bannerList.value,
-        signup_button: {
-          text: signupButtonText.value,
-          style: signupButtonStyle.value
-        }
+      enabled_modules: enabledModules.value,
+      signup_button: {
+        text: signupButtonText.value,
+        style: signupButtonStyle.value
       }
     }
     
@@ -677,203 +649,59 @@ watch(signupButtonStyleIndex, (newIndex) => {
 </script>
 
 <style lang="scss" scoped>
-.container {
-    min-height: 100vh;
-    background-color: #f5f5f5;
-    padding-bottom: 120rpx;
-}
-
-.loading-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 60vh;
-    
-    text {
-        font-size: 28rpx;
-        color: #999;
-    }
+.diy-design-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
 }
 
 .page-header {
-    background-color: white;
-    padding: 40rpx 32rpx;
-    margin-bottom: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  background: white;
+  border-bottom: 1rpx solid #eee;
+  
+  .header-left {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     
-    .header-left {
-        display: flex;
-        align-items: center;
-        
-        .nc-iconfont {
-            font-size: 36rpx;
-            margin-right: 10rpx;
-        }
-        
-        .header-title {
-            font-size: 36rpx;
-            font-weight: bold;
-            color: #333;
-        }
+    .nc-iconfont {
+      font-size: 36rpx;
+      margin-right: 10rpx;
     }
     
-    .header-right {
-        display: flex;
-        gap: 20rpx;
-        
-        .preview-btn, .save-btn {
-            padding: 12rpx 24rpx;
-            border-radius: 8rpx;
-            font-size: 28rpx;
-            border: none;
-        }
-        
-        .preview-btn {
-            background: #f0f0f0;
-            color: #666;
-        }
-        
-        .save-btn {
-            background: #007aff;
-            color: white;
-            
-            &:disabled {
-                background: #ccc;
-            }
-        }
+    .header-title {
+      font-size: 32rpx;
+      font-weight: bold;
     }
-}
-
-.detail-card {
-    background-color: white;
-    margin: 0 32rpx 20rpx;
-    border-radius: 16rpx;
-    padding: 32rpx;
+  }
+  
+  .header-right {
+    display: flex;
+    gap: 20rpx;
     
-    &.module-disabled {
-        opacity: 0.5;
+    .preview-btn, .save-btn {
+      padding: 12rpx 24rpx;
+      border-radius: 8rpx;
+      font-size: 28rpx;
+      border: none;
     }
     
-    .card-title {
-        margin-bottom: 32rpx;
-        padding-bottom: 20rpx;
-        border-bottom: 1rpx solid #f0f0f0;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        
-        .title-text {
-            font-size: 32rpx;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .module-toggle {
-            switch {
-                transform: scale(0.8);
-            }
-        }
+    .preview-btn {
+      background: #f0f0f0;
+      color: #666;
     }
     
-    .detail-item {
-        display: flex;
-        margin-bottom: 24rpx;
-        align-items: flex-start;
-        
-        &:last-child {
-            margin-bottom: 0;
-        }
-        
-        .label {
-            width: 160rpx;
-            font-size: 28rpx;
-            color: #666;
-            flex-shrink: 0;
-        }
-        
-        .value {
-            flex: 1;
-            font-size: 28rpx;
-            color: #333;
-            word-break: break-all;
-        }
-        
-        .contact-info-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 12rpx;
-        }
-        
-        .contact-item {
-            display: flex;
-            align-items: center;
-            font-size: 28rpx;
-            
-            .contact-label {
-                color: #666;
-                margin-right: 8rpx;
-                min-width: 80rpx;
-            }
-            
-            .contact-value {
-                color: #333;
-                font-weight: 500;
-            }
-        }
+    .save-btn {
+      background: #007aff;
+      color: white;
+      
+      &:disabled {
+        background: #ccc;
+      }
     }
-    
-    .age-groups-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8rpx;
-        margin-top: 8rpx;
-    }
-    
-    .age-group-tag {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 6rpx 12rpx;
-        border-radius: 16rpx;
-        
-        .age-group-text {
-            font-size: 22rpx;
-            color: white;
-            font-weight: 500;
-        }
-    }
-}
-
-.banner-content {
-    .banner-carousel {
-        .banner-swiper {
-            height: 300rpx;
-            border-radius: 12rpx;
-            overflow: hidden;
-            
-            .banner-image {
-                width: 100%;
-                height: 100%;
-            }
-        }
-    }
-    
-    .banner-placeholder {
-        height: 300rpx;
-        background: #f8f8f8;
-        border: 2rpx dashed #ddd;
-        border-radius: 12rpx;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        
-        .placeholder-text {
-            color: #999;
-            font-size: 28rpx;
-        }
-    }
+  }
 }
 
 .main-content {
