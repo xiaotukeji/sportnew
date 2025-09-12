@@ -3423,3 +3423,65 @@ CREATE TABLE `sport_event_number_assignment` (
   KEY `idx_number_plate` (`number_plate`),
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事号码分配表';
+
+-- ----------------------------
+-- Sport插件DIY报名页面数据库表
+-- 创建时间: 2025-01-11
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for sport_event_diy_config
+-- 赛事DIY配置表
+-- ----------------------------
+DROP TABLE IF EXISTS `sport_event_diy_config`;
+CREATE TABLE `sport_event_diy_config` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '配置ID',
+  `event_id` int(11) unsigned NOT NULL COMMENT '赛事ID',
+  `config_data` text NOT NULL COMMENT 'DIY配置数据(JSON格式)',
+  `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态：0禁用 1启用',
+  `create_time` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_event_id` (`event_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事DIY配置表';
+
+-- ----------------------------
+-- Table structure for sport_event_banner
+-- 赛事Banner图片表
+-- ----------------------------
+DROP TABLE IF EXISTS `sport_event_banner`;
+CREATE TABLE `sport_event_banner` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '图片ID',
+  `event_id` int(11) unsigned NOT NULL COMMENT '赛事ID',
+  `image_url` varchar(500) NOT NULL DEFAULT '' COMMENT '图片URL',
+  `image_title` varchar(255) NOT NULL DEFAULT '' COMMENT '图片标题',
+  `image_link` varchar(500) NOT NULL DEFAULT '' COMMENT '图片链接',
+  `sort` int(11) NOT NULL DEFAULT '0' COMMENT '排序',
+  `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态：0禁用 1启用',
+  `create_time` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_event_id` (`event_id`),
+  KEY `idx_status_sort` (`status`,`sort`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事Banner图片表';
+
+-- ----------------------------
+-- Table structure for sport_event_detail_content
+-- 赛事详情内容表
+-- ----------------------------
+DROP TABLE IF EXISTS `sport_event_detail_content`;
+CREATE TABLE `sport_event_detail_content` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '内容ID',
+  `event_id` int(11) unsigned NOT NULL COMMENT '赛事ID',
+  `content_type` varchar(50) NOT NULL DEFAULT 'rich_text' COMMENT '内容类型：rich_text富文本，html_html，markdown_markdown',
+  `content_data` longtext COMMENT '内容数据',
+  `content_images` text COMMENT '内容图片(JSON格式)',
+  `status` tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态：0禁用 1启用',
+  `create_time` int(11) NOT NULL DEFAULT '0' COMMENT '创建时间',
+  `update_time` int(11) NOT NULL DEFAULT '0' COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_event_id` (`event_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='赛事详情内容表';
+

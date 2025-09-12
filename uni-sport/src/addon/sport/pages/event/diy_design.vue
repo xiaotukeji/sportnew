@@ -14,250 +14,256 @@
       </view>
     </view>
 
-    <!-- 主要内容区域 -->
+    <!-- 主要内容区域 - 直接显示所有元素 -->
     <view class="main-content">
-      <!-- 左侧：模块面板 -->
-      <view class="modules-panel">
-        <view class="panel-title">页面模块</view>
-        <view class="modules-list" id="modules-list">
-          <view 
-            v-for="module in availableModules" 
-            :key="module.key"
-            class="module-item"
-            :class="{ disabled: !module.enabled }"
-            @click="toggleModule(module.key)"
-          >
-            <view class="module-icon">{{ module.icon }}</view>
-            <text class="module-name">{{ module.name }}</text>
-            <view class="module-switch">
-              <switch :checked="module.enabled" @change="toggleModule(module.key)" />
+      <view class="diy-preview-container">
+        <!-- Banner轮播图模块 -->
+        <view class="diy-module banner-module" :class="{ 'module-disabled': !enabledModules.includes('banner') }">
+          <view class="module-controls" v-if="selectedModule === 'banner'">
+            <button class="control-btn add-btn" @click="addBanner">+ 添加图片</button>
+            <button class="control-btn delete-btn" @click="deleteBanner">删除</button>
+            <button class="control-btn edit-btn" @click="editBanner">编辑</button>
+          </view>
+          <view class="module-content" @click="selectModule('banner')">
+            <view v-if="bannerList.length > 0" class="banner-carousel">
+              <swiper class="banner-swiper" :indicator-dots="true" :autoplay="true">
+                <swiper-item v-for="(banner, index) in bannerList" :key="index">
+                  <image :src="banner.image_url" class="banner-image" mode="aspectFill" />
+                </swiper-item>
+              </swiper>
             </view>
+            <view v-else class="banner-placeholder">
+              <text class="placeholder-text">点击添加Banner图片</text>
+            </view>
+          </view>
+          <view class="module-toggle" @click="toggleModule('banner')">
+            <switch :checked="enabledModules.includes('banner')" />
           </view>
         </view>
-      </view>
 
-      <!-- 中间：预览区域 -->
-      <view class="preview-area">
-        <view class="preview-container">
-          <view class="preview-title">实时预览</view>
-          
-          <!-- Banner模块预览 -->
-          <view v-if="enabledModules.includes('banner')" class="preview-module">
-            <view class="module-header">
-              <text class="module-title">Banner轮播图</text>
-              <button class="edit-btn" @click="editBanner">编辑</button>
-            </view>
-            <view class="banner-preview">
-              <view v-if="bannerImages.length === 0" class="empty-banner" @click="editBanner">
-                <text class="empty-text">点击添加Banner图片</text>
-                <text class="add-icon">+</text>
-              </view>
-              <u-swiper 
-                v-else 
-                :list="bannerImages" 
-                :height="bannerHeight + 'rpx'"
-                :autoplay="bannerAutoplay"
-                :indicator="bannerIndicator"
-                :interval="bannerInterval"
-              />
-            </view>
+        <!-- 赛事基本信息模块 -->
+        <view class="diy-module basic-info-module" :class="{ 'module-disabled': !enabledModules.includes('basic_info') }">
+          <view class="module-controls" v-if="selectedModule === 'basic_info'">
+            <button class="control-btn edit-btn" @click="editBasicInfo">编辑信息</button>
           </view>
-
-          <!-- 基本信息模块预览 -->
-          <view v-if="enabledModules.includes('basicInfo')" class="preview-module">
-            <view class="module-header">
-              <text class="module-title">基本信息</text>
-              <button class="edit-btn" @click="editBasicInfo">编辑</button>
-            </view>
-            <view class="basic-info-preview">
-              <view class="info-item" v-if="basicInfoSettings.showEventName">
-                <text class="info-label">赛事名称</text>
-                <text class="info-value">示例赛事名称</text>
+          <view class="module-content" @click="selectModule('basic_info')">
+            <view class="event-basic-info">
+              <text class="event-name">{{ eventInfo.name || '赛事名称' }}</text>
+              <view class="info-row">
+                <text class="info-label">时间：</text>
+                <text class="info-value">{{ eventInfo.start_time || '开始时间' }} - {{ eventInfo.end_time || '结束时间' }}</text>
               </view>
-              <view class="info-item" v-if="basicInfoSettings.showTimeLocation">
-                <text class="info-label">时间地点</text>
-                <text class="info-value">2025年1月1日 北京</text>
+              <view class="info-row">
+                <text class="info-label">地点：</text>
+                <text class="info-value">{{ eventInfo.location || '举办地点' }}</text>
               </view>
-              <view class="info-item" v-if="basicInfoSettings.showOrganizer">
-                <text class="info-label">主办方</text>
-                <text class="info-value">示例主办方</text>
+              <view class="info-row" v-if="eventInfo.address_detail">
+                <text class="info-label">详细地址：</text>
+                <text class="info-value">{{ eventInfo.address_detail }}</text>
               </view>
-            </view>
-          </view>
-
-          <!-- 项目信息模块预览 -->
-          <view v-if="enabledModules.includes('projects')" class="preview-module">
-            <view class="module-header">
-              <text class="module-title">比赛项目</text>
-              <button class="edit-btn" @click="editProjects">编辑</button>
-            </view>
-            <view class="projects-preview">
-              <view class="project-item">
-                <text class="project-name">100米短跑</text>
-                <text class="project-fee">报名费：￥50</text>
+              <view class="info-row">
+                <text class="info-label">主办方：</text>
+                <text class="info-value">{{ eventInfo.organizer_name || '主办单位' }}</text>
               </view>
-              <view class="project-item">
-                <text class="project-name">200米短跑</text>
-                <text class="project-fee">报名费：￥50</text>
+              <view class="info-row" v-if="eventInfo.co_organizer && eventInfo.co_organizer.length > 0">
+                <text class="info-label">协办方：</text>
+                <text class="info-value">{{ eventInfo.co_organizer.map(item => item.name).join('、') }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.series">
+                <text class="info-label">系列赛：</text>
+                <text class="info-value">{{ eventInfo.series }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.category">
+                <text class="info-label">项目分类：</text>
+                <text class="info-value">{{ eventInfo.category }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.contact_phone">
+                <text class="info-label">联系电话：</text>
+                <text class="info-value">{{ eventInfo.contact_phone }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.contact_email">
+                <text class="info-label">联系邮箱：</text>
+                <text class="info-value">{{ eventInfo.contact_email }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.signup_fields && eventInfo.signup_fields.length > 0">
+                <text class="info-label">报名字段：</text>
+                <text class="info-value">{{ eventInfo.signup_fields.map(field => field.name).join('、') }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.custom_groups && eventInfo.custom_groups.length > 0">
+                <text class="info-label">自定义分组：</text>
+                <text class="info-value">{{ eventInfo.custom_groups.map(group => group.name).join('、') }}</text>
+              </view>
+              <view class="info-row" v-if="eventInfo.age_groups && eventInfo.age_groups.length > 0">
+                <text class="info-label">年龄分组：</text>
+                <text class="info-value">{{ eventInfo.age_groups.map(group => group.name).join('、') }}</text>
               </view>
             </view>
           </view>
+          <view class="module-toggle" @click="toggleModule('basic_info')">
+            <switch :checked="enabledModules.includes('basic_info')" />
+          </view>
+        </view>
 
-          <!-- 详情内容模块预览 -->
-          <view v-if="enabledModules.includes('detailContent')" class="preview-module">
-            <view class="module-header">
-              <text class="module-title">详情内容</text>
-              <button class="edit-btn" @click="editDetailContent">编辑</button>
-            </view>
-            <view class="detail-content-preview">
-              <text class="content-text">这里是赛事详情内容...</text>
+        <!-- 比赛项目模块 -->
+        <view class="diy-module event-items-module" :class="{ 'module-disabled': !enabledModules.includes('event_items') }">
+          <view class="module-controls" v-if="selectedModule === 'event_items'">
+            <button class="control-btn edit-btn" @click="editEventItems">管理项目</button>
+          </view>
+          <view class="module-content" @click="selectModule('event_items')">
+            <view class="event-items-list">
+              <text class="section-title">比赛项目</text>
+              <view v-for="(item, index) in eventItems.slice(0, 3)" :key="index" class="item-row">
+                <view class="item-info">
+                  <text class="item-name">{{ item.name }}</text>
+                  <text class="item-category">{{ item.category_name }}</text>
+                </view>
+                <view class="item-details" v-if="item.registration_fee">
+                  <text class="item-fee">报名费：¥{{ item.registration_fee }}</text>
+                </view>
+                <view class="item-details" v-if="item.age_group">
+                  <text class="item-age">年龄组：{{ item.age_group }}</text>
+                </view>
+                <view class="item-details" v-if="item.gender_limit">
+                  <text class="item-gender">性别限制：{{ item.gender_limit }}</text>
+                </view>
+              </view>
+              <text v-if="eventItems.length > 3" class="more-items">还有 {{ eventItems.length - 3 }} 个项目...</text>
             </view>
           </view>
+          <view class="module-toggle" @click="toggleModule('event_items')">
+            <switch :checked="enabledModules.includes('event_items')" />
+          </view>
+        </view>
 
-          <!-- 报名操作模块预览 -->
-          <view v-if="enabledModules.includes('signupAction')" class="preview-module">
-            <view class="module-header">
-              <text class="module-title">报名操作</text>
-              <button class="edit-btn" @click="editSignupAction">编辑</button>
+        <!-- 详情内容模块 -->
+        <view class="diy-module detail-content-module" :class="{ 'module-disabled': !enabledModules.includes('detail_content') }">
+          <view class="module-controls" v-if="selectedModule === 'detail_content'">
+            <button class="control-btn add-btn" @click="addContent">+ 添加内容</button>
+            <button class="control-btn edit-btn" @click="editDetailContent">编辑</button>
+          </view>
+          <view class="module-content" @click="selectModule('detail_content')">
+            <view class="detail-content">
+              <text class="section-title">赛事详情</text>
+              <view v-for="(content, index) in detailContentList" :key="index" class="content-item">
+                <text class="content-title">{{ content.title }}</text>
+                <text class="content-text">{{ content.content }}</text>
+              </view>
+              <text v-if="detailContentList.length === 0" class="placeholder-text">点击添加详情内容</text>
             </view>
-            <view class="signup-action-preview">
+          </view>
+          <view class="module-toggle" @click="toggleModule('detail_content')">
+            <switch :checked="enabledModules.includes('detail_content')" />
+          </view>
+        </view>
+
+        <!-- 报名操作模块 -->
+        <view class="diy-module signup-action-module" :class="{ 'module-disabled': !enabledModules.includes('signup_action') }">
+          <view class="module-controls" v-if="selectedModule === 'signup_action'">
+            <button class="control-btn edit-btn" @click="editSignupAction">编辑按钮</button>
+          </view>
+          <view class="module-content" @click="selectModule('signup_action')">
+            <view class="signup-action">
+              <view class="signup-info" v-if="eventInfo.registration_start_time && eventInfo.registration_end_time">
+                <text class="signup-time">报名时间：{{ eventInfo.registration_start_time }} 至 {{ eventInfo.registration_end_time }}</text>
+              </view>
               <view class="signup-status">
-                <text class="status-text">报名进行中</text>
-                <text class="time-text">2025年1月1日 - 2025年1月31日</text>
+                <text class="status-text">报名状态：{{ getRegistrationStatus() }}</text>
+              </view>
+              <view class="participant-count" v-if="eventItems.length > 0">
+                <text class="count-text">参赛人数：{{ getTotalParticipants() }} 人</text>
               </view>
               <button class="signup-btn" :class="signupButtonStyle">
                 {{ signupButtonText }}
               </button>
+              <text class="signup-tips">点击上方按钮进行报名</text>
             </view>
           </view>
-        </view>
-      </view>
-
-      <!-- 右侧：属性设置面板 -->
-      <view class="properties-panel">
-        <view class="panel-title">属性设置</view>
-        <view class="properties-content">
-          <view v-if="selectedModule" class="module-properties">
-            <text class="properties-title">{{ selectedModule.name }}设置</text>
-            
-            <!-- Banner属性设置 -->
-            <view v-if="selectedModule.key === 'banner'" class="property-group">
-              <view class="property-item">
-                <text class="property-label">轮播高度</text>
-                <slider 
-                  :value="bannerHeight" 
-                  @change="updateBannerHeight"
-                  min="200" 
-                  max="600" 
-                  step="50"
-                />
-                <text class="property-value">{{ bannerHeight }}rpx</text>
-              </view>
-              <view class="property-item">
-                <text class="property-label">自动播放</text>
-                <switch :checked="bannerAutoplay" @change="updateBannerAutoplay" />
-              </view>
-              <view class="property-item">
-                <text class="property-label">显示指示器</text>
-                <switch :checked="bannerIndicator" @change="updateBannerIndicator" />
-              </view>
-            </view>
-
-            <!-- 基本信息属性设置 -->
-            <view v-if="selectedModule.key === 'basicInfo'" class="property-group">
-              <view class="property-item" v-for="(value, key) in basicInfoSettings" :key="key">
-                <text class="property-label">{{ getBasicInfoLabel(key) }}</text>
-                <switch :checked="value" @change="updateBasicInfoSetting(key, $event)" />
-              </view>
-            </view>
-
-            <!-- 报名操作属性设置 -->
-            <view v-if="selectedModule.key === 'signupAction'" class="property-group">
-              <view class="property-item">
-                <text class="property-label">按钮文字</text>
-                <input 
-                  v-model="signupButtonText" 
-                  class="property-input"
-                  placeholder="请输入按钮文字"
-                />
-              </view>
-              <view class="property-item">
-                <text class="property-label">按钮样式</text>
-                <picker 
-                  :value="signupButtonStyleIndex" 
-                  :range="buttonStyles"
-                  @change="updateSignupButtonStyle"
-                >
-                  <view class="picker-text">{{ buttonStyles[signupButtonStyleIndex] }}</view>
-                </picker>
-              </view>
-            </view>
-          </view>
-          
-          <view v-else class="no-selection">
-            <text class="no-selection-text">请选择要编辑的模块</text>
+          <view class="module-toggle" @click="toggleModule('signup_action')">
+            <switch :checked="enabledModules.includes('signup_action')" />
           </view>
         </view>
       </view>
     </view>
 
     <!-- Banner编辑弹窗 -->
-    <u-popup :show="bannerEditShow" @close="bannerEditShow = false">
-      <view class="banner-edit-popup">
+    <u-popup :show="bannerEditShow" @close="bannerEditShow = false" mode="bottom" height="80%">
+      <view class="popup-content">
         <view class="popup-header">
-          <text class="popup-title">编辑Banner</text>
+          <text class="popup-title">Banner设置</text>
           <text class="close-btn" @click="bannerEditShow = false">×</text>
         </view>
-        
-        <view class="popup-content">
-          <!-- 图片上传区域 -->
-          <view class="upload-area">
-            <view 
-              v-for="(image, index) in bannerImages" 
-              :key="index"
-              class="image-item"
-            >
-              <image :src="image" class="uploaded-image" />
-              <view class="image-actions">
-                <button class="action-btn" @click="previewImage(image)">预览</button>
-                <button class="action-btn delete" @click="removeImage(index)">删除</button>
+        <view class="popup-body">
+          <view class="form-group">
+            <text class="form-label">轮播图片</text>
+            <view class="image-list">
+              <view v-for="(banner, index) in bannerList" :key="index" class="image-item">
+                <image :src="banner.image_url" class="preview-image" mode="aspectFill" />
+                <button class="delete-image-btn" @click="removeBannerImage(index)">×</button>
+              </view>
+              <view class="add-image-btn" @click="chooseBannerImage">
+                <text class="add-icon">+</text>
+                <text class="add-text">添加图片</text>
               </view>
             </view>
-            
-            <view v-if="bannerImages.length < 5" class="upload-btn" @click="uploadImage">
-              <text class="upload-icon">+</text>
-              <text class="upload-text">添加图片</text>
-            </view>
           </view>
-        </view>
-        
-        <view class="popup-footer">
-          <button class="cancel-btn" @click="bannerEditShow = false">取消</button>
-          <button class="confirm-btn" @click="saveBannerSettings">确定</button>
         </view>
       </view>
     </u-popup>
 
     <!-- 基本信息编辑弹窗 -->
-    <u-popup :show="basicInfoEditShow" @close="basicInfoEditShow = false">
-      <view class="basic-info-edit-popup">
+    <u-popup :show="basicInfoEditShow" @close="basicInfoEditShow = false" mode="bottom" height="60%">
+      <view class="popup-content">
         <view class="popup-header">
-          <text class="popup-title">编辑基本信息</text>
+          <text class="popup-title">基本信息设置</text>
           <text class="close-btn" @click="basicInfoEditShow = false">×</text>
         </view>
-        
-        <view class="popup-content">
-          <view class="settings-section">
-            <view class="setting-item" v-for="(value, key) in basicInfoSettings" :key="key">
-              <text class="setting-label">{{ getBasicInfoLabel(key) }}</text>
-              <switch :checked="value" @change="updateBasicInfoSetting(key, $event)" />
-            </view>
+        <view class="popup-body">
+          <view class="form-group">
+            <text class="form-label">赛事名称</text>
+            <input class="form-input" v-model="eventInfo.name" placeholder="请输入赛事名称" />
+          </view>
+          <view class="form-group">
+            <text class="form-label">开始时间</text>
+            <input class="form-input" v-model="eventInfo.start_time" placeholder="请输入开始时间" />
+          </view>
+          <view class="form-group">
+            <text class="form-label">结束时间</text>
+            <input class="form-input" v-model="eventInfo.end_time" placeholder="请输入结束时间" />
+          </view>
+          <view class="form-group">
+            <text class="form-label">举办地点</text>
+            <input class="form-input" v-model="eventInfo.location" placeholder="请输入举办地点" />
           </view>
         </view>
-        
-        <view class="popup-footer">
-          <button class="cancel-btn" @click="basicInfoEditShow = false">取消</button>
-          <button class="confirm-btn" @click="saveBasicInfoSettings">确定</button>
+      </view>
+    </u-popup>
+
+    <!-- 报名按钮编辑弹窗 -->
+    <u-popup :show="signupEditShow" @close="signupEditShow = false" mode="bottom" height="50%">
+      <view class="popup-content">
+        <view class="popup-header">
+          <text class="popup-title">报名按钮设置</text>
+          <text class="close-btn" @click="signupEditShow = false">×</text>
+        </view>
+        <view class="popup-body">
+          <view class="form-group">
+            <text class="form-label">按钮文字</text>
+            <input class="form-input" v-model="signupButtonText" placeholder="请输入按钮文字" />
+          </view>
+          <view class="form-group">
+            <text class="form-label">按钮样式</text>
+            <view class="style-options">
+              <view 
+                v-for="(style, index) in buttonStyles" 
+                :key="index"
+                class="style-option"
+                :class="{ active: signupButtonStyleIndex === index }"
+                @click="signupButtonStyleIndex = index"
+              >
+                <button class="style-btn" :class="style">{{ signupButtonText }}</button>
+              </view>
+            </view>
+          </view>
         </view>
       </view>
     </u-popup>
@@ -280,90 +286,57 @@ const userInfo = computed(() => memberStore.info)
 
 // 状态管理
 const isSaving = ref(false)
-const selectedModule = ref<DIYModule | null>(null)
+const selectedModule = ref<string>('')
 
 // 弹窗状态
 const bannerEditShow = ref(false)
 const basicInfoEditShow = ref(false)
+const signupEditShow = ref(false)
 
 // 可用模块列表
 const availableModules = ref<DIYModule[]>([
-  {
-    key: 'banner',
-    name: 'Banner轮播图',
-    icon: '🖼️',
-    description: '展示赛事宣传图片，支持多图轮播',
-    enabled: true,
-    order: 1,
-    properties: {}
-  },
-  {
-    key: 'basicInfo',
-    name: '基本信息',
-    icon: '📋',
-    description: '展示赛事基本信息和组织方信息',
-    enabled: true,
-    order: 2,
-    properties: {}
-  },
-  {
-    key: 'projects',
-    name: '比赛项目',
-    icon: '🏆',
-    description: '展示赛事项目和报名信息',
-    enabled: true,
-    order: 3,
-    properties: {}
-  },
-  {
-    key: 'detailContent',
-    name: '详情内容',
-    icon: '📄',
-    description: '展示赛事详细说明和规则',
-    enabled: true,
-    order: 4,
-    properties: {}
-  },
-  {
-    key: 'signupAction',
-    name: '报名操作',
-    icon: '📝',
-    description: '报名状态和操作按钮',
-    enabled: true,
-    order: 5,
-    properties: {}
-  }
+  { key: 'banner', name: 'Banner轮播图', icon: '🖼️', enabled: true },
+  { key: 'basic_info', name: '基本信息', icon: '📋', enabled: true },
+  { key: 'event_items', name: '比赛项目', icon: '🏆', enabled: true },
+  { key: 'detail_content', name: '详情内容', icon: '📄', enabled: true },
+  { key: 'signup_action', name: '报名操作', icon: '✍️', enabled: true }
 ])
 
 // 启用的模块
 const enabledModules = computed(() => {
-  return availableModules.value
-    .filter(module => module.enabled)
-    .sort((a, b) => a.order - b.order)
-    .map(module => module.key)
+  return availableModules.value.filter(module => module.enabled).map(module => module.key)
 })
 
-// Banner相关数据
-const bannerImages = ref<string[]>([])
-const bannerHeight = ref(400)
-const bannerAutoplay = ref(true)
-const bannerIndicator = ref(true)
-const bannerInterval = ref(3000)
-
-// 基本信息设置
-const basicInfoSettings = ref({
-  showEventName: true,
-  showTimeLocation: true,
-  showOrganizer: true,
-  showCoOrganizer: true,
-  showSeries: true,
-  showCategory: true,
-  showAgeGroups: true,
-  showCustomGroups: true,
-  showContactInfo: true
+// 赛事信息
+const eventInfo = ref({
+  name: '',
+  start_time: '',
+  end_time: '',
+  location: '',
+  address_detail: '',
+  organizer_name: '',
+  co_organizer: [],
+  series: '',
+  category: '',
+  contact_phone: '',
+  contact_email: '',
+  signup_fields: [],
+  custom_groups: [],
+  age_groups: [],
+  registration_start_time: '',
+  registration_end_time: ''
 })
 
-// 报名操作设置
+// Banner数据
+const bannerList = ref<any[]>([])
+
+// 比赛项目数据
+const eventItems = ref<any[]>([])
+
+// 详情内容数据
+const detailContentList = ref<any[]>([])
+
+// 报名按钮设置
 const signupButtonText = ref('立即报名')
 const signupButtonStyle = ref('primary')
 const signupButtonStyleIndex = ref(0)
@@ -384,6 +357,9 @@ onMounted(() => {
   if (eventId.value) {
     loadDiyConfig()
     loadBannerImages()
+    loadEventInfo()
+    loadEventItems()
+    loadDetailContent()
   }
 })
 
@@ -391,11 +367,16 @@ onMounted(() => {
 const loadDiyConfig = async () => {
   try {
     const response = await diyConfigApi.getEventDiyConfig(eventId.value)
-    if (response.code === 1) {
-      const config = response.data.config
-      if (config) {
-        // 应用配置到界面
-        applyConfigToUI(config)
+    if (response.data) {
+      const config = response.data
+      // 更新模块启用状态
+      availableModules.value.forEach(module => {
+        module.enabled = config.enabled_modules?.includes(module.key) ?? true
+      })
+      // 更新报名按钮设置
+      if (config.signup_button) {
+        signupButtonText.value = config.signup_button.text || '立即报名'
+        signupButtonStyle.value = config.signup_button.style || 'primary'
       }
     }
   } catch (error) {
@@ -407,177 +388,220 @@ const loadDiyConfig = async () => {
 const loadBannerImages = async () => {
   try {
     const response = await bannerApi.getEventBanners(eventId.value)
-    if (response.code === 1) {
-      bannerImages.value = response.data.banners.map((banner: any) => banner.image_url)
+    if (response.data) {
+      // 确保 response.data 是数组格式
+      bannerList.value = Array.isArray(response.data) ? response.data : []
+    } else {
+      bannerList.value = []
     }
   } catch (error) {
     console.error('加载Banner图片失败:', error)
+    bannerList.value = []
   }
 }
 
-// 应用配置到界面
-const applyConfigToUI = (config: DIYConfig) => {
-  // 应用模块配置
-  Object.keys(config.modules).forEach(moduleKey => {
-    const module = availableModules.value.find(m => m.key === moduleKey)
-    if (module) {
-      module.enabled = config.modules[moduleKey].enabled
-      module.order = config.modules[moduleKey].order
-      module.properties = config.modules[moduleKey].properties
+// 加载赛事信息
+const loadEventInfo = async () => {
+  try {
+    const response = await getEventDetailInfo(eventId.value)
+    if (response.data) {
+      const eventData = response.data
+      eventInfo.value = {
+        name: eventData.name || '',
+        start_time: eventData.start_time || '',
+        end_time: eventData.end_time || '',
+        location: eventData.location || '',
+        address_detail: eventData.address_detail || '',
+        organizer_name: eventData.organizer?.name || '',
+        co_organizer: eventData.co_organizer || [],
+        series: eventData.series?.name || '',
+        category: eventData.category?.name || '',
+        contact_phone: eventData.contact_phone || '',
+        contact_email: eventData.contact_email || '',
+        signup_fields: eventData.signup_fields || [],
+        custom_groups: eventData.custom_groups || [],
+        age_groups: eventData.age_groups || [],
+        registration_start_time: eventData.registration_start_time || '',
+        registration_end_time: eventData.registration_end_time || ''
+      }
     }
-  })
-
-  // 应用Banner配置
-  if (config.modules.banner) {
-    const bannerProps = config.modules.banner.properties
-    bannerHeight.value = bannerProps.height
-    bannerAutoplay.value = bannerProps.autoplay
-    bannerIndicator.value = bannerProps.indicator
-    bannerInterval.value = bannerProps.interval
-  }
-
-  // 应用基本信息配置
-  if (config.modules.basicInfo) {
-    basicInfoSettings.value = { ...basicInfoSettings.value, ...config.modules.basicInfo.properties }
-  }
-
-  // 应用报名操作配置
-  if (config.modules.signupAction) {
-    const signupProps = config.modules.signupAction.properties
-    signupButtonText.value = signupProps.buttonText
-    signupButtonStyle.value = signupProps.buttonStyle
-    signupButtonStyleIndex.value = buttonStyles.indexOf(signupProps.buttonStyle)
+  } catch (error) {
+    console.error('加载赛事信息失败:', error)
+    // 使用默认数据
+    eventInfo.value = {
+      name: '赛事名称',
+      start_time: '',
+      end_time: '',
+      location: '',
+      address_detail: '',
+      organizer_name: '',
+      co_organizer: [],
+      series: '',
+      category: '',
+      contact_phone: '',
+      contact_email: '',
+      signup_fields: [],
+      custom_groups: [],
+      age_groups: [],
+      registration_start_time: '',
+      registration_end_time: ''
+    }
   }
 }
 
-// 切换模块启用状态
+// 加载比赛项目
+const loadEventItems = async () => {
+  try {
+    const response = await getEventItems(eventId.value)
+    if (response.data) {
+      eventItems.value = response.data
+    } else {
+      eventItems.value = []
+    }
+  } catch (error) {
+    console.error('加载比赛项目失败:', error)
+    eventItems.value = []
+  }
+}
+
+// 加载详情内容
+const loadDetailContent = async () => {
+  try {
+    const response = await contentApi.getEventDetailContent(eventId.value)
+    if (response.data) {
+      detailContentList.value = [
+        { 
+          title: '赛事详情', 
+          content: response.data.content_data || '暂无详细说明' 
+        }
+      ]
+    } else {
+      detailContentList.value = [
+        { title: '赛事详情', content: '暂无详细说明' }
+      ]
+    }
+  } catch (error) {
+    console.error('加载详情内容失败:', error)
+    detailContentList.value = [
+      { title: '赛事详情', content: '暂无详细说明' }
+    ]
+  }
+}
+
+// 选择模块
+const selectModule = (moduleKey: string) => {
+  selectedModule.value = selectedModule.value === moduleKey ? '' : moduleKey
+}
+
+// 获取报名状态
+const getRegistrationStatus = () => {
+  if (!eventInfo.value.registration_start_time || !eventInfo.value.registration_end_time) {
+    return '未设置报名时间'
+  }
+  
+  const now = new Date()
+  const startTime = new Date(eventInfo.value.registration_start_time)
+  const endTime = new Date(eventInfo.value.registration_end_time)
+  
+  if (now < startTime) {
+    return '报名未开始'
+  } else if (now > endTime) {
+    return '报名已结束'
+  } else {
+    return '报名进行中'
+  }
+}
+
+// 获取总参赛人数
+const getTotalParticipants = () => {
+  return eventItems.value.reduce((total, item) => {
+    return total + (item.participant_count || 0)
+  }, 0)
+}
+
+// 切换模块显示状态
 const toggleModule = (moduleKey: string) => {
   const module = availableModules.value.find(m => m.key === moduleKey)
   if (module) {
     module.enabled = !module.enabled
-    if (module.enabled) {
-      selectedModule.value = module
-    } else if (selectedModule.value?.key === moduleKey) {
-      selectedModule.value = null
-    }
   }
 }
 
 // 编辑Banner
 const editBanner = () => {
-  selectedModule.value = availableModules.value.find(m => m.key === 'banner') || null
   bannerEditShow.value = true
 }
 
-// 编辑基本信息
-const editBasicInfo = () => {
-  selectedModule.value = availableModules.value.find(m => m.key === 'basicInfo') || null
-  basicInfoEditShow.value = true
+// 添加Banner
+const addBanner = () => {
+  chooseBannerImage()
 }
 
-// 编辑项目信息
-const editProjects = () => {
-  selectedModule.value = availableModules.value.find(m => m.key === 'projects') || null
+// 删除Banner
+const deleteBanner = () => {
+  bannerList.value = []
 }
 
-// 编辑详情内容
-const editDetailContent = () => {
-  selectedModule.value = availableModules.value.find(m => m.key === 'detailContent') || null
-}
-
-// 编辑报名操作
-const editSignupAction = () => {
-  selectedModule.value = availableModules.value.find(m => m.key === 'signupAction') || null
-}
-
-// 上传图片
-const uploadImage = () => {
+// 选择Banner图片
+const chooseBannerImage = () => {
   uni.chooseImage({
-    count: 1,
+    count: 9,
     sizeType: ['compressed'],
     sourceType: ['album', 'camera'],
-    success: async (res) => {
-      try {
-        const filePath = res.tempFilePaths[0]
-        // 这里应该调用上传接口
-        // const response = await bannerApi.uploadBanner({
-        //   event_id: eventId.value,
-        //   image: filePath
-        // })
-        // 临时添加到列表
-        bannerImages.value.push(filePath)
-      } catch (error) {
-        uni.showToast({
-          title: '上传失败',
-          icon: 'error'
-        })
+    success: (res) => {
+      // 确保 bannerList.value 是数组
+      if (!Array.isArray(bannerList.value)) {
+        bannerList.value = []
       }
+      
+      // 这里应该上传图片到服务器
+      res.tempFilePaths.forEach(path => {
+        bannerList.value.push({
+          image_url: path,
+          sort: bannerList.value.length
+        })
+      })
     }
   })
 }
 
-// 删除图片
-const removeImage = (index: number) => {
-  bannerImages.value.splice(index, 1)
+// 移除Banner图片
+const removeBannerImage = (index: number) => {
+  if (Array.isArray(bannerList.value) && index >= 0 && index < bannerList.value.length) {
+    bannerList.value.splice(index, 1)
+  }
 }
 
-// 预览图片
-const previewImage = (imageUrl: string) => {
-  uni.previewImage({
-    urls: [imageUrl]
+// 编辑基本信息
+const editBasicInfo = () => {
+  basicInfoEditShow.value = true
+}
+
+// 编辑比赛项目
+const editEventItems = () => {
+  uni.navigateTo({
+    url: `/addon/sport/pages/event/items?event_id=${eventId.value}`
   })
 }
 
-// 更新Banner高度
-const updateBannerHeight = (e: any) => {
-  bannerHeight.value = e.detail.value
+// 编辑详情内容
+const editDetailContent = () => {
+  uni.navigateTo({
+    url: `/addon/sport/pages/event/content?event_id=${eventId.value}`
+  })
 }
 
-// 更新Banner自动播放
-const updateBannerAutoplay = (e: any) => {
-  bannerAutoplay.value = e.detail.value
+// 添加内容
+const addContent = () => {
+  detailContentList.value.push({
+    title: '新内容',
+    content: '请输入内容'
+  })
 }
 
-// 更新Banner指示器
-const updateBannerIndicator = (e: any) => {
-  bannerIndicator.value = e.detail.value
-}
-
-// 更新基本信息设置
-const updateBasicInfoSetting = (key: string, e: any) => {
-  basicInfoSettings.value[key] = e.detail.value
-}
-
-// 更新报名按钮样式
-const updateSignupButtonStyle = (e: any) => {
-  signupButtonStyleIndex.value = e.detail.value
-  signupButtonStyle.value = buttonStyles[e.detail.value]
-}
-
-// 获取基本信息标签
-const getBasicInfoLabel = (key: string) => {
-  const labels: Record<string, string> = {
-    showEventName: '显示赛事名称',
-    showTimeLocation: '显示时间地点',
-    showOrganizer: '显示主办方',
-    showCoOrganizer: '显示协办方',
-    showSeries: '显示系列赛',
-    showCategory: '显示项目分类',
-    showAgeGroups: '显示年龄分组',
-    showCustomGroups: '显示自定义分组',
-    showContactInfo: '显示联系方式'
-  }
-  return labels[key] || key
-}
-
-// 保存Banner设置
-const saveBannerSettings = () => {
-  bannerEditShow.value = false
-}
-
-// 保存基本信息设置
-const saveBasicInfoSettings = () => {
-  basicInfoEditShow.value = false
+// 编辑报名操作
+const editSignupAction = () => {
+  signupEditShow.value = true
 }
 
 // 保存配置
@@ -586,81 +610,20 @@ const saveConfig = async () => {
   
   isSaving.value = true
   try {
-    const config: DIYConfig = {
-      modules: {
-        banner: {
-          enabled: availableModules.value.find(m => m.key === 'banner')?.enabled || false,
-          order: 1,
-          properties: {
-            images: bannerImages.value,
-            height: bannerHeight.value,
-            autoplay: bannerAutoplay.value,
-            indicator: bannerIndicator.value,
-            interval: bannerInterval.value
-          }
-        },
-        basicInfo: {
-          enabled: availableModules.value.find(m => m.key === 'basicInfo')?.enabled || false,
-          order: 2,
-          properties: basicInfoSettings.value
-        },
-        projects: {
-          enabled: availableModules.value.find(m => m.key === 'projects')?.enabled || false,
-          order: 3,
-          properties: {}
-        },
-        detailContent: {
-          enabled: availableModules.value.find(m => m.key === 'detailContent')?.enabled || false,
-          order: 4,
-          properties: {
-            content: '',
-            showRichText: true,
-            showImages: true,
-            maxHeight: 500,
-            showExpand: true
-          }
-        },
-        signupAction: {
-          enabled: availableModules.value.find(m => m.key === 'signupAction')?.enabled || false,
-          order: 5,
-          properties: {
-            showRegistrationStatus: true,
-            showRegistrationTime: true,
-            showParticipantCount: true,
-            buttonText: signupButtonText.value,
-            buttonStyle: signupButtonStyle.value,
-            buttonSize: 'large',
-            showProgress: true
-          }
-        }
-      },
-      global: {
-        theme: 'light',
-        primaryColor: '#409EFF',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 8,
-        spacing: 16
+    const configData = {
+      event_id: eventId.value,
+      enabled_modules: enabledModules.value,
+      signup_button: {
+        text: signupButtonText.value,
+        style: signupButtonStyle.value
       }
     }
-
-    const response = await diyConfigApi.saveEventDiyConfig({
-      event_id: eventId.value,
-      config_data: config
-    })
-
-    if (response.code === 1) {
-      uni.showToast({
-        title: '保存成功',
-        icon: 'success'
-      })
-    } else {
-      throw new Error(response.msg)
-    }
+    
+    await diyConfigApi.saveEventDiyConfig(configData)
+    uni.showToast({ title: '保存成功', icon: 'success' })
   } catch (error) {
-    uni.showToast({
-      title: '保存失败',
-      icon: 'error'
-    })
+    console.error('保存配置失败:', error)
+    uni.showToast({ title: '保存失败', icon: 'error' })
   } finally {
     isSaving.value = false
   }
@@ -669,7 +632,7 @@ const saveConfig = async () => {
 // 预览页面
 const previewPage = () => {
   uni.navigateTo({
-    url: `/addon/sport/pages/event/signup_show?event_id=${eventId.value}&preview=1`
+    url: `/addon/sport/pages/event/signup_show?event_id=${eventId.value}`
   })
 }
 
@@ -677,47 +640,42 @@ const previewPage = () => {
 const goBack = () => {
   uni.navigateBack()
 }
+
+// 监听按钮样式变化
+watch(signupButtonStyleIndex, (newIndex) => {
+  signupButtonStyle.value = buttonStyles[newIndex]
+})
 </script>
 
 <style lang="scss" scoped>
 .diy-design-page {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
+  min-height: 100vh;
   background-color: #f5f5f5;
 }
 
 .page-header {
-  height: 88rpx;
-  background: #fff;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 0 30rpx;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  background: white;
   border-bottom: 1rpx solid #eee;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-
+  
   .header-left {
     display: flex;
     align-items: center;
     
     .nc-iconfont {
       font-size: 36rpx;
-      color: #333;
-      margin-right: 20rpx;
+      margin-right: 10rpx;
     }
     
     .header-title {
       font-size: 32rpx;
-      font-weight: 500;
-      color: #333;
+      font-weight: bold;
     }
   }
-
+  
   .header-right {
     display: flex;
     gap: 20rpx;
@@ -735,8 +693,8 @@ const goBack = () => {
     }
     
     .save-btn {
-      background: #409EFF;
-      color: #fff;
+      background: #007aff;
+      color: white;
       
       &:disabled {
         background: #ccc;
@@ -746,390 +704,342 @@ const goBack = () => {
 }
 
 .main-content {
-  flex: 1;
-  display: flex;
-  margin-top: 88rpx;
-  height: calc(100vh - 88rpx);
+  padding: 20rpx;
 }
 
-.modules-panel {
-  width: 300rpx;
-  background: #fff;
-  border-right: 1rpx solid #eee;
-  overflow-y: auto;
+.diy-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
 
-  .panel-title {
-    height: 80rpx;
-    line-height: 80rpx;
-    padding: 0 30rpx;
-    font-size: 28rpx;
-    font-weight: 500;
-    color: #333;
-    border-bottom: 1rpx solid #eee;
+.diy-module {
+  background: white;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  position: relative;
+  
+  &.module-disabled {
+    opacity: 0.5;
   }
-
-  .modules-list {
-    padding: 20rpx 0;
+  
+  .module-controls {
+    position: absolute;
+    top: -10rpx;
+    right: 20rpx;
+    display: flex;
+    gap: 10rpx;
+    background: white;
+    padding: 10rpx;
+    border-radius: 8rpx;
+    box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.1);
+    z-index: 10;
+    
+    .control-btn {
+      padding: 8rpx 16rpx;
+      border-radius: 6rpx;
+      font-size: 24rpx;
+      border: none;
+      
+      &.add-btn {
+        background: #4cd964;
+        color: white;
+      }
+      
+      &.delete-btn {
+        background: #ff3b30;
+        color: white;
+      }
+      
+      &.edit-btn {
+        background: #007aff;
+        color: white;
+      }
+    }
   }
+  
+  .module-content {
+    position: relative;
+    
+    &.selected {
+      border: 2rpx dashed #007aff;
+    }
+  }
+  
+  .module-toggle {
+    position: absolute;
+    top: 20rpx;
+    right: 20rpx;
+    z-index: 5;
+  }
+}
 
-  .module-item {
+// Banner模块样式
+.banner-module {
+  .banner-carousel {
+    .banner-swiper {
+      height: 300rpx;
+      border-radius: 12rpx;
+      overflow: hidden;
+      
+      .banner-image {
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+  
+  .banner-placeholder {
+    height: 300rpx;
+    background: #f8f8f8;
+    border: 2rpx dashed #ddd;
+    border-radius: 12rpx;
     display: flex;
     align-items: center;
-    padding: 20rpx 30rpx;
-    cursor: pointer;
-    transition: background-color 0.2s;
-
-    &:hover {
-      background: #f8f9fa;
-    }
-
-    &.disabled {
-      opacity: 0.5;
-    }
-
-    .module-icon {
-      font-size: 32rpx;
-      margin-right: 20rpx;
-    }
-
-    .module-name {
-      flex: 1;
+    justify-content: center;
+    
+    .placeholder-text {
+      color: #999;
       font-size: 28rpx;
-      color: #333;
-    }
-
-    .module-switch {
-      margin-left: 20rpx;
     }
   }
 }
 
-.preview-area {
-  flex: 1;
-  background: #f8f9fa;
-  overflow-y: auto;
-
-  .preview-container {
-    padding: 30rpx;
-  }
-
-  .preview-title {
-    font-size: 32rpx;
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 30rpx;
-  }
-
-  .preview-module {
-    background: #fff;
-    border-radius: 16rpx;
-    margin-bottom: 30rpx;
-    overflow: hidden;
-
-    .module-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 30rpx;
-      border-bottom: 1rpx solid #eee;
-
-      .module-title {
-        font-size: 28rpx;
-        font-weight: 500;
-        color: #333;
-      }
-
-      .edit-btn {
-        padding: 8rpx 16rpx;
-        background: #409EFF;
-        color: #fff;
-        border: none;
-        border-radius: 6rpx;
-        font-size: 24rpx;
-      }
-    }
-  }
-
-  .banner-preview {
-    .empty-banner {
-      height: 200rpx;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: #f8f9fa;
-      color: #999;
-      cursor: pointer;
-
-      .empty-text {
-        font-size: 28rpx;
-        margin-bottom: 10rpx;
-      }
-
-      .add-icon {
-        font-size: 48rpx;
-        color: #409EFF;
-      }
-    }
-  }
-
-  .basic-info-preview {
-    padding: 30rpx;
-
-    .info-item {
-      display: flex;
+// 基本信息模块样式
+.basic-info-module {
+  .event-basic-info {
+    .event-name {
+      font-size: 36rpx;
+      font-weight: bold;
+      color: #333;
       margin-bottom: 20rpx;
-
+      display: block;
+    }
+    
+    .info-row {
+      display: flex;
+      margin-bottom: 12rpx;
+      
       .info-label {
-        width: 120rpx;
-        font-size: 26rpx;
         color: #666;
+        font-size: 28rpx;
+        width: 120rpx;
       }
-
+      
       .info-value {
-        flex: 1;
-        font-size: 26rpx;
         color: #333;
+        font-size: 28rpx;
+        flex: 1;
       }
     }
   }
+}
 
-  .projects-preview {
-    padding: 30rpx;
-
-    .project-item {
+// 比赛项目模块样式
+.event-items-module {
+  .event-items-list {
+    .section-title {
+      font-size: 32rpx;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 20rpx;
+      display: block;
+    }
+    
+    .item-row {
       display: flex;
       justify-content: space-between;
-      padding: 20rpx 0;
-      border-bottom: 1rpx solid #eee;
-
-      .project-name {
+      align-items: center;
+      padding: 16rpx 0;
+      border-bottom: 1rpx solid #f0f0f0;
+      
+      .item-name {
         font-size: 28rpx;
         color: #333;
       }
-
-      .project-fee {
-        font-size: 26rpx;
-        color: #f56c6c;
-      }
-    }
-  }
-
-  .detail-content-preview {
-    padding: 30rpx;
-
-    .content-text {
-      font-size: 28rpx;
-      color: #666;
-      line-height: 1.6;
-    }
-  }
-
-  .signup-action-preview {
-    padding: 30rpx;
-
-    .signup-status {
-      margin-bottom: 30rpx;
-
-      .status-text {
-        display: block;
-        font-size: 28rpx;
-        color: #67c23a;
-        margin-bottom: 10rpx;
-      }
-
-      .time-text {
+      
+      .item-category {
         font-size: 24rpx;
         color: #999;
       }
     }
-
-    .signup-btn {
-      width: 100%;
-      height: 80rpx;
-      background: #409EFF;
-      color: #fff;
-      border: none;
-      border-radius: 8rpx;
-      font-size: 28rpx;
+    
+    .more-items {
+      font-size: 24rpx;
+      color: #999;
+      text-align: center;
+      margin-top: 16rpx;
+      display: block;
     }
   }
 }
 
-.properties-panel {
-  width: 400rpx;
-  background: #fff;
-  border-left: 1rpx solid #eee;
-  overflow-y: auto;
-
-  .panel-title {
-    height: 80rpx;
-    line-height: 80rpx;
-    padding: 0 30rpx;
-    font-size: 28rpx;
-    font-weight: 500;
-    color: #333;
-    border-bottom: 1rpx solid #eee;
-  }
-
-  .properties-content {
-    padding: 30rpx;
-  }
-
-  .module-properties {
-    .properties-title {
-      font-size: 28rpx;
-      font-weight: 500;
+// 详情内容模块样式
+.detail-content-module {
+  .detail-content {
+    .section-title {
+      font-size: 32rpx;
+      font-weight: bold;
       color: #333;
-      margin-bottom: 30rpx;
+      margin-bottom: 20rpx;
+      display: block;
     }
-
-    .property-group {
-      .property-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 30rpx;
-
-        .property-label {
-          width: 120rpx;
-          font-size: 26rpx;
-          color: #666;
-        }
-
-        .property-value {
-          margin-left: 20rpx;
-          font-size: 24rpx;
-          color: #999;
-        }
-
-        .property-input {
-          flex: 1;
-          height: 60rpx;
-          padding: 0 20rpx;
-          border: 1rpx solid #ddd;
-          border-radius: 6rpx;
-          font-size: 26rpx;
-        }
-
-        .picker-text {
-          flex: 1;
-          height: 60rpx;
-          line-height: 60rpx;
-          padding: 0 20rpx;
-          border: 1rpx solid #ddd;
-          border-radius: 6rpx;
-          font-size: 26rpx;
-          color: #333;
-        }
+    
+    .content-item {
+      margin-bottom: 20rpx;
+      
+      .content-title {
+        font-size: 28rpx;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 8rpx;
+        display: block;
+      }
+      
+      .content-text {
+        font-size: 26rpx;
+        color: #666;
+        line-height: 1.6;
       }
     }
+    
+    .placeholder-text {
+      color: #999;
+      font-size: 28rpx;
+      text-align: center;
+      padding: 40rpx 0;
+      display: block;
+    }
   }
+}
 
-  .no-selection {
+// 报名操作模块样式
+.signup-action-module {
+  .signup-action {
     text-align: center;
-    padding: 100rpx 0;
-
-    .no-selection-text {
-      font-size: 26rpx;
+    
+    .signup-btn {
+      width: 100%;
+      height: 80rpx;
+      border-radius: 40rpx;
+      font-size: 32rpx;
+      font-weight: bold;
+      border: none;
+      margin-bottom: 16rpx;
+      
+      &.primary {
+        background: linear-gradient(135deg, #007aff 0%, #0051d5 100%);
+        color: white;
+      }
+      
+      &.secondary {
+        background: linear-gradient(135deg, #8e8e93 0%, #636366 100%);
+        color: white;
+      }
+      
+      &.success {
+        background: linear-gradient(135deg, #4cd964 0%, #34c759 100%);
+        color: white;
+      }
+      
+      &.warning {
+        background: linear-gradient(135deg, #ff9500 0%, #ff6b35 100%);
+        color: white;
+      }
+    }
+    
+    .signup-tips {
+      font-size: 24rpx;
       color: #999;
     }
   }
 }
 
 // 弹窗样式
-.banner-edit-popup, .basic-info-edit-popup {
-  width: 600rpx;
-  max-height: 80vh;
-  background: #fff;
-  border-radius: 16rpx;
-  overflow: hidden;
-
+.popup-content {
+  background: white;
+  border-radius: 20rpx 20rpx 0 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
   .popup-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     padding: 30rpx;
     border-bottom: 1rpx solid #eee;
-
+    
     .popup-title {
       font-size: 32rpx;
-      font-weight: 500;
-      color: #333;
+      font-weight: bold;
     }
-
+    
     .close-btn {
-      font-size: 48rpx;
+      font-size: 40rpx;
       color: #999;
-      cursor: pointer;
     }
   }
-
-  .popup-content {
+  
+  .popup-body {
+    flex: 1;
     padding: 30rpx;
-    max-height: 60vh;
     overflow-y: auto;
-  }
-
-  .popup-footer {
-    display: flex;
-    gap: 20rpx;
-    padding: 30rpx;
-    border-top: 1rpx solid #eee;
-
-    .cancel-btn, .confirm-btn {
-      flex: 1;
-      height: 80rpx;
-      border: none;
-      border-radius: 8rpx;
-      font-size: 28rpx;
-    }
-
-    .cancel-btn {
-      background: #f0f0f0;
-      color: #666;
-    }
-
-    .confirm-btn {
-      background: #409EFF;
-      color: #fff;
-    }
   }
 }
 
-.upload-area {
+.form-group {
+  margin-bottom: 30rpx;
+  
+  .form-label {
+    font-size: 28rpx;
+    color: #333;
+    margin-bottom: 16rpx;
+    display: block;
+  }
+  
+  .form-input {
+    width: 100%;
+    height: 80rpx;
+    border: 1rpx solid #ddd;
+    border-radius: 8rpx;
+    padding: 0 20rpx;
+    font-size: 28rpx;
+  }
+}
+
+.image-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  
   .image-item {
     position: relative;
-    margin-bottom: 20rpx;
-
-    .uploaded-image {
+    width: 200rpx;
+    height: 200rpx;
+    
+    .preview-image {
       width: 100%;
-      height: 200rpx;
+      height: 100%;
       border-radius: 8rpx;
     }
-
-    .image-actions {
+    
+    .delete-image-btn {
       position: absolute;
-      top: 10rpx;
-      right: 10rpx;
-      display: flex;
-      gap: 10rpx;
-
-      .action-btn {
-        padding: 8rpx 16rpx;
-        background: rgba(0, 0, 0, 0.6);
-        color: #fff;
-        border: none;
-        border-radius: 4rpx;
-        font-size: 24rpx;
-
-        &.delete {
-          background: #f56c6c;
-        }
-      }
+      top: -10rpx;
+      right: -10rpx;
+      width: 40rpx;
+      height: 40rpx;
+      border-radius: 50%;
+      background: #ff3b30;
+      color: white;
+      border: none;
+      font-size: 24rpx;
     }
   }
-
-  .upload-btn {
+  
+  .add-image-btn {
+    width: 200rpx;
     height: 200rpx;
     border: 2rpx dashed #ddd;
     border-radius: 8rpx;
@@ -1137,32 +1047,58 @@ const goBack = () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-
-    .upload-icon {
+    
+    .add-icon {
       font-size: 48rpx;
-      color: #409EFF;
+      color: #999;
       margin-bottom: 10rpx;
     }
-
-    .upload-text {
-      font-size: 26rpx;
+    
+    .add-text {
+      font-size: 24rpx;
       color: #999;
     }
   }
 }
 
-.settings-section {
-  .setting-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20rpx 0;
-    border-bottom: 1rpx solid #eee;
-
-    .setting-label {
+.style-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  
+  .style-option {
+    &.active {
+      border: 2rpx solid #007aff;
+      border-radius: 8rpx;
+      padding: 4rpx;
+    }
+    
+    .style-btn {
+      width: 200rpx;
+      height: 60rpx;
+      border-radius: 30rpx;
+      border: none;
       font-size: 28rpx;
-      color: #333;
+      
+      &.primary {
+        background: linear-gradient(135deg, #007aff 0%, #0051d5 100%);
+        color: white;
+      }
+      
+      &.secondary {
+        background: linear-gradient(135deg, #8e8e93 0%, #636366 100%);
+        color: white;
+      }
+      
+      &.success {
+        background: linear-gradient(135deg, #4cd964 0%, #34c759 100%);
+        color: white;
+      }
+      
+      &.warning {
+        background: linear-gradient(135deg, #ff9500 0%, #ff6b35 100%);
+        color: white;
+      }
     }
   }
 }
