@@ -43,6 +43,32 @@
             "needLogin": true
         },
         {
+            "path": "addon/sport/pages/event/diy_design",
+            "style": {
+                "navigationBarTitleText": "DIY设计"
+            },
+            "needLogin": true
+        },
+        {
+            "path": "addon/sport/pages/event/signup_show",
+            "style": {
+                "navigationBarTitleText": "赛事报名"
+            }
+        },
+        {
+            "path": "addon/sport/pages/event/signup_form",
+            "style": {
+                "navigationBarTitleText": "报名表单"
+            },
+            "needLogin": true
+        },
+        {
+            "path": "addon/sport/pages/event/signup_success",
+            "style": {
+                "navigationBarTitleText": "报名成功"
+            }
+        },
+        {
             "path": "addon/sport/pages/event/items",
             "style": {
                 "navigationBarTitleText": "选择比赛项目"

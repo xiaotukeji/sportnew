@@ -70,6 +70,7 @@
                     <button v-if="goodsDetail.detail.stock > 0" hover-class="none"
                             class="!h-[80rpx] primary-btn-bg leading-[80rpx] text-[26rpx] rounded-[50rpx] font-500"
                             type="primary" @click="confirm">确定</button>
+                    <button v-else hover-class="none" class="!h-[80rpx] leading-[80rpx] text-[26rpx] text-[#fff] bg-[#ccc] rounded-[50rpx] font-500">已售罄</button>
                     <!-- #endif -->
 
                     <!-- #ifdef MP-WEIXIN -->
@@ -80,9 +81,8 @@
                                 class="!h-[80rpx] primary-btn-bg leading-[80rpx] text-[26rpx] rounded-[50rpx] font-500"
                                 type="primary" @click="confirm">确定</button>
                     </template>
+                    <button v-else hover-class="none" class="!h-[80rpx] leading-[80rpx] text-[26rpx] text-[#fff] bg-[#ccc] rounded-[50rpx] font-500">已售罄</button>
                     <!-- #endif -->
-
-                    <button hover-class="none" v-else class="!h-[80rpx] leading-[80rpx] text-[26rpx] text-[#fff] bg-[#ccc] rounded-[50rpx] font-500">已售罄</button>
                 </view>
             </view>
         </u-popup>

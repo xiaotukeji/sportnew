@@ -33,7 +33,7 @@
             <view v-if="currentStep === 1" class="form-wrapper">
                 <!-- 系列赛设置 -->
                 <view class="form-section">
-                    <view class="section-title">系列赛设置11</view>
+                    <view class="section-title">系列赛设置</view>
                     
                     <!-- 是否系列赛 -->
                     <view class="form-item">

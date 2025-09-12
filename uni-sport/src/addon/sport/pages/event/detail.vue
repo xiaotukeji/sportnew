@@ -521,8 +521,8 @@
             <button class="action-btn edit-btn" @tap="editEvent">
                 <text class="btn-text">编辑比赛</text>
             </button>
-            <button class="action-btn next-btn" @tap="nextStep">
-                <text class="btn-text">项目设置</text>
+            <button class="action-btn publish-btn" @tap="publishEvent">
+                <text class="btn-text">发布比赛</text>
             </button>
         </view>
     </view>
@@ -820,12 +820,12 @@ const editEvent = () => {
 }
 
 /**
- * 下一步 - 进入项目详细设置
+ * 发布比赛 - 进入DIY设计界面
  */
-const nextStep = () => {
+const publishEvent = () => {
     requireLogin(() => {
         uni.navigateTo({
-            url: `/addon/sport/pages/event/item-settings?event_id=${eventId.value}`
+            url: `/addon/sport/pages/event/diy_design?event_id=${eventId.value}`
         })
     })
 }
@@ -1635,11 +1635,13 @@ onMounted(() => {
             }
         }
         
-        &.next-btn {
-            background-color: #007aff;
+        &.publish-btn {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            box-shadow: 0 4rpx 12rpx rgba(255, 107, 53, 0.3);
             
             .btn-text {
                 color: white;
+                font-weight: bold;
             }
         }
         

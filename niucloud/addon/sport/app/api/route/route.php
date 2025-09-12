@@ -165,6 +165,66 @@ Route::group('sport', function() {
     
     // 批量添加协办单位
     Route::post('co-organizer/batch', 'addon\sport\app\api\controller\co_organizer\CoOrganizer@batchAdd');
+    
+    /***************************************************** DIY配置管理 ****************************************************/
+    
+    // 获取赛事的DIY配置
+    Route::get('diy-config', 'addon\sport\app\api\controller\diy\DiyConfig@get');
+    
+    // 保存赛事的DIY配置
+    Route::post('diy-config', 'addon\sport\app\api\controller\diy\DiyConfig@save');
+    
+    // 更新赛事的DIY配置
+    Route::put('diy-config', 'addon\sport\app\api\controller\diy\DiyConfig@update');
+    
+    // 删除赛事的DIY配置
+    Route::delete('diy-config', 'addon\sport\app\api\controller\diy\DiyConfig@delete');
+    
+    // 重置为默认配置
+    Route::post('diy-config/reset', 'addon\sport\app\api\controller\diy\DiyConfig@reset');
+    
+    // 获取可用的模块配置
+    Route::get('diy-config/modules', 'addon\sport\app\api\controller\diy\DiyConfig@getAvailableModules');
+    
+    /***************************************************** Banner管理 ****************************************************/
+    
+    // 获取赛事的Banner列表
+    Route::get('banner/list', 'addon\sport\app\api\controller\diy\Banner@getList');
+    
+    // 上传Banner图片
+    Route::post('banner/upload', 'addon\sport\app\api\controller\diy\Banner@upload');
+    
+    // 更新Banner信息
+    Route::put('banner/update', 'addon\sport\app\api\controller\diy\Banner@update');
+    
+    // 删除Banner图片
+    Route::delete('banner/delete', 'addon\sport\app\api\controller\diy\Banner@delete');
+    
+    // 更新Banner排序
+    Route::put('banner/sort', 'addon\sport\app\api\controller\diy\Banner@updateSort');
+    
+    // 批量删除赛事的Banner
+    Route::delete('banner/delete-event', 'addon\sport\app\api\controller\diy\Banner@deleteEventBanners');
+    
+    /***************************************************** 内容管理 ****************************************************/
+    
+    // 获取赛事的详情内容
+    Route::get('content', 'addon\sport\app\api\controller\diy\Content@get');
+    
+    // 保存赛事的详情内容
+    Route::post('content', 'addon\sport\app\api\controller\diy\Content@save');
+    
+    // 更新详情内容
+    Route::put('content', 'addon\sport\app\api\controller\diy\Content@update');
+    
+    // 删除赛事的详情内容
+    Route::delete('content', 'addon\sport\app\api\controller\diy\Content@delete');
+    
+    // 上传内容图片
+    Route::post('content/upload-image', 'addon\sport\app\api\controller\diy\Content@uploadImage');
+    
+    // 删除内容图片
+    Route::delete('content/remove-image', 'addon\sport\app\api\controller\diy\Content@removeImage');
 
 })->middleware(ApiChannel::class)
     ->middleware(ApiCheckToken::class, true) //表示验证登录

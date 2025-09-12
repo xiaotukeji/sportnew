@@ -1,6 +1,6 @@
 {
     "name" : "赛程助手",
-    "appid" : "__UNI__ED923AB",
+    "appid" : "__UNI__5F45305",
     "description" : "",
     "versionName" : "1.0.0",
     "versionCode" : "100",
@@ -36,7 +36,9 @@
                     "<uses-permission android:name=\"android.permission.WRITE_SETTINGS\"/>"
                 ]
             },
-            "ios" : {},
+            "ios" : {
+                "dSYMs" : false
+            },
             "sdkConfigs" : {}
         }
     },
