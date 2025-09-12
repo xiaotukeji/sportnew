@@ -26,8 +26,7 @@ class Banner extends BaseApiController
                 return fail('赛事ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $bannerService = new BannerService($memberId);
+            $bannerService = new BannerService();
             $result = $bannerService->getEventBanners($eventId);
 
             return success($result, '获取Banner列表成功');
@@ -59,8 +58,7 @@ class Banner extends BaseApiController
                 return $this->error('请选择要上传的图片');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $bannerService = new BannerService($memberId);
+            $bannerService = new BannerService();
             $result = $bannerService->uploadBanner($eventId, $file, $imageTitle, $imageLink);
 
             return success($result, '上传Banner成功');
@@ -90,8 +88,7 @@ class Banner extends BaseApiController
                 return $this->error('Banner ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $bannerService = new BannerService($memberId);
+            $bannerService = new BannerService();
             $result = $bannerService->updateBanner($data['banner_id'], $data);
 
             return success($result, '更新Banner信息成功');
@@ -116,8 +113,7 @@ class Banner extends BaseApiController
                 return $this->error('Banner ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $bannerService = new BannerService($memberId);
+            $bannerService = new BannerService();
             $result = $bannerService->deleteBanner($bannerId);
 
             return success($result, '删除Banner成功');
@@ -147,8 +143,7 @@ class Banner extends BaseApiController
                 return $this->error('排序数据不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $bannerService = new BannerService($memberId);
+            $bannerService = new BannerService();
             $result = $bannerService->updateBannerSort($eventId, $sortData);
 
             return success($result, '更新Banner排序成功');
@@ -173,8 +168,7 @@ class Banner extends BaseApiController
                 return fail('赛事ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $bannerService = new BannerService($memberId);
+            $bannerService = new BannerService();
             $result = $bannerService->deleteEventBanners($eventId);
 
             return success($result, '删除赛事Banner成功');

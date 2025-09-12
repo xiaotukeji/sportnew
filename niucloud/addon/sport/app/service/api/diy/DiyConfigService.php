@@ -2,6 +2,7 @@
 
 namespace addon\sport\app\service\api\diy;
 
+use core\base\BaseApiService;
 use addon\sport\app\model\diy_config\SportEventDiyConfig;
 use addon\sport\app\model\event\SportEvent;
 use core\exception\CommonException;
@@ -11,22 +12,8 @@ use core\exception\CommonException;
  * Class DiyConfigService
  * @package addon\sport\app\service\api\diy
  */
-class DiyConfigService
+class DiyConfigService extends BaseApiService
 {
-    /**
-     * 当前用户ID
-     * @var int
-     */
-    protected $member_id;
-
-    /**
-     * 构造函数
-     * @param int $member_id
-     */
-    public function __construct($member_id = 0)
-    {
-        $this->member_id = $member_id;
-    }
 
     /**
      * 获取赛事的DIY配置

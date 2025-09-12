@@ -26,8 +26,7 @@ class DiyConfig extends BaseApiController
                 return fail('赛事ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $diyConfigService = new DiyConfigService($memberId);
+            $diyConfigService = new DiyConfigService();
             $result = $diyConfigService->getEventDiyConfig($eventId);
 
             return success($result, '获取DIY配置成功');
@@ -64,8 +63,7 @@ class DiyConfig extends BaseApiController
                 return fail('配置数据格式错误');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $diyConfigService = new DiyConfigService($memberId);
+            $diyConfigService = new DiyConfigService();
             $result = $diyConfigService->saveEventDiyConfig($data['event_id'], $configData);
 
             return success($result, '保存DIY配置成功');
@@ -102,8 +100,7 @@ class DiyConfig extends BaseApiController
                 return fail('配置数据格式错误');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $diyConfigService = new DiyConfigService($memberId);
+            $diyConfigService = new DiyConfigService();
             $result = $diyConfigService->updateEventDiyConfig($data['event_id'], $configData);
 
             return success($result, '更新DIY配置成功');
@@ -128,8 +125,7 @@ class DiyConfig extends BaseApiController
                 return fail('赛事ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $diyConfigService = new DiyConfigService($memberId);
+            $diyConfigService = new DiyConfigService();
             $result = $diyConfigService->deleteEventDiyConfig($eventId);
 
             return success($result, '删除DIY配置成功');
@@ -154,8 +150,7 @@ class DiyConfig extends BaseApiController
                 return fail('赛事ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $diyConfigService = new DiyConfigService($memberId);
+            $diyConfigService = new DiyConfigService();
             $result = $diyConfigService->resetToDefaultConfig($eventId);
 
             return success($result, '重置配置成功');
@@ -174,8 +169,7 @@ class DiyConfig extends BaseApiController
     public function getAvailableModules()
     {
         try {
-            $memberId = $this->request->uid ?? 0;
-            $diyConfigService = new DiyConfigService($memberId);
+            $diyConfigService = new DiyConfigService();
             $result = $diyConfigService->getAvailableModules();
 
             return success($result, '获取可用模块成功');

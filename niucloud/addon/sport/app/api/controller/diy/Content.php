@@ -26,8 +26,7 @@ class Content extends BaseApiController
                 return fail('赛事ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $contentService = new ContentService($memberId);
+            $contentService = new ContentService();
             $result = $contentService->getEventDetailContent($eventId);
 
             return success($result, '获取详情内容成功');
@@ -57,8 +56,7 @@ class Content extends BaseApiController
                 return fail('赛事ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $contentService = new ContentService($memberId);
+            $contentService = new ContentService();
             $result = $contentService->saveEventDetailContent(
                 $data['event_id'],
                 $data['content_type'],
@@ -94,8 +92,7 @@ class Content extends BaseApiController
                 return fail('内容ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $contentService = new ContentService($memberId);
+            $contentService = new ContentService();
             $result = $contentService->updateDetailContent($data['content_id'], $data);
 
             return success($result, '更新详情内容成功');
@@ -120,8 +117,7 @@ class Content extends BaseApiController
                 return fail('赛事ID不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $contentService = new ContentService($memberId);
+            $contentService = new ContentService();
             $result = $contentService->deleteEventDetailContent($eventId);
 
             return success($result, '删除详情内容成功');
@@ -152,8 +148,7 @@ class Content extends BaseApiController
                 return fail('请选择要上传的图片');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $contentService = new ContentService($memberId);
+            $contentService = new ContentService();
             $result = $contentService->uploadContentImage($eventId, $file, $imageTitle);
 
             return success($result, '上传内容图片成功');
@@ -183,8 +178,7 @@ class Content extends BaseApiController
                 return fail('图片URL不能为空');
             }
 
-            $memberId = $this->request->uid ?? 0;
-            $contentService = new ContentService($memberId);
+            $contentService = new ContentService();
             $result = $contentService->removeContentImage($eventId, $imageUrl);
 
             return success($result, '删除内容图片成功');

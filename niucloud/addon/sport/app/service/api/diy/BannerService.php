@@ -2,6 +2,7 @@
 
 namespace addon\sport\app\service\api\diy;
 
+use core\base\BaseApiService;
 use addon\sport\app\model\banner\SportEventBanner;
 use addon\sport\app\model\event\SportEvent;
 use core\exception\CommonException;
@@ -12,22 +13,8 @@ use think\facade\Filesystem;
  * Class BannerService
  * @package addon\sport\app\service\api\diy
  */
-class BannerService
+class BannerService extends BaseApiService
 {
-    /**
-     * 当前用户ID
-     * @var int
-     */
-    protected $member_id;
-
-    /**
-     * 构造函数
-     * @param int $member_id
-     */
-    public function __construct($member_id = 0)
-    {
-        $this->member_id = $member_id;
-    }
 
     /**
      * 获取赛事的Banner列表

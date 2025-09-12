@@ -2,6 +2,7 @@
 
 namespace addon\sport\app\service\api\diy;
 
+use core\base\BaseApiService;
 use addon\sport\app\model\detail_content\SportEventDetailContent;
 use addon\sport\app\model\event\SportEvent;
 use core\exception\CommonException;
@@ -12,22 +13,8 @@ use think\facade\Filesystem;
  * Class ContentService
  * @package addon\sport\app\service\api\diy
  */
-class ContentService
+class ContentService extends BaseApiService
 {
-    /**
-     * 当前用户ID
-     * @var int
-     */
-    protected $member_id;
-
-    /**
-     * 构造函数
-     * @param int $member_id
-     */
-    public function __construct($member_id = 0)
-    {
-        $this->member_id = $member_id;
-    }
 
     /**
      * 获取赛事的详情内容
