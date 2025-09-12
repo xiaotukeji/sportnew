@@ -23,7 +23,7 @@ class DiyConfig extends BaseApiController
             $eventId = $this->request->param('event_id', 0, 'intval');
             
             if (!$eventId) {
-                return error('赛事ID不能为空');
+                return fail('赛事ID不能为空');
             }
 
             $memberId = $this->request->uid ?? 0;
@@ -33,9 +33,9 @@ class DiyConfig extends BaseApiController
             return success($result, '获取DIY配置成功');
 
         } catch (CommonException $e) {
-            return error($e->getMessage());
+            return fail($e->getMessage());
         } catch (\Exception $e) {
-            return error('系统错误: ' . $e->getMessage());
+            return fail('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -52,16 +52,16 @@ class DiyConfig extends BaseApiController
             ]);
 
             if (!$data['event_id']) {
-                return error('赛事ID不能为空');
+                return fail('赛事ID不能为空');
             }
 
             if (!$data['config_data']) {
-                return error('配置数据不能为空');
+                return fail('配置数据不能为空');
             }
 
             $configData = json_decode($data['config_data'], true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return error('配置数据格式错误');
+                return fail('配置数据格式错误');
             }
 
             $memberId = $this->request->uid ?? 0;
@@ -71,9 +71,9 @@ class DiyConfig extends BaseApiController
             return success($result, '保存DIY配置成功');
 
         } catch (CommonException $e) {
-            return error($e->getMessage());
+            return fail($e->getMessage());
         } catch (\Exception $e) {
-            return error('系统错误: ' . $e->getMessage());
+            return fail('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -90,16 +90,16 @@ class DiyConfig extends BaseApiController
             ]);
 
             if (!$data['event_id']) {
-                return error('赛事ID不能为空');
+                return fail('赛事ID不能为空');
             }
 
             if (!$data['config_data']) {
-                return error('配置数据不能为空');
+                return fail('配置数据不能为空');
             }
 
             $configData = json_decode($data['config_data'], true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                return error('配置数据格式错误');
+                return fail('配置数据格式错误');
             }
 
             $memberId = $this->request->uid ?? 0;
@@ -109,9 +109,9 @@ class DiyConfig extends BaseApiController
             return success($result, '更新DIY配置成功');
 
         } catch (CommonException $e) {
-            return error($e->getMessage());
+            return fail($e->getMessage());
         } catch (\Exception $e) {
-            return error('系统错误: ' . $e->getMessage());
+            return fail('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -125,7 +125,7 @@ class DiyConfig extends BaseApiController
             $eventId = $this->request->param('event_id', 0, 'intval');
             
             if (!$eventId) {
-                return error('赛事ID不能为空');
+                return fail('赛事ID不能为空');
             }
 
             $memberId = $this->request->uid ?? 0;
@@ -135,9 +135,9 @@ class DiyConfig extends BaseApiController
             return success($result, '删除DIY配置成功');
 
         } catch (CommonException $e) {
-            return error($e->getMessage());
+            return fail($e->getMessage());
         } catch (\Exception $e) {
-            return error('系统错误: ' . $e->getMessage());
+            return fail('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -151,7 +151,7 @@ class DiyConfig extends BaseApiController
             $eventId = $this->request->param('event_id', 0, 'intval');
             
             if (!$eventId) {
-                return error('赛事ID不能为空');
+                return fail('赛事ID不能为空');
             }
 
             $memberId = $this->request->uid ?? 0;
@@ -161,9 +161,9 @@ class DiyConfig extends BaseApiController
             return success($result, '重置配置成功');
 
         } catch (CommonException $e) {
-            return error($e->getMessage());
+            return fail($e->getMessage());
         } catch (\Exception $e) {
-            return error('系统错误: ' . $e->getMessage());
+            return fail('系统错误: ' . $e->getMessage());
         }
     }
 
@@ -181,9 +181,9 @@ class DiyConfig extends BaseApiController
             return success($result, '获取可用模块成功');
 
         } catch (CommonException $e) {
-            return error($e->getMessage());
+            return fail($e->getMessage());
         } catch (\Exception $e) {
-            return error('系统错误: ' . $e->getMessage());
+            return fail('系统错误: ' . $e->getMessage());
         }
     }
 }
