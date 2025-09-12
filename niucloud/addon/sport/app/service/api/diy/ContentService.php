@@ -188,16 +188,12 @@ class ContentService
      */
     private function checkEventPermission($eventId)
     {
-        if ($this->member_id <= 0) {
-            throw new CommonException('请先登录');
-        }
-
         $eventModel = new SportEvent();
         $event = $eventModel->where('id', $eventId)
             ->where('member_id', $this->member_id)
-            ->find();
+            ->findOrEmpty();
 
-        if (!$event) {
+        if ($event->isEmpty()) {
             throw new CommonException('赛事不存在或无权限操作');
         }
     }
@@ -209,14 +205,10 @@ class ContentService
      */
     private function checkContentPermission($contentId)
     {
-        if ($this->member_id <= 0) {
-            throw new CommonException('请先登录');
-        }
-
         $contentModel = new SportEventDetailContent();
-        $content = $contentModel->find($contentId);
+        $content = $contentModel->findOrEmpty($contentId);
 
-        if (!$content) {
+        if ($content->isEmpty()) {
             throw new CommonException('内容不存在');
         }
 

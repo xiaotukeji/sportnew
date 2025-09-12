@@ -267,9 +267,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { diyConfigApi, bannerApi, type DIYConfig, type DIYModule } from '@/addon/sport/api/diy'
+import useMemberStore from '@/stores/member'
+import { useLogin } from '@/hooks/useLogin'
 
 // 页面参数
 const eventId = ref<number>(0)
+
+// 登录状态管理
+const memberStore = useMemberStore()
+const login = useLogin()
+const userInfo = computed(() => memberStore.info)
 
 // 状态管理
 const isSaving = ref(false)
@@ -364,6 +371,12 @@ const buttonStyles = ['primary', 'secondary', 'success', 'warning']
 
 // 页面初始化
 onMounted(() => {
+  // 检查登录状态
+  if (!userInfo.value) {
+    login.setLoginBack({ url: `/addon/sport/pages/event/diy_design?event_id=${eventId.value}` })
+    return
+  }
+  
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   eventId.value = currentPage.options?.event_id || 0
