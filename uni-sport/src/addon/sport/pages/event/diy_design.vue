@@ -87,17 +87,17 @@
                     </view>
                 </view>
             </view>
-
-            <!-- 时间地点信息 -->
-            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.timeLocation.enabled }">
+            
+            <!-- 时间信息 -->
+            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.timeInfo.enabled }">
                 <view class="card-title">
-                    <text class="title-text">时间地点</text>
-                    <view class="module-toggle" @click="toggleModule('timeLocation')">
-                        <switch :checked="moduleSettings.timeLocation.enabled" />
+                    <text class="title-text">时间信息</text>
+                    <view class="module-toggle" @click="toggleModule('timeInfo')">
+                        <switch :checked="moduleSettings.timeInfo.enabled" />
                     </view>
                 </view>
                 
-                <view v-if="moduleSettings.timeLocation.enabled">
+                <view v-if="moduleSettings.timeInfo.enabled">
                     <view class="detail-item">
                         <text class="label">开始比赛</text>
                         <text class="value">{{ formatDateTime(eventInfo.start_time) }}</text>
@@ -117,7 +117,19 @@
                         <text class="label">截至报名</text>
                         <text class="value">{{ formatRegistrationTime(eventInfo.registration_end_time) }}</text>
                     </view>
-                    
+                </view>
+            </view>
+            
+            <!-- 地址信息 -->
+            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.locationInfo.enabled }">
+                <view class="card-title">
+                    <text class="title-text">地址信息</text>
+                    <view class="module-toggle" @click="toggleModule('locationInfo')">
+                        <switch :checked="moduleSettings.locationInfo.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.locationInfo.enabled">
                     <view class="detail-item">
                         <text class="label">举办地点</text>
                         <text class="value">{{ eventInfo.location }}</text>
@@ -127,9 +139,20 @@
                         <text class="label">详细地址</text>
                         <text class="value">{{ getAddressDetail(eventInfo) }}</text>
                     </view>
-                    
-                    <!-- 联系方式信息 -->
-                    <view v-if="eventInfo.contact_name || eventInfo.contact_phone || eventInfo.contact_wechat || eventInfo.contact_email" class="detail-item">
+                </view>
+            </view>
+            
+            <!-- 联系方式信息 -->
+            <view v-if="eventInfo.contact_name || eventInfo.contact_phone || eventInfo.contact_wechat || eventInfo.contact_email" class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.contactInfo.enabled }">
+                <view class="card-title">
+                    <text class="title-text">联系方式</text>
+                    <view class="module-toggle" @click="toggleModule('contactInfo')">
+                        <switch :checked="moduleSettings.contactInfo.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.contactInfo.enabled">
+                    <view class="detail-item">
                         <text class="label">联系方式</text>
                         <view class="contact-info-container">
                             <view v-if="eventInfo.contact_name" class="contact-item">
@@ -150,8 +173,454 @@
                             </view>
                         </view>
                     </view>
+                </view>
             </view>
-        </view>
+            
+            <!-- 主办方信息 -->
+            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.organizerInfo.enabled }">
+                <view class="card-title">
+                    <text class="title-text">主办方信息</text>
+                    <view class="module-toggle" @click="toggleModule('organizerInfo')">
+                        <switch :checked="moduleSettings.organizerInfo.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.organizerInfo.enabled">
+                    <view class="detail-item">
+                        <text class="label">主办方</text>
+                        <text class="value">{{ eventInfo.organizer_name }}</text>
+                    </view>
+                    
+                    <view v-if="eventInfo.organizer_contact_name" class="detail-item">
+                        <text class="label">联系人</text>
+                        <text class="value">{{ eventInfo.organizer_contact_name }}</text>
+                    </view>
+                    
+                    <view v-if="eventInfo.organizer_contact_phone" class="detail-item">
+                        <text class="label">联系电话</text>
+                        <text class="value">{{ eventInfo.organizer_contact_phone }}</text>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 协办方信息 -->
+            <view v-if="eventInfo.co_organizers && eventInfo.co_organizers.length > 0" class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.coOrganizerInfo.enabled }">
+                <view class="card-title">
+                    <text class="title-text">协办方信息</text>
+                    <text class="item-count">({{ eventInfo.co_organizers.length }}个)</text>
+                    <view class="module-toggle" @click="toggleModule('coOrganizerInfo')">
+                        <switch :checked="moduleSettings.coOrganizerInfo.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.coOrganizerInfo.enabled">
+                    <view class="co-organizers-container">
+                        <view 
+                            v-for="(coOrg, index) in eventInfo.co_organizers" 
+                            :key="index" 
+                            class="co-organizer-item"
+                        >
+                            <view class="co-org-header">
+                                <text class="co-org-name">{{ coOrg.organizer_name }}</text>
+                                <view class="co-org-type-badge" :class="'type-' + coOrg.organizer_type">
+                                    <text class="type-text">{{ getCoOrganizerTypeText(coOrg.organizer_type) }}</text>
+                                </view>
+                            </view>
+                            <view v-if="coOrg.contact_name" class="co-org-detail">
+                                <text class="co-org-label">联系人：</text>
+                                <text class="co-org-value">{{ coOrg.contact_name }}</text>
+                            </view>
+                            <view v-if="coOrg.contact_phone" class="co-org-detail">
+                                <text class="co-org-label">联系电话：</text>
+                                <text class="co-org-value">{{ coOrg.contact_phone }}</text>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 报名参数字段 -->
+            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.signupFields.enabled }">
+                <view class="card-title">
+                    <text class="title-text">报名参数字段</text>
+                    <text v-if="eventInfo.signup_fields && eventInfo.signup_fields.length > 0" class="item-count">
+                        ({{ eventInfo.signup_fields.length }}项，必填{{ requiredFieldsCount }}项)
+                    </text>
+                    <view class="module-toggle" @click="toggleModule('signupFields')">
+                        <switch :checked="moduleSettings.signupFields.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.signupFields.enabled">
+                    <view v-if="eventInfo.signup_fields && eventInfo.signup_fields.length > 0" class="signup-fields-container">
+                        <view 
+                            v-for="(field, index) in eventInfo.signup_fields" 
+                            :key="field.key" 
+                            class="signup-field-item"
+                        >
+                            <view class="field-header">
+                                <view class="field-info">
+                                    <text class="field-index">{{ index + 1 }}</text>
+                                    <text class="field-name">{{ field.label }}</text>
+                                </view>
+                                <view :class="field.required ? 'required-badge' : 'optional-badge'">
+                                    <text :class="field.required ? 'required-text' : 'optional-text'">
+                                        {{ field.required ? '必填' : '选填' }}
+                                    </text>
+                                </view>
+                            </view>
+                            <view class="field-key">
+                                <text class="key-label">字段标识：</text>
+                                <text class="key-value">{{ field.key }}</text>
+                            </view>
+                        </view>
+                    </view>
+                    
+                    <view v-else class="empty-signup-fields">
+                        <text class="empty-text">暂未设置报名参数字段</text>
+                        <text class="empty-tip">可在编辑赛事时设置报名所需的字段</text>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 自定义分组信息 -->
+            <view v-if="eventInfo.custom_groups && eventInfo.custom_groups.length > 0" class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.customGroups.enabled }">
+                <view class="card-title">
+                    <text class="title-text">自定义分组</text>
+                    <text class="item-count">({{ eventInfo.custom_groups.length }}个)</text>
+                    <view class="module-toggle" @click="toggleModule('customGroups')">
+                        <switch :checked="moduleSettings.customGroups.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.customGroups.enabled">
+                    <view class="custom-groups-container">
+                        <view 
+                            v-for="(group, index) in eventInfo.custom_groups" 
+                            :key="group.id" 
+                            class="custom-group-item"
+                        >
+                            <view class="group-header">
+                                <view class="group-info">
+                                    <text class="group-index">{{ index + 1 }}</text>
+                                    <text class="group-name">{{ group.group_name }}</text>
+                                </view>
+                                <view class="group-status-badge" :class="'status-' + group.status">
+                                    <text class="status-text">{{ group.status === 1 ? '启用' : '禁用' }}</text>
+                                </view>
+                            </view>
+                            
+                            <view v-if="group.description" class="group-description">
+                                <text class="description-text">{{ group.description }}</text>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 比赛项目设置 -->
+            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.eventItems.enabled }">
+                <view class="card-title">
+                    <text class="title-text">比赛项目设置</text>
+                    <text class="item-count">({{ groupedEventItems.length }}大类 {{ eventItems.length }}项)</text>
+                    <view class="module-toggle" @click="toggleModule('eventItems')">
+                        <switch :checked="moduleSettings.eventItems.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.eventItems.enabled">
+                    <view v-if="eventItems.length > 0" class="items-container">
+                        <view 
+                            v-for="(group, groupIndex) in groupedEventItems" 
+                            :key="group.categoryName" 
+                            class="category-group"
+                        >
+                            <!-- 大类标题 -->
+                            <view class="category-header" :style="{ background: getCategoryColor(group.categoryName) }">
+                                <text class="category-name">{{ group.categoryName }}</text>
+                                <text class="category-count">({{ group.items.length }}项)</text>
+                            </view>
+                            
+                            <!-- 该大类下的项目列表 -->
+                            <view class="group-items">
+                                <view 
+                                    v-for="(item, index) in group.items" 
+                                    :key="item.id" 
+                                    class="item-card"
+                                    :style="{ borderLeftColor: getCategoryBorderColor(group.categoryName) }"
+                                >
+                                    <view class="item-header">
+                                        <text class="item-name">{{ item.name }}</text>
+                                    </view>
+                                    
+                                    <view class="item-details">
+                                        <view class="item-detail-row">
+                                            <text class="detail-label">比赛类型：</text>
+                                            <text class="detail-value">{{ getCompetitionTypeText(item.competition_type) }}</text>
+                                        </view>
+                                        
+                                        <view class="item-detail-row">
+                                            <text class="detail-label">性别要求：</text>
+                                            <text class="detail-value">{{ getGenderTypeText(item.gender_type) }}</text>
+                                        </view>
+                                        
+                                        <!-- 项目设置信息 -->
+                                        <view v-if="item.registration_fee > 0" class="item-detail-row">
+                                            <text class="detail-label">报名费用：</text>
+                                            <text class="detail-value fee">¥{{ item.registration_fee }}</text>
+                                        </view>
+                                        
+                                        <view v-if="item.max_participants > 0" class="item-detail-row">
+                                            <text class="detail-label">最大参赛人数：</text>
+                                            <text class="detail-value">{{ item.max_participants }}人</text>
+                                        </view>
+                                        
+                                        <view v-if="item.rounds > 0" class="item-detail-row">
+                                            <text class="detail-label">比赛轮次：</text>
+                                            <text class="detail-value">{{ item.rounds }}轮</text>
+                                        </view>
+                                        
+                                        <view v-if="item.group_size > 0" class="item-detail-row">
+                                            <text class="detail-label">分组大小：</text>
+                                            <text class="detail-value">{{ item.group_size }}人/组</text>
+                                        </view>
+                                        
+                                        <view class="item-detail-row">
+                                            <text class="detail-label">允许重复报名：</text>
+                                            <text class="detail-value">{{ item.allow_duplicate_registration ? '是' : '否' }}</text>
+                                        </view>
+                                        
+                                        <view class="item-detail-row">
+                                            <text class="detail-label">循环赛制：</text>
+                                            <text class="detail-value">{{ item.is_round_robin ? '是' : '否' }}</text>
+                                        </view>
+                                        
+                                        <view v-if="item.venue_type" class="item-detail-row">
+                                            <text class="detail-label">场地类型：</text>
+                                            <text class="detail-value">{{ getVenueTypeLabel(item.venue_type) }}</text>
+                                        </view>
+                                        
+                                        <view v-if="item.venue_count > 0" class="item-detail-row">
+                                            <text class="detail-label">场地数量：</text>
+                                            <text class="detail-value">{{ item.venue_count }}个</text>
+                                        </view>
+                                        
+                                        <!-- 场地分配信息 -->
+                                        <view v-if="item.venues && item.venues.length > 0" class="item-detail-row">
+                                            <text class="detail-label">分配场地：</text>
+                                            <view class="venues-container">
+                                                <view 
+                                                    v-for="venue in item.venues" 
+                                                    :key="venue.id" 
+                                                    class="venue-tag"
+                                                >
+                                                    <text class="venue-text">{{ venue.name }}({{ venue.venue_code }})</text>
+                                                </view>
+                                            </view>
+                                        </view>
+                                        
+                                        <view v-if="item.remark" class="item-detail-row">
+                                            <text class="detail-label">项目说明：</text>
+                                            <text class="detail-value">{{ item.remark }}</text>
+                                        </view>
+                                    </view>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                    
+                    <view v-else class="empty-items">
+                        <text class="empty-text">暂无比赛项目</text>
+                        <text class="empty-tip">请点击"下一步"添加比赛项目</text>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 比赛场地安排 -->
+            <view v-if="hasVenueArrangements" class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.venueArrangements.enabled }">
+                <view class="card-title">
+                    <text class="title-text">比赛场地安排</text>
+                    <view class="module-toggle" @click="toggleModule('venueArrangements')">
+                        <switch :checked="moduleSettings.venueArrangements.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.venueArrangements.enabled">
+                    <view class="venue-arrangements-container">
+                        <view 
+                            v-for="(group, groupIndex) in groupedEventItems" 
+                            :key="group.categoryName" 
+                            class="venue-category-group"
+                        >
+                            <view class="venue-category-header">
+                                <text class="venue-category-name">{{ group.categoryName }}</text>
+                                <text class="venue-category-count">({{ getCategoryVenueCount(group.items) }}个场地)</text>
+                            </view>
+                            
+                            <view class="venue-items-list">
+                                <view 
+                                    v-for="item in group.items.filter(i => i.venues && i.venues.length > 0)" 
+                                    :key="item.id" 
+                                    class="venue-item-card"
+                                >
+                                    <view class="venue-item-header">
+                                        <text class="venue-item-name">{{ item.name }}</text>
+                                        <text class="venue-item-type">{{ getVenueTypeLabel(item.venue_type) }}</text>
+                                    </view>
+                                    
+                                    <view class="venue-assignments">
+                                        <view 
+                                            v-for="venue in item.venues" 
+                                            :key="venue.id" 
+                                            class="venue-assignment"
+                                        >
+                                            <view class="venue-info">
+                                                <text class="venue-name">{{ venue.name }}</text>
+                                                <text class="venue-code">({{ venue.venue_code }})</text>
+                                            </view>
+                                            <view v-if="venue.location" class="venue-location">
+                                                <text class="location-text">{{ venue.location }}</text>
+                                            </view>
+                                        </view>
+                                    </view>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 显示设置 -->
+            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.displaySettings.enabled }">
+                <view class="card-title">
+                    <text class="title-text">显示设置</text>
+                    <view class="module-toggle" @click="toggleModule('displaySettings')">
+                        <switch :checked="moduleSettings.displaySettings.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.displaySettings.enabled">
+                    <view class="detail-item">
+                        <text class="label">显示报名人数</text>
+                        <text class="value">{{ eventInfo.show_participant_count ? '是' : '否' }}</text>
+                    </view>
+                    
+                    <view class="detail-item">
+                        <text class="label">显示比赛进度</text>
+                        <text class="value">{{ eventInfo.show_progress ? '是' : '否' }}</text>
+                    </view>
+                    
+                    <view class="detail-item">
+                        <text class="label">显示年龄组</text>
+                        <text class="value">{{ eventInfo.age_group_display ? '是' : '否' }}</text>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 号码牌设置 -->
+            <view v-if="eventInfo.number_plate_settings" class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.numberPlate.enabled }">
+                <view class="card-title">
+                    <text class="title-text">号码牌设置</text>
+                    <view class="module-toggle" @click="toggleModule('numberPlate')">
+                        <switch :checked="moduleSettings.numberPlate.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.numberPlate.enabled">
+                    <view class="detail-item">
+                        <text class="label">编号模式</text>
+                        <text class="value">{{ eventInfo.number_plate_settings.numbering_mode === 1 ? '系统分配' : '用户自选' }}</text>
+                    </view>
+                    
+                    <view class="detail-item">
+                        <text class="label">自动编号</text>
+                        <text class="value">{{ getAutoAssignText(eventInfo.number_plate_settings.auto_assign_after_registration, eventInfo.number_plate_settings.numbering_mode) }}</text>
+                    </view>
+                    
+                    <view v-if="eventInfo.number_plate_settings.prefix" class="detail-item">
+                        <text class="label">号码前缀</text>
+                        <text class="value">{{ eventInfo.number_plate_settings.prefix }}</text>
+                    </view>
+                    
+                    <view class="detail-item">
+                        <text class="label">数字位数</text>
+                        <text class="value">{{ eventInfo.number_plate_settings.number_length }}位</text>
+                    </view>
+                    
+                    <view class="detail-item">
+                        <text class="label">起始号码</text>
+                        <text class="value">{{ eventInfo.number_plate_settings.start_number }}</text>
+                    </view>
+                    
+                    <view class="detail-item">
+                        <text class="label">结束号码</text>
+                        <text class="value">{{ eventInfo.number_plate_settings.end_number }}</text>
+                    </view>
+                    
+                    <view class="detail-item">
+                        <text class="label">是否禁用4</text>
+                        <text class="value">{{ eventInfo.number_plate_settings.disable_number_4 ? '是' : '否' }}</text>
+                    </view>
+                    
+                    <view v-if="eventInfo.number_plate_settings.numbering_mode === 2" class="detail-item">
+                        <text class="label">自选时间窗口</text>
+                        <text class="value">{{ eventInfo.number_plate_settings.choice_time_window }}天</text>
+                    </view>
+                    
+                    <view v-if="eventInfo.number_plate_settings.reserved_numbers && eventInfo.number_plate_settings.reserved_numbers.length > 0" class="detail-item">
+                        <text class="label">保留号码</text>
+                        <view class="numbers-container">
+                            <view 
+                                v-for="number in eventInfo.number_plate_settings.reserved_numbers" 
+                                :key="number" 
+                                class="number-tag reserved"
+                            >
+                                <text class="number-text">{{ number }}</text>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 赛事状态 -->
+            <view class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.eventStatus.enabled }">
+                <view class="card-title">
+                    <text class="title-text">赛事状态</text>
+                    <view class="module-toggle" @click="toggleModule('eventStatus')">
+                        <switch :checked="moduleSettings.eventStatus.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.eventStatus.enabled">
+                    <view class="detail-item">
+                        <text class="label">当前状态</text>
+                        <text class="value status" :class="'status-' + eventInfo.status">
+                            {{ getStatusText(eventInfo.status) }}
+                        </text>
+                    </view>
+                    
+                    <view class="detail-item">
+                        <text class="label">创建时间</text>
+                        <text class="value">{{ formatDateTime(eventInfo.create_time) }}</text>
+                    </view>
+                </view>
+            </view>
+            
+            <!-- 备注说明 -->
+            <view v-if="eventInfo.remark" class="detail-card diy-module" :class="{ 'module-disabled': !moduleSettings.remarkInfo.enabled }">
+                <view class="card-title">
+                    <text class="title-text">备注说明</text>
+                    <view class="module-toggle" @click="toggleModule('remarkInfo')">
+                        <switch :checked="moduleSettings.remarkInfo.enabled" />
+                    </view>
+                </view>
+                
+                <view v-if="moduleSettings.remarkInfo.enabled">
+                    <view class="detail-item">
+                        <text class="remark-text">{{ eventInfo.remark }}</text>
+                    </view>
+                </view>
+            </view>
         </view>
 
     <!-- Banner编辑弹窗 -->
@@ -268,9 +737,11 @@ const signupEditShow = ref(false)
 const moduleSettings = ref({
   banner: { enabled: true },
   basicInfo: { enabled: true },
-  timeLocation: { enabled: true },
-  organizer: { enabled: true },
-  coOrganizer: { enabled: true },
+  timeInfo: { enabled: true },
+  locationInfo: { enabled: true },
+  contactInfo: { enabled: true },
+  organizerInfo: { enabled: true },
+  coOrganizerInfo: { enabled: true },
   signupFields: { enabled: true },
   customGroups: { enabled: true },
   eventItems: { enabled: true },
@@ -278,8 +749,7 @@ const moduleSettings = ref({
   displaySettings: { enabled: true },
   numberPlate: { enabled: true },
   eventStatus: { enabled: true },
-  detailContent: { enabled: true },
-  signupAction: { enabled: true }
+  remarkInfo: { enabled: true }
 })
 
 // 赛事信息
@@ -322,6 +792,40 @@ const signupButtonStyle = ref('primary')
 const signupButtonStyleIndex = ref(0)
 const buttonStyles = ['primary', 'secondary', 'success', 'warning']
 
+// 按大类分组的比赛项目
+const groupedEventItems = computed(() => {
+    const groups: Record<string, any[]> = {}
+    
+    eventItems.value.forEach(item => {
+        // 使用大类名称作为分组键
+        const categoryName = item.category_name || '其他'
+        if (!groups[categoryName]) {
+            groups[categoryName] = []
+        }
+        groups[categoryName].push(item)
+    })
+    
+    // 转换为数组格式，便于模板渲染，并按大类名称排序
+    return Object.keys(groups)
+        .sort()
+        .map(categoryName => ({
+            categoryName,
+            items: groups[categoryName].sort((a, b) => a.name.localeCompare(b.name)) // 项目名称也排序
+        }))
+})
+
+// 必填字段数量
+const requiredFieldsCount = computed(() => {
+    if (!eventInfo.value?.signup_fields) return 0
+    return eventInfo.value.signup_fields.filter((field: any) => field.required).length
+})
+
+// 检查是否有场地安排
+const hasVenueArrangements = computed(() => {
+    if (!eventItems.value || eventItems.value.length === 0) return false
+    return eventItems.value.some(item => item.venues && item.venues.length > 0)
+})
+
 // 页面初始化
 onMounted(() => {
   // 检查登录状态
@@ -346,9 +850,14 @@ onMounted(() => {
 // 加载DIY配置
 const loadDiyConfig = async () => {
   try {
+    console.log('开始加载DIY配置，eventId:', eventId.value)
     const response: any = await diyConfigApi.getEventDiyConfig(eventId.value)
+    console.log('DIY配置响应:', response)
+    
     if (response.data) {
       const config = response.data
+      console.log('配置数据:', config)
+      
       // 更新模块设置
       if (config.module_settings) {
         Object.keys(config.module_settings).forEach(key => {
@@ -357,14 +866,21 @@ const loadDiyConfig = async () => {
           }
         })
       }
+      
       // 更新报名按钮设置
       if (config.signup_button) {
         signupButtonText.value = config.signup_button.text || '立即报名'
         signupButtonStyle.value = config.signup_button.style || 'primary'
       }
+      
+      console.log('DIY配置加载完成')
+    } else {
+      console.log('没有配置数据，使用默认设置')
     }
   } catch (error) {
     console.error('加载DIY配置失败:', error)
+    // 使用默认配置
+    console.log('使用默认模块设置')
   }
 }
 
@@ -542,6 +1058,140 @@ const getAddressDetail = (eventInfo: any) => {
     }
     
     return ''
+}
+
+/**
+ * 获取大类颜色
+ */
+const getCategoryColor = (categoryName: string) => {
+    const colorMap: Record<string, string> = {
+        '乒乓球': 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+        '羽毛球': 'linear-gradient(135deg, #4834d4 0%, #686de0 100%)',
+        '篮球': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+        '足球': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+        '网球': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+        '排球': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+        '田径': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+        '游泳': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        '其他': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    }
+    
+    return colorMap[categoryName] || colorMap['其他']
+}
+
+/**
+ * 获取大类边框颜色
+ */
+const getCategoryBorderColor = (categoryName: string) => {
+    const colorMap: Record<string, string> = {
+        '乒乓球': '#ff6b6b',
+        '羽毛球': '#4834d4',
+        '篮球': '#f093fb',
+        '足球': '#4facfe',
+        '网球': '#43e97b',
+        '排球': '#fa709a',
+        '田径': '#a8edea',
+        '游泳': '#667eea',
+        '其他': '#667eea'
+    }
+    
+    return colorMap[categoryName] || colorMap['其他']
+}
+
+/**
+ * 获取状态文本
+ */
+const getStatusText = (status: number) => {
+    const statusMap: Record<number, string> = {
+        0: '待发布',
+        1: '进行中', 
+        2: '已结束',
+        3: '已作废'
+    }
+    return statusMap[status] || '未知状态'
+}
+
+/**
+ * 获取比赛类型文本
+ */
+const getCompetitionTypeText = (type: number) => {
+    const typeMap: Record<number, string> = {
+        1: '个人项目',
+        2: '团体项目'
+    }
+    return typeMap[type] || '未知'
+}
+
+/**
+ * 获取性别要求文本
+ */
+const getGenderTypeText = (type: number) => {
+    const typeMap: Record<number, string> = {
+        1: '男子项目',
+        2: '女子项目',
+        3: '混合/不限'
+    }
+    return typeMap[type] || '未知'
+}
+
+/**
+ * 获取协办方类型文本
+ */
+const getCoOrganizerTypeText = (type: number) => {
+    const typeMap: Record<number, string> = {
+        1: '协办单位',
+        2: '赞助商',
+        3: '支持单位',
+        11: '赞助商',  // 兼容旧数据
+        12: '赞助商',  // 兼容旧数据
+        13: '赞助商'   // 兼容旧数据
+    }
+    return typeMap[type] || '未知'
+}
+
+/**
+ * 获取分类下的场地数量
+ */
+const getCategoryVenueCount = (items: any[]) => {
+    let totalCount = 0
+    items.forEach(item => {
+        if (item.venues && item.venues.length > 0) {
+            totalCount += item.venues.length
+        }
+    })
+    return totalCount
+}
+
+/**
+ * 获取场地类型标签
+ */
+const getVenueTypeLabel = (venueType: string) => {
+    const typeMap: Record<string, string> = {
+        'PP': '乒乓球台',
+        'BD': '羽毛球场地',
+        'BB': '篮球场地',
+        'FB': '足球场地',
+        'TN': '网球场地',
+        'VB': '排球场地',
+        'SW': '游泳场地',
+        'AT': '田径场地',
+        'GYM': '健身房',
+        'OTHER': '其他'
+    }
+    return typeMap[venueType] || venueType
+}
+
+/**
+ * 获取自动编号显示文本
+ */
+const getAutoAssignText = (autoAssign: number, numberingMode: number) => {
+    if (numberingMode === 1) {
+        // 系统分配模式
+        return autoAssign ? '是（系统统一编号）' : '否（手动分配）'
+    } else {
+        // 用户自选模式
+        return autoAssign ? '是（报名后自动分配）' : '否（用户自选号码）'
+    }
 }
 
 // 切换模块显示状态
