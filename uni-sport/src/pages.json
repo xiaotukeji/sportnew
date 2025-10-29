@@ -69,6 +69,43 @@
             }
         },
         {
+            "path": "addon/sport/pages/event_qoder/create-all-in-one",
+            "style": {
+                "navigationBarTitleText": "一站式创建赛事",
+                "navigationStyle": "custom"
+            },
+            "needLogin": true
+        },
+        {
+            "path": "addon/sport/pages/event_qoder/detail",
+            "style": {
+                "navigationBarTitleText": "赛事详情"
+            },
+            "needLogin": true
+        },
+        {
+            "path": "addon/sport/pages/event_qoder/test",
+            "style": {
+                "navigationBarTitleText": "赛事功能测试"
+            },
+            "needLogin": true
+        },
+        {
+            "path": "addon/sport/pages/event_qoder/create-all-in-one",
+            "style": {
+                "navigationBarTitleText": "一站式创建赛事",
+                "navigationStyle": "custom"
+            },
+            "needLogin": true
+        },
+        {
+            "path": "addon/sport/pages/event_qoder/detail",
+            "style": {
+                "navigationBarTitleText": "赛事详情"
+            },
+            "needLogin": true
+        },
+        {
             "path": "addon/sport/pages/event/items",
             "style": {
                 "navigationBarTitleText": "选择比赛项目"
